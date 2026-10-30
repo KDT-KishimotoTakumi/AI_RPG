@@ -1,0 +1,16 @@
+/Binaries/
+/Intermediate/
+/DerivedDataCache/
+/Saved/
+/.vs/
+*.sln
+*.vcxproj*
+*.suo
+*.user
+*.profraw
+*.profdata
+.env*
+__pycache__/
+
+# 端末固有の秘密情報を含む設定はローカルで保持
+/Config/DefaultEngine.ini

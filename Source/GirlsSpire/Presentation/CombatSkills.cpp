@@ -1,0 +1,50 @@
+#include "CombatScreen.h"
+#include "Widgets/SBoxPanel.h"
+#include <algorithm>
+
+const TCHAR* SCombatScreen::SkillLabel(GirlsSpire::Skill skill)
+{
+    static const TCHAR* names[]={TEXT("強撃"),TEXT("応急手当"),TEXT("薙ぎ払い"),TEXT("遠当て"),TEXT("癒しの術")};
+    return names[static_cast<int>(skill)];
+}
+
+void SCombatScreen::RefreshSkills()
+{
+    using namespace GirlsSpire;
+    const auto& state=Combat->Snapshot();
+    const auto actor=std::find_if(state.Units.begin(),state.Units.end(),[&](const BattleUnit& unit) {return unit.Id==state.ActiveId;});
+    if(std::none_of(actor->Skills.begin(),actor->Skills.end(),[](bool owned){return owned;})) return;
+    FString status=TEXT("技 / 再使用待ち ");
+    for(int i=0;i<SkillCount;++i) if(actor->Skills[i]) status+=FString::Printf(TEXT("%s:%d "),SkillLabel(static_cast<Skill>(i)),actor->Cooldowns[i]);
+    Text(status,"battle.skill.status",13);
+    const auto row=SNew(SHorizontalBox);
+    Panel->AddSlot().AutoHeight()[row];
+    for(int index=0;index<SkillCount;++index) {
+        if(index>=2 && !actor->Skills[index]) continue;
+        Action(SkillLabel(static_cast<Skill>(index)),*FString::Printf(TEXT("battle.skill.%d"),index),[this,index] {
+            SelectedSkill=static_cast<Skill>(index); Selected.reset(); MoveTarget.reset(); Refresh();
+        },actor->Skills[index] && actor->Cooldowns[index]==0 && !state.Acted,row);
+    }
+    if(!SelectedSkill) return;
+    Action(TEXT("通常操作へ戻る"),"battle.skill.cancel",[this] {SelectedSkill.reset();Selected.reset();Refresh();});
+    if(!Selected) return;
+    const auto preview=Combat->PreviewSkill(state.ActiveId,*SelectedSkill,*Selected);
+    FString label=TEXT("この対象には使用できません");
+    if(preview.Legal) {
+        if(preview.Healing>0) label=FString::Printf(TEXT("回復%d"),preview.Healing);
+        else if(!preview.Attack.Hits.empty()) {
+            label.Empty();
+            for(const auto& hit:preview.Attack.Hits) label+=FString::Printf(TEXT("敵%d / 命中%d%% / ダメージ%d\n"),hit.TargetId,hit.Chance,hit.Damage);
+        }
+        else label=FString::Printf(TEXT("障害物にダメージ%d（確定命中）"),preview.Attack.TerrainDamage);
+    }
+    Text(label,"battle.skill.preview",15);
+    Action(TEXT("技を確定"),"battle.skill.confirm",[this,revision=state.Revision,actorId=state.ActiveId,skill=*SelectedSkill,target=*Selected,preview] {
+        if(Combat->UseSkill(revision,actorId,skill,target)) {
+            if(preview.Healing>0) Message=FString::Printf(TEXT("対象%dを%d回復しました"),preview.TargetId,preview.Healing);
+            else if(preview.Attack.TerrainDamage>0) Message=TEXT("障害物へ強撃しました");
+            else DescribeHits();
+        }
+        SelectedSkill.reset(); Selected.reset(); Refresh();
+    },preview.Legal);
+}

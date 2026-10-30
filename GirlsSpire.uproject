@@ -1,0 +1,7 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.7",
+  "Category": "Games",
+  "Description": "Girls Spire",
+  "Modules": [{ "Name": "GirlsSpire", "Type": "Runtime", "LoadingPhase": "Default" }]
+}

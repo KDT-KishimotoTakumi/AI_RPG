@@ -1,0 +1,32 @@
+[
+  {
+    "path": "Source/GirlsSpire/Domain/Rules.h",
+    "sha256": "02C36D342F0FD1BAF98E1C5908F81619A6006440DE60869C79B491B95C020534",
+    "reason": "構造体メンバーと関数宣言のみ。関数定義はRules.cppで計測。"
+  },
+  {
+    "path": "Source/GirlsSpire/GirlsSpire.cpp",
+    "sha256": "A87826BE91163EE1DD65DC4AA1BB49FF8B9539EB336E8A55CDCB2EE6BEBD2923",
+    "reason": "UE提供のモジュール登録マクロ呼出しのみ。自作関数定義なし。マクロ定義はUE側の計測位置。"
+  },
+  {
+    "path": "Source/GirlsSpire/RunAutomation.cpp",
+    "sha256": "A6AEA9C06070C862FB1C1AD1B69F2093780545AB139C369B8989911CFB3A4AE3",
+    "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
+  },
+  {
+    "path": "Source/GirlsSpire/Presentation/GameEntry.h",
+    "sha256": "DA49820F1913CFF9D0A4E1618F5920F844F8A127C90284E15FBAE7CE9B2EC70D",
+    "reason": "UCLASS・自作関数宣言・ポインターメンバーのみ。実装はGameEntry.cppで計測し、UE生成コードはIntermediateに置く。"
+  },
+  {
+    "path": "Source/GirlsSpire/Application/Encounter.h",
+    "sha256": "32A026BB3CDD315DAC58BEBF6F05B64DAA76CC3E484BD159938EEEB6B7D61F7C",
+    "reason": "生成関数の宣言のみ。関数定義はEncounter.cppで計測。"
+  },
+  {
+    "path": "Source/GirlsSpire/Presentation/CharacterPortraits.h",
+    "sha256": "B96FC3EA2AE1B2855BA009B475C1E402600B86B5605076FFFDF0A3B653F84955",
+    "reason": "関数宣言とメンバーのみ。全関数定義はCharacterPortraits.cppで計測。内容ハッシュで実装の追加を検出する。"
+  }
+]

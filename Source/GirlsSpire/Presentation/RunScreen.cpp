@@ -1,0 +1,191 @@
+#include "RunScreen.h"
+#include "CombatScreen.h"
+#include "Application/Encounter.h"
+#include "Framework/MetaData/DriverMetaData.h"
+#include "Styling/CoreStyle.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/Text/STextBlock.h"
+#include <algorithm>
+
+namespace {
+const TCHAR* const Roles[] = {TEXT("太刀"), TEXT("薙刀"), TEXT("軍配"), TEXT("火縄銃")};
+const TCHAR* const Levels[] = {TEXT("初級"), TEXT("中級"), TEXT("上級")};
+const TCHAR* const Candidates[] = {TEXT("真田 茜"), TEXT("白峰 澪"), TEXT("朧"), TEXT("土御門 紫苑"),
+    TEXT("鷹司 楓"), TEXT("雑賀 火乃香"), TEXT("柳生 千景"), TEXT("鈴鹿 小夜")};
+const TCHAR* const Nodes[] = {TEXT("合戦"), TEXT("強敵"), TEXT("救出"), TEXT("交流"), TEXT("商店"),
+    TEXT("休息"), TEXT("怪異"), TEXT("中間ボス — 落城姫"), TEXT("最終ボス — 歴史喰らいの城主")};
+FString NodeLabel(const GirlsSpire::RouteNode& Node)
+{
+    FString Label = Nodes[static_cast<int>(Node.Kind)];
+    if (Node.Kind == GirlsSpire::NodeKind::Rescue) Label += FString(TEXT(" — ")) + Candidates[Node.Candidate];
+    return Label;
+}
+}
+
+void SRunScreen::Construct(const FArguments& Args)
+{
+    SaveService=Args._SaveService;
+    DevelopmentTools=Args._DevelopmentTools;
+    ChildSlot [
+        SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+        .BorderBackgroundColor(FLinearColor(0.035f, 0.025f, 0.055f)).Padding(36)
+        [ SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
+            [ SNew(STextBlock).Text(FText::FromString(TEXT("GIRLS SPIRE  /  死者の城")))
+                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 30)).ColorAndOpacity(FLinearColor(0.94f, 0.79f, 0.58f)) ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 24)
+            [ SNew(STextBlock).Text(FText::FromString(DevelopmentTools?TEXT("開発版 — 戦闘・作戦予告・三択報酬 / 正式素材は開発中"):TEXT("十二日後、死者の城が歴史を書き換える。")))
+                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16)).ColorAndOpacity(FLinearColor(0.8f, 0.65f, 0.65f)) ]
+            + SVerticalBox::Slot().FillHeight(1)
+            [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("run.scroll")) + SScrollBox::Slot() [ SAssignNew(Body, SVerticalBox) ] ]
+        ]
+    ];
+    if(Args._InitialRun) {CurrentRun=Args._InitialRun;RefreshRun();}
+    else ShowTitle();
+}
+
+void SRunScreen::AddText(const FString& Text, const FName& Id, int Size)
+{
+    Body->AddSlot().AutoHeight().Padding(0, 0, 0, 16)
+    [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true)
+        .Font(FCoreStyle::GetDefaultFontStyle("Regular", Size))
+        .ColorAndOpacity(FLinearColor(0.92f, 0.89f, 0.83f)).AddMetaData(FDriverMetaData::Id(Id)) ];
+}
+
+void SRunScreen::AddAction(const FString& Text, const FName& Id, TFunction<void()> Action, TSharedPtr<SHorizontalBox> Row)
+{
+    const auto Button = SNew(SButton).ContentPadding(FMargin(20, 12)).HAlign(HAlign_Left)
+        .ButtonColorAndOpacity(FLinearColor(0.25f, 0.12f, 0.18f))
+        .AddMetaData(FDriverMetaData::Id(Id))
+        .OnClicked_Lambda([Action = MoveTemp(Action)] { Action(); return FReply::Handled(); })
+        [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular", 19))
+            .ColorAndOpacity(FLinearColor(0.98f, 0.94f, 0.85f)) ];
+    if (Row.IsValid()) Row->AddSlot().FillWidth(1).Padding(0, 0, 8, 10) [ Button ];
+    else Body->AddSlot().AutoHeight().Padding(0, 0, 0, 10) [ Button ];
+}
+
+void SRunScreen::ShowTitle()
+{
+    if(CurrentRun) {
+        RetainedProfile=CurrentRun->ProfileState();
+        CurrentRun.reset();
+        if(SaveService) {FinishRunToTitle();return;}
+    }
+    CurrentRun.reset();
+    SocialActor=-1;SocialChoice=-1;SocialMessage.Empty();
+    Body->ClearChildren();
+    if(!LoadTitleState()) return;
+    AddText(TEXT("十二日を生き抜き、仲間と城へ。"), "title.heading", 28);
+    AddText(TEXT("主人公・黒鉄 蓮と、道中で救い出す四人の仲間。\n信頼と戦い方を組み合わせる、戦国怪異の戦術ローグライク。"), "title.description");
+    AddText(DevelopmentTools?TEXT("経路を選び、盤面で移動・攻撃して仲間を救出します。進行確認用の結果入力も利用できます。"):
+        TEXT("経路を選び、仲間へ作戦を伝え、死者の城へ挑む。進行は自動保存され、戦闘中も中断できます。"), "title.notice");
+    if(StoredRun) AddAction(StoredRun->ResumeAvailable?TEXT("中断した周回を再開"):TEXT("直近の状態から復旧"),
+        StoredRun->ResumeAvailable?"title.resume":"title.recover",[this]{ResumeSaved();});
+    if(StorageRecovered) AddText(TEXT("保存記録を復旧しました。直近の有効な状態を使用しています。"),"save.recovered",16);
+    if(!SaveNotice.IsEmpty()) AddText(SaveNotice,"save.reset.result",16);
+    AddAction(TEXT("新しい周回へ"), "title.start", [this] {if(StoredRun) ConfirmAbandon();else ShowSetup();});
+    if(std::any_of(RetainedProfile.Epilogues.begin(),RetainedProfile.Epilogues.end(),[](bool read){return read;}))
+        AddAction(TEXT("後日談の本を開く"),"title.epilogues",[this]{ShowEpilogueLibrary();});
+    AddText(ProfileLabel(),"title.bonds",14);
+}
+
+void SRunScreen::ShowSetup()
+{
+    SaveNotice.Empty();
+    Body->ClearChildren();
+    AddText(TEXT("出陣の支度"), "setup.heading", 28);
+    AddText(TEXT("難易度"), "setup.difficulty");
+    TSharedPtr<SHorizontalBox> LevelRow;
+    Body->AddSlot().AutoHeight() [ SAssignNew(LevelRow, SHorizontalBox) ];
+    for (int Index = 0; Index < 3; ++Index) {
+        const FString Mark = static_cast<int>(Difficulty) == Index ? TEXT("● ") : TEXT("○ ");
+        AddAction(Mark + Levels[Index], *FString::Printf(TEXT("difficulty.%d"), Index), [this, Index] {
+            Difficulty = static_cast<GirlsSpire::Difficulty>(Index); ShowSetup();
+        }, LevelRow);
+    }
+    AddText(TEXT("主人公の武器・役割"), "setup.role");
+    TSharedPtr<SHorizontalBox> RoleRow;
+    Body->AddSlot().AutoHeight() [ SAssignNew(RoleRow, SHorizontalBox) ];
+    for (int Index = 0; Index < 4; ++Index) {
+        const FString Mark = static_cast<int>(Role) == Index ? TEXT("● ") : TEXT("○ ");
+        AddAction(Mark + Roles[Index], *FString::Printf(TEXT("role.%d"), Index), [this, Index] {
+            Role = static_cast<GirlsSpire::HeroRole>(Index); ShowSetup();
+        }, RoleRow);
+    }
+    AddAction(TEXT("この編成で出発する"), "role.confirm", [this] { StartRun(); });
+    AddAction(TEXT("タイトルへ戻る"), "setup.back", [this] { ShowTitle(); });
+}
+
+void SRunScreen::StartRun()
+{
+    const auto seed=DevelopmentTools?UINT64_C(42):static_cast<std::uint64_t>(FDateTime::UtcNow().GetTicks())^FPlatformTime::Cycles64();
+    CurrentRun = std::make_shared<GirlsSpire::Run>(seed, Difficulty, Role,RetainedProfile);
+    RefreshRun();
+}
+
+void SRunScreen::RefreshRun()
+{
+    if(!SaveCurrent()) {ShowSaveError([this]{RefreshRun();});return;}
+    using namespace GirlsSpire;
+    const auto State = CurrentRun->Snapshot();
+    Body->ClearChildren();
+    AddText(FString::Printf(TEXT("第 %d 日 / 十二日　 |　 %s ・ %s"), State.Day,
+        Levels[static_cast<int>(State.Level)], Roles[static_cast<int>(State.Role)]), "run.day", 27);
+    FString Party = FString::Printf(TEXT("黒鉄 蓮 ＋ 仲間%d人"), static_cast<int>(State.Recruited.size()));
+    for (int Candidate : State.Recruited) Party += FString(TEXT("　/　")) + Candidates[Candidate];
+    AddText(Party, "run.party", 18);
+    AddText(FString::Printf(TEXT("所持金%d銭 / 傷薬%d/5"),State.Wallet.Coins,State.Wallet.Medicines),"run.wallet",16);
+    if(SaveService) AddAction(TEXT("保存して中断する"),"save.suspend",[this]{SuspendRun();});
+    if(State.Phase==RunPhase::Route || State.Phase==RunPhase::Reward) ShowGrowth();
+    if(State.PendingRescue>=0){RefreshRescueConversation();return;}
+    if(State.Phase==RunPhase::Reward) { RefreshRewards();return; }
+    if (State.Phase == RunPhase::Route) {
+        AddText(FString::Printf(TEXT("行き先を選ぶ　—　本日の %d / %d 件目"), State.EventIndex + 1, State.EventsToday), "route.heading");
+        for (int Index = 0; Index < static_cast<int>(State.Choices.size()); ++Index) {
+            AddAction(NodeLabel(State.Choices[Index]), *FString::Printf(TEXT("route.node.%d"), Index),
+                [this, Revision = State.Revision, Index] {
+                    CurrentRun->ChooseNode(Revision, Index);SocialMessage.Empty(); RefreshRun();
+                });
+        }
+        AddText(TEXT("1～4日目：仲間の救出　　6日目：落城姫　　12日目：城主との決戦"), "route.schedule", 17);
+        if(!SocialMessage.IsEmpty()) AddText(SocialMessage,"social.result",16);
+        AddText(ProfileLabel(),"run.profile",14);
+    } else if (State.Phase == RunPhase::Event) {
+        AddText(NodeLabel(State.Active), "event.kind", 26);
+        if(State.Active.Kind==NodeKind::Rest) {RefreshRest();return;}
+        if(State.Active.Kind==NodeKind::Shop) {RefreshShop();return;}
+        if(State.Active.Kind==NodeKind::Social) {RefreshSocial();return;}
+        const bool combat=State.Active.Kind==NodeKind::Battle || State.Active.Kind==NodeKind::Elite ||
+            State.Active.Kind==NodeKind::Rescue || State.Active.Kind==NodeKind::MidBoss || State.Active.Kind==NodeKind::FinalBoss;
+        if(combat) AddAction(TEXT("戦闘を始める"),DevelopmentTools?"preview.battle":"battle.start",[this] { StartBattle(); });
+        if(combat && DevelopmentTools) AddAction(TEXT("検証：生成を失敗させ固定戦場へ"),"preview.fallback",[this] { StartBattle(true); });
+        if(DevelopmentTools) AddText(TEXT("以下は進行確認用です。戦闘・報酬を操作せず結果だけを反映します。"), "event.notice");
+        if (State.Active.Kind == NodeKind::Rescue)
+            AddText(TEXT("救出対象は倒れても死亡せず、戦闘に勝てば加入します。"), "event.rescue");
+        if(DevelopmentTools || !combat) AddAction(DevelopmentTools?TEXT("検証：勝利・達成として進む"):TEXT("先へ進む"), DevelopmentTools?"preview.complete":"event.resolve", [this, Revision = State.Revision] {
+            CurrentRun->CompleteEvent(Revision); RefreshRun();
+        });
+        if(DevelopmentTools) AddAction(TEXT("検証：味方全員戦闘不能"), "preview.defeat", [this, Revision = State.Revision] {
+            CurrentRun->CompleteEvent(Revision, true); RefreshRun();
+        });
+    } else {
+        const bool Won = State.Phase == RunPhase::Won;
+        AddText(Won ? TEXT("周回成功") : TEXT("周回敗北"), Won ? "result.won" : "result.lost", 30);
+        if(DevelopmentTools) AddText(TEXT("正式な敵・素材・会話は開発中です。"), "result.notice");
+        AddAction(Won?TEXT("後日談を選ぶ"):TEXT("タイトルへ戻る"), "result.continue", [this,Won] {if(Won)ShowEpilogueChoices();else ShowTitle();});
+    }
+}
+
+void SRunScreen::StartBattle(bool forceGenerationFailure)
+{
+    const auto state=CurrentRun->Snapshot();
+    GirlsSpire::GenerationResult generation;
+    const auto combat=MakeShared<GirlsSpire::Battle>(GirlsSpire::Encounter::Create(state,CurrentRun->RandomState(),&generation,forceGenerationFailure));
+    const auto description=FString::Printf(TEXT("%s %d×%d / 生成試行%d回"),
+        generation.UsedFallback?TEXT("固定戦場へ切替"):TEXT("自動生成"),
+        generation.Layout.Width,generation.Layout.Height,generation.Attempts);
+    ShowCombat(combat,description);
+}

@@ -1,0 +1,22 @@
+#requires -Version 7.0
+param([switch] $SkipBuild)
+$ErrorActionPreference = 'Stop'
+$projectRoot = Split-Path -Parent $PSScriptRoot
+if (-not $SkipBuild) {
+    & (Join-Path $PSScriptRoot 'build-unreal.ps1')
+    if ($LASTEXITCODE) { throw 'ゲーム起動試験のビルドに失敗しました。' }
+}
+$launchRoot = $projectRoot
+if ($projectRoot -match '[^\x00-\x7F]') {
+    $suffix = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($projectRoot))).Substring(0,12)
+    $taskAlias = Join-Path ([IO.Path]::GetTempPath()) "GirlsSpire-$suffix"
+    $link = Get-Item -LiteralPath $taskAlias
+    if ($link.LinkType -ne 'Junction' -or $link.Target -ne $projectRoot) { throw 'ゲーム試験用の別名が不正です。' }
+    $launchRoot = $taskAlias
+}
+$taskId = [Guid]::NewGuid().ToString('N')
+$relative = "Saved/Tests/Runtime/$taskId"
+$testRoot = Join-Path $launchRoot $relative
+& (Join-Path $PSScriptRoot 'test-unreal.ps1') -UI -Filter 'GirlsSpire.Runtime.GameEntry' -ExtraArgs @('-game','/Engine/Maps/Entry','-GirlsSpireRuntimeTest',"-GirlsSpireRuntimeRoot=$testRoot")
+if ($LASTEXITCODE) { throw '通常ゲーム起動のUI試験が失敗しました。' }
+"通常ゲーム起動・実戦操作・保存・中断: 成功。試験保存先: $(Join-Path $projectRoot $relative)"

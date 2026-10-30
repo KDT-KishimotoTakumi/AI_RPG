@@ -1,0 +1,116 @@
+#include "BasicTurn.h"
+#include <algorithm>
+#include <cstdlib>
+#include <limits>
+namespace GirlsSpire {
+BasicAction ChooseBasicAction(const Battle& battle)
+{
+    const auto& state = battle.Snapshot();
+    if (state.Outcome != BattleOutcome::Ongoing) return {};
+    const auto actor = std::find_if(state.Units.begin(),state.Units.end(),
+        [&](const BattleUnit& unit) { return unit.Id == state.ActiveId; });
+    BasicAction best;
+    if(!state.Acted && actor->Side==Faction::Enemy && actor->Role==BattleRole::Fox) {
+        const BattleUnit* recipient=nullptr;
+        for(const auto& target:state.Units) {
+            if(target.Hp*2>target.MaxHp || !battle.PreviewSkill(actor->Id,Skill::FirstAid,target.At).Legal)continue;
+            // 浮動小数点の丸めに依存せずHP割合を比較し、同率は人物IDで固定する。
+            if(!recipient || target.Hp*recipient->MaxHp<recipient->Hp*target.MaxHp ||
+                (target.Hp*recipient->MaxHp==recipient->Hp*target.MaxHp && target.Id<recipient->Id))recipient=&target;
+        }
+        if(recipient)return {BasicActionKind::UseSkill,recipient->At,Skill::FirstAid};
+    }
+    int bestScore = -1, bestId = std::numeric_limits<int>::max();
+    for (const auto& target : state.Units) {
+        if(target.Hp<=0 || target.Side==actor->Side || (actor->Side==Faction::Player && target.Side==Faction::Neutral))continue;
+        const auto prediction = battle.PreviewAttack(actor->Id,target.At);
+        if (!prediction.Legal) continue;
+        auto selected=prediction;
+        BasicAction candidate{BasicActionKind::Attack,target.At};
+        if(actor->Side==Faction::Enemy && actor->Role==BattleRole::Oni) {
+            const auto skill=battle.PreviewSkill(actor->Id,Skill::PowerStrike,target.At);
+            if(skill.Legal && skill.Attack.Hits.front().Damage>selected.Hits.front().Damage) {
+                selected=skill.Attack;candidate={BasicActionKind::UseSkill,target.At,Skill::PowerStrike};
+            }
+        }
+        int score=0;
+        for(const auto& hit:selected.Hits) {
+            const auto victim=std::find_if(state.Units.begin(),state.Units.end(),[&](const BattleUnit& unit){return unit.Id==hit.TargetId;});
+            score+=hit.Chance*std::min(hit.Damage,victim->Hp);
+        }
+        if (score > bestScore || (score == bestScore && target.Id < bestId)) {
+            bestScore = score; bestId = target.Id;
+            best = candidate;
+        }
+    }
+    if (best.Kind == BasicActionKind::Attack || best.Kind==BasicActionKind::UseSkill) return best;
+    if (state.Acted) {
+        if(actor->Side!=Faction::Enemy || actor->Role!=BattleRole::Ninja || state.Moved ||
+            state.UsedSkill==static_cast<int>(Skill::FirstAid) || state.UsedSkill==static_cast<int>(Skill::Heal))return best;
+        const auto distance=[&](Position at) {
+            int nearest=std::numeric_limits<int>::max();
+            for(const auto& unit:state.Units)if(unit.Side==Faction::Player && unit.Hp>0)
+                nearest=std::min(nearest,std::abs(at.X-unit.At.X)+std::abs(at.Y-unit.At.Y));
+            return nearest;
+        };
+        int leastDamage=battle.PotentialHostileDamage(actor->Id),farthest=distance(actor->At);
+        for(const auto destination:battle.Reachable(actor->Id)) {
+            const auto move=battle.PreviewMove(actor->Id,destination);
+            if(!move.Legal || move.KnockedOut)continue;
+            auto projection=battle;
+            if(!projection.Move(state.Revision,actor->Id,destination))continue;
+            const int damage=move.Damage+projection.PotentialHostileDamage(actor->Id);
+            const int separation=distance(destination);
+            if(damage<leastDamage || (damage==leastDamage && separation>farthest)) {
+                leastDamage=damage;farthest=separation;best={BasicActionKind::Move,destination};
+            }
+        }
+        return best;
+    }
+    if(actor->Side==Faction::Enemy && (actor->Role==BattleRole::Archer || actor->Role==BattleRole::Gunner || actor->Role==BattleRole::CurseMonk || actor->Role==BattleRole::Fox || actor->Role==BattleRole::Spider || actor->Role==BattleRole::CastleLord)) {
+        int firingScore=-1;
+        for(const auto destination:battle.Reachable(actor->Id)) {
+            auto projection=battle;
+            if(!projection.Move(state.Revision,actor->Id,destination))continue;
+            for(const auto& target:state.Units) {
+                const auto shot=projection.PreviewAttack(actor->Id,target.At);
+                if(!shot.Legal)continue;
+                const auto& hit=shot.Hits.front();
+                const int score=hit.Chance*std::min(hit.Damage,target.Hp);
+                if(score>firingScore) {
+                    firingScore=score;best={BasicActionKind::Move,destination};
+                }
+            }
+        }
+        // 移動の仮適用だけで射程・射線・所属を照合し、実戦の乱数は進めない。
+        if(firingScore>=0)return best;
+    }
+    const auto nearest = [&](Position at) {
+        int distance = std::numeric_limits<int>::max();
+        for (const auto& target : state.Units) {
+            if (target.Hp <= 0 || target.Side == actor->Side ||
+                (actor->Side == Faction::Player && target.Side == Faction::Neutral)) continue;
+            distance = std::min(distance,std::abs(at.X - target.At.X) + std::abs(at.Y - target.At.Y));
+        }
+        return distance;
+    };
+    int shortest = nearest(actor->At);
+    for (auto destination : battle.Reachable(actor->Id)) {
+        const int distance = nearest(destination);
+        if (distance < shortest) { shortest = distance; best = {BasicActionKind::Move,destination}; }
+    }
+    return best;
+}
+
+bool ApplyBasicAction(Battle& battle, const BasicAction& action)
+{
+    const auto& state = battle.Snapshot();
+    switch (action.Kind) {
+    case BasicActionKind::UseSkill: return battle.UseSkill(state.Revision,state.ActiveId,action.Ability,action.Target);
+    case BasicActionKind::Move: return battle.Move(state.Revision,state.ActiveId,action.Target);
+    case BasicActionKind::Attack: return battle.Attack(state.Revision,state.ActiveId,action.Target);
+    case BasicActionKind::Wait: return battle.EndTurn(state.Revision,state.ActiveId,Facing::South);
+    }
+    return false;
+}
+}

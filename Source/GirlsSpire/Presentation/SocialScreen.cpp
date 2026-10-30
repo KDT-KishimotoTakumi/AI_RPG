@@ -1,0 +1,59 @@
+#include "RunScreen.h"
+FString SRunScreen::ProfileLabel() const
+{
+    const auto& profile=CurrentRun?CurrentRun->ProfileState():RetainedProfile;
+    FString label=SaveService?TEXT("絆・専用交流（保存済み／次周へ保持）: "):TEXT("絆・専用交流（このプレビュー内で保持）: ");
+    for(int id=1;id<=8;++id) label+=FString::Printf(TEXT("%s %d%s　"),*ActorName(id),profile.Bonds[id-1],
+        profile.SpecialConversations[id-1]?TEXT("・専用交流済"):TEXT(""));
+    return label;
+}
+void SRunScreen::RefreshSocial()
+{
+    using namespace GirlsSpire;
+    const auto& state=CurrentRun->Snapshot();
+    AddText(TEXT("加入済みの仲間1人と交流します。確定すると1イベントが終わり、やり直せません。"),"social.help",15);
+    if(SocialActor<0) {
+        for(int candidate:state.Recruited) {
+            const int id=candidate+1;
+            AddAction(FString::Printf(TEXT("%sと話す（絆%d）"),*ActorName(id),CurrentRun->ProfileState().Bonds[candidate]),
+                *FString::Printf(TEXT("social.actor.%d"),id),[this,id]{SocialActor=id;SocialChoice=-1;RefreshRun();});
+        }
+        return;
+    }
+    AddText(ActorName(SocialActor)+TEXT("「城へ向かう前に、少し話を聞いてほしい。」"),"social.dialogue",18);
+    if(CurrentRun->CanSpecialConverse(SocialActor)) {
+        if(SocialChoice==-2) {
+            auto preview=*CurrentRun;
+            if(preview.SpecialConverse(state.Revision,SocialActor)) {
+                AddText(TEXT("二人の意思を確かめ、城を出た後の約束を交わします。\n1イベントを消費し、専用交流の完了を次周以降も保持します。絆の追加変動はありません。確定後は取り消せません。"),"social.special.preview",18);
+                AddAction(TEXT("互いの約束を確定"),"social.special.confirm",[this,revision=state.Revision,actor=SocialActor] {
+                    if(CurrentRun->SpecialConverse(revision,actor))SocialMessage=ActorName(actor)+TEXT("との約束を記録しました。専用交流の完了は次周へ引き継ぎます。");
+                    SocialActor=-1;SocialChoice=-1;RefreshRun();
+                });
+            }
+            AddAction(TEXT("まだ約束せず戻る"),"social.special.cancel",[this]{SocialChoice=-1;RefreshRun();});
+            return;
+        }
+        AddAction(TEXT("専用交流：二人の約束"),"social.special",[this]{SocialChoice=-2;RefreshRun();});
+    }
+    const TCHAR* choices[]={TEXT("話を聞き、支える（＋10）"),TEXT("今後の予定を確認する（0）"),TEXT("話を突き放す（−5）")};
+    if(SocialChoice>=0) {
+        const auto choice=static_cast<ConversationChoice>(SocialChoice);
+        auto preview=*CurrentRun;
+        const bool legal=preview.Converse(state.Revision,SocialActor,choice);
+        if(legal) {
+            const int before=CurrentRun->ProfileState().Bonds[SocialActor-1],after=preview.ProfileState().Bonds[SocialActor-1];
+            AddText(FString::Printf(TEXT("%s / 絆%d→%d（実変動%+d）\n会話1回でイベント終了。確定後は取り消せません。"),choices[SocialChoice],before,after,after-before),"social.preview",17);
+            AddAction(TEXT("この返答を確定"),"social.confirm",[this,revision=state.Revision,actor=SocialActor,choice,before,after] {
+                if(CurrentRun->Converse(revision,actor,choice)) {
+                    const TCHAR* reason=choice==ConversationChoice::Warm?TEXT("支えを感じた"):choice==ConversationChoice::Cold?TEXT("突き放されたと感じた"):TEXT("予定を確認した");
+                    SocialMessage=FString::Printf(TEXT("%s：%s / 絆%d→%d"),*ActorName(actor),reason,before,after);
+                }
+                SocialActor=-1;SocialChoice=-1;RefreshRun();
+            });
+        }
+        AddAction(TEXT("返答を取り消す（絆・時間は変化しない）"),"social.cancel",[this]{SocialChoice=-1;RefreshRun();});
+    }
+    for(int index=0;index<3;++index) AddAction(choices[index],*FString::Printf(TEXT("social.choice.%d"),index),[this,index]{SocialChoice=index;RefreshRun();});
+    AddAction(TEXT("相手を選び直す"),"social.back",[this]{SocialActor=-1;SocialChoice=-1;RefreshRun();});
+}
