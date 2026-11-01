@@ -1,0 +1,70 @@
+{
+  "commit": "8bfcc1f9916f2eea55494d8c1fa7f4bde867dd9e",
+  "files": [
+    {
+      "source": "skills/context-engineering/SKILL.md",
+      "path": ".agents/skills/context-engineering/SKILL.md",
+      "gitBlob": "abdfe2732255de944db13d0312a1634a425c7c5d",
+      "bytes": 15514,
+      "sha256": "5ee2929d3aded01587aa24fc9907693c8820f87f807ea0c52a263af718b62d0b"
+    },
+    {
+      "source": "skills/test-driven-development/SKILL.md",
+      "path": ".agents/skills/test-driven-development/SKILL.md",
+      "gitBlob": "1937b9b9798d8986f4d979355565311bbaa7244f",
+      "bytes": 16845,
+      "sha256": "8fcaa57cf445ca6111fd20d2321bcfc0f424db7cfe526836db7b9bf8828fee39"
+    },
+    {
+      "source": "skills/debugging-and-error-recovery/SKILL.md",
+      "path": ".agents/skills/debugging-and-error-recovery/SKILL.md",
+      "gitBlob": "13c1a431626c23270542c7b570d7193ba79c3a96",
+      "bytes": 10893,
+      "sha256": "01cff31fbd8796b444225f8a8386219792c25cebb5d4d76df664afd1d13ed610"
+    },
+    {
+      "source": "skills/code-review-and-quality/SKILL.md",
+      "path": ".agents/skills/code-review-and-quality/SKILL.md",
+      "gitBlob": "08209ff2208d2883d48d945f7754c428b77f8d87",
+      "bytes": 20976,
+      "sha256": "2db1e850379f255fd3091ef278cde24cd6c7d2ba23e360cc52ea522c40d4396e"
+    },
+    {
+      "source": "skills/code-simplification/SKILL.md",
+      "path": ".agents/skills/code-simplification/SKILL.md",
+      "gitBlob": "c4f794aa3fc63ea041989b30be7a3887c79c53ed",
+      "bytes": 13719,
+      "sha256": "e13b433345e6bf425c3625442ac1b3507b371c18d7ea3e3db822da7a7f742a29"
+    },
+    {
+      "source": "references/testing-patterns.md",
+      "path": ".agents/references/testing-patterns.md",
+      "gitBlob": "86abe519a60566535ec2b3092bf6a04a0f6722f7",
+      "bytes": 7543,
+      "sha256": "8607fda9150f639eae3097d322399e08c5978cce56fe3a3c6291553cb89edf88"
+    },
+    {
+      "source": "references/security-checklist.md",
+      "path": ".agents/references/security-checklist.md",
+      "gitBlob": "910fbff3ff3ee67e343ef308fe224f95edb5b5ce",
+      "bytes": 14503,
+      "sha256": "84ed77cbba419c95390618f857eca2fadfeec12f2e5d39af4cc1833b94d82a39"
+    },
+    {
+      "source": "references/performance-checklist.md",
+      "path": ".agents/references/performance-checklist.md",
+      "gitBlob": "81f754909440211c3a925a770abccf2da6d1d0fc",
+      "bytes": 13292,
+      "sha256": "ce946457d4a502846e781a2747cf6af50bcc79b1957a66dc024f50557e8982e1"
+    },
+    {
+      "source": "LICENSE",
+      "path": ".agents/agent-skills.LICENSE",
+      "gitBlob": "d67778ada6b9cda6227e9130da182c13e73c8b2e",
+      "bytes": 1068,
+      "sha256": "6f202f8bd568cd730dbb2b0d1f8e243bc74c2fa1f64dbce9b2c7ea08bd5c9fd7"
+    }
+  ],
+  "bytes": 114353.0,
+  "repository": "https://github.com/addyosmani/agent-skills"
+}

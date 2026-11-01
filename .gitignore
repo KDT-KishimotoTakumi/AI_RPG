@@ -14,3 +14,6 @@ __pycache__/
 
 # 端末固有の秘密情報を含む設定はローカルで保持
 /Config/DefaultEngine.ini
+
+# 環境から生成するローカルMCP起動設定
+/.codex/config.toml

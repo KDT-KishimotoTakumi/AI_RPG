@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/mksglu/context-mode",
+  "commit": "baf6a5510790cba7e9d5c2f5399354f54a962bb1",
+  "npmVersion": "1.0.169",
+  "files": [
+    {
+      "bytes": 16683,
+      "source": "skills/context-mode/SKILL.md",
+      "sha256": "ce26cb01de7a116eab256f916620935f029e850771f3fb6cb7d40a3ce8d1f7ff",
+      "path": ".agents/skills/context-mode/SKILL.md"
+    },
+    {
+      "bytes": 3840,
+      "source": "LICENSE",
+      "sha256": "92f11a867c41c9e575ccb978ff205ae2011c244a14aa3c576e914e537105caa0",
+      "path": ".agents/context-mode.LICENSE"
+    }
+  ],
+  "npmIntegrity": "sha512-94JIaFuLjF9SO2BsGTrbGtyT44K95+9OC8BdbaL/UT76xOkanJLfUR5CzmNw+GELXZQqH4nBrKg9wjBnSFkVnQ==",
+  "runtimeBytes": 38413098.0
+}
