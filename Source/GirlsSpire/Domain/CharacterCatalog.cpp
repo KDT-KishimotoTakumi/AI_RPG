@@ -1,4 +1,5 @@
 #include "CharacterCatalog.h"
+#include "AbilityCatalog.h"
 #include <stdexcept>
 namespace GirlsSpire {
 std::string_view CommonSkillName(Skill skill)
@@ -11,14 +12,13 @@ std::string_view CommonSkillName(Skill skill)
 std::string_view CharacterSkillName(int actorId,Skill skill)
 {
     if(!FindCharacter(actorId))return {};
-    if(actorId==0 && skill==Skill::PowerStrike)return "鍛冶の一撃";
-    if(actorId==0 && skill==Skill::FirstAid)return "野戦の手当";
+    if(actorId==0)if(const auto ability=FormalSkill(actorId,skill))return ability->Name;
     return CommonSkillName(skill);
 }
 std::string_view CharacterUltimateName(int actorId)
 {
     if(!FindCharacter(actorId))return {};
-    return actorId==0?"火打ちの誓い":"開発用個人必殺";
+    return actorId==0?FormalUltimate(actorId,0)->Name:"開発用個人必殺";
 }
 const std::array<CharacterDefinition,9>& CharacterCatalog()
 {

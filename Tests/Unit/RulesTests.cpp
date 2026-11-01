@@ -167,5 +167,9 @@ int main()
     failed += TestHeroAbilities();
     extern int TestStorageContention();
     failed += TestStorageContention();
+    extern int TestAbilityCatalog();
+    failed += TestAbilityCatalog();
+    extern int TestLegacyRoster();
+    failed += TestLegacyRoster();
     return failed == 0 ? 0 : 1;
 }
