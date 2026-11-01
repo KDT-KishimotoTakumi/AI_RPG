@@ -6,7 +6,7 @@ int TestAbilityContext()
 {
     int checks=0,failed=0;
     const auto check=[&](bool ok,const char* why){++checks;if(!ok){++failed;std::cerr<<"FAIL AbilityContext: "<<why<<'\n';}};
-    check(RunPayloadSchema==12 && ProfilePayloadSchema==4,"周回v12だけ拡張し恒久v4を維持");
+    check(RunPayloadSchema>=12 && ProfilePayloadSchema==4,"周回v12以降の開始時絆を維持し恒久v4は不変");
     auto saved=TestData::RosterCase(0);
     auto& context=saved.Combat->Battle.State;
     check(context.AbilityRules==AbilityRuleSet::Legacy && context.StartingBonds==std::array<int,8>{},"既存生成は旧ルールを維持");
@@ -56,7 +56,7 @@ int TestAbilityContext()
         for(std::size_t n=0;n<bytes->size();++n)check(!DecodeRunPayload(std::string_view(*bytes).substr(0,n)),"正式状態の全切断を拒否");
         check(!DecodeRunPayload(*bytes+"x"),"余剰を拒否");
         auto forged=*bytes;forged[4]=11;check(!DecodeRunPayload(forged),"新状態を旧v11として偽装できない");
-        forged=*bytes;forged[4]=13;check(!DecodeRunPayload(forged) && InspectPayload(forged,SaveKind::Run)==SaveError::UnsupportedVersion,"未知版を破損と区別して拒否");
+        forged=*bytes;forged[4]=static_cast<char>(RunPayloadSchema+1);check(!DecodeRunPayload(forged) && InspectPayload(forged,SaveKind::Run)==SaveError::UnsupportedVersion,"未知版を破損と区別して拒否");
         forged=*bytes;forged[forged.size()-2]=0;check(!DecodeRunPayload(forged),"読込時も正式戦闘の信頼固定を必須にする");
     } else check(false,"検証用の正式状態を保存できる");
     std::cout<<"AbilityContext: "<<checks<<" checks, "<<failed<<" failed\n";return failed;

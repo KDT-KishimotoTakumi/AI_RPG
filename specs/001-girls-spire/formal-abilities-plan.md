@@ -38,3 +38,5 @@ AbilityCatalog.h/.cppは18初期技能/9個人必殺/8強化版のデータ定�
 GS-044でRun v12にAbilityRules/StartingBonds[8]を保存する境界を追加。既存生成はLegacyのまま。次に一時強化と所有者別の技能効果・構文を保存互換付きで接続し、全正式効果の実行が揃ってから新規ゲームの戦闘生成へProfileを渡して有効化する。旧戦闘を途中から自動変換しない。
 
 GS-045のTimedBoostは強度AmountとSkipCurrentEndを持つ純粋な期限処理。ApplyTimedBoostは正の強度を最大値で再付与し、期限を今回の付与で更新する。EndTimedBoostTurnは受け手の手番終了時だけ呼び、自己使用手番を1回除外する。0強度＋除外フラグは不正。不正状態/付与は無変更で拒否。攻撃/防御/命中は独立した状態を持つ予定。現段階でBattleUnit/能力値/保存には未接続。整数上限の試験は期限処理の非加算/オーバーフロー回避を確認するもので、技能表の強度を増やすものではない。範囲回復/強化で使用者自身も対象になる場合は、その人物だけduringRecipientTurn=trueとする。
+
+GS-046はTimedBoostを戦闘/予告/手番/表示/Run v13へ接続。v11原本100例と変更前v12のLegacy/Character2例を固定し旧形式では空補完。次はFormalSkillの18技能を合法判定/対象/付与/命中時弱体/回復解除/CD/構文へ接続し、人物別の実UIと援護/AIを検証する。全正式効果が揃うまで通常のEncounter生成はLegacyを維持する。

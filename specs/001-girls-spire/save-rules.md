@@ -51,3 +51,7 @@ APIの根拠: [MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/
 ## GS-044 戦闘ルールと開始時絆（Run v12）
 
 BattleSnapshot.AbilityRules（Legacy/Character）とStartingBonds[8]を明示的なlittle-endian整数で保存する。旧v2～v11はLegacy/全0へ補完し、旧効果/構文/乱数位置は変換しない。Legacyで非0絆、未知識別、0～100外の絆は拒否。CharacterではCombatControl.ProfileDriven=trueとTrust[1～8]との一致を必須とし、現在の恒久絆から開始時絆を再計算しない。Profile形式はv4を維持する。この段階では正式技能の効果実行は未接続で、新規戦闘の生成もLegacyを維持する。
+
+## GS-046 一時強化（Run v13）
+
+各BattleUnitのAttackBoost/DefenseBoost/AccuracyBoostをAmount（int）とSkipCurrentEnd（厳密bool）で保存する。旧v2～v12は全て空状態で補完し、Profile v4は維持する。強化はCharacterルールのみ非空を許可し、最大は承認表の攻撃6/防御4/命中15。不正強度/空の除外期限/Legacyへの混入は拒否する。使用者自身の手番終了を1回除外し、受け手の次手番終了で失効。別人物の終了では進めず、新しい戦闘では消去する。攻撃/命中/防御の計算を通常・技能・必殺で共用し、予告と被害予測は元状態/RNGを変えない。敵被害の予測では、敵が動くまでの受け手の手番終了に合わせて防御強化の期限をコピー内だけで進める。正式技能からの付与は未接続。

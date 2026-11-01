@@ -54,6 +54,13 @@ int Battle::PotentialHostileDamage(int targetId) const
         if (enemy.Side == target->Side || enemy.Side==Faction::Neutral || enemy.Hp <= 0) continue;
         // コピー内で次の手番を仮定。移動・射線・攻撃を通常操作と同じ判定に通す。
         auto projection = *this;
+        // 敵が動くまでに受け手の手番が終わるなら、防御強化の期限を先に進める。
+        // 現在の敵から直ちに受ける攻撃や、自己使用手番を除外する強化は残す。
+        for(std::size_t step=0;step<state_.Order.size();++step){
+            const int id=state_.Order[(turnIndex_+step)%state_.Order.size()];
+            if(id==enemy.Id)break;
+            if(id==targetId)EndTimedBoostTurn(projection.Find(targetId)->DefenseBoost);
+        }
         projection.state_.ActiveId = enemy.Id;
         projection.state_.Moved = false; projection.state_.Acted = false;
         projection.state_.ChargeReady=false;projection.state_.UsedSkill=-1;
@@ -96,7 +103,7 @@ Battle::Battle(int width, int height, std::vector<Tile> tiles, std::vector<Battl
     state_.Width = width; state_.Height = height;
     state_.Medicines=medicines;
     state_.Tiles = std::move(tiles); state_.Units = std::move(units);
-    for(auto& unit:state_.Units) unit.Cooldowns={};
+    for(auto& unit:state_.Units){unit.Cooldowns={};unit.AttackBoost={};unit.DefenseBoost={};unit.AccuracyBoost={};}
     if(!ValidSetup(true)) throw std::invalid_argument("戦場・人物・目的の設定が無効です");
     RebuildOrder();
     Evaluate();
@@ -238,7 +245,7 @@ AttackPreview Battle::PreviewAttack(int actorId, Position target, int radius, bo
     if(normal)radius=std::max(radius,NormalAttackRadius(actorId));
     const auto& actor = *Find(actorId);
     const auto& targetTerrain=state_.Tiles[target.Y*state_.Width+target.X];
-    const int power=std::max(0,actor.Attack-(actor.AttackCursed?4:0))+(state_.ChargeReady?6:0);
+    const int power=std::max(0,actor.Attack+actor.AttackBoost.Amount-(actor.AttackCursed?4:0))+(state_.ChargeReady?6:0);
     if (Distance(actor.At,target) > actor.Range || !TraceLine(actor.At,target,targetTerrain.ObstacleHp>0)) return preview;
     if (targetTerrain.ObstacleHp>0) {
         if (radius!=0) return preview;
@@ -252,9 +259,9 @@ AttackPreview Battle::PreviewAttack(int actorId, Position target, int radius, bo
             Distance(victim.At,target) > radius || !HasLineOfSight(target,victim.At)) continue;
         const auto& sourceTile = state_.Tiles[actor.At.Y * state_.Width + actor.At.X];
         const auto& targetTile = state_.Tiles[victim.At.Y * state_.Width + victim.At.X];
-        const int chance = ClampHitChance(actor.Accuracy - victim.Evasion - targetTile.Cover +
+        const int chance = ClampHitChance(actor.Accuracy + actor.AccuracyBoost.Amount - victim.Evasion - targetTile.Cover +
             10 * (sourceTile.Elevation - targetTile.Elevation));
-        preview.Hits.push_back({victim.Id,chance,std::max(1,power - victim.Defense)});
+        preview.Hits.push_back({victim.Id,chance,std::max(1,power - victim.Defense - victim.DefenseBoost.Amount)});
     }
     // 入力配列の並びが変わっても乱数の消費対象を同じにする。
     std::sort(preview.Hits.begin(),preview.Hits.end(),[](const PredictedHit& a, const PredictedHit& b) {
@@ -322,6 +329,9 @@ void Battle::AdvanceTurn()
     auto& outgoing=*Find(state_.ActiveId);
     outgoing.AttackCursed=false;
     outgoing.MovementWebbed=false;
+    EndTimedBoostTurn(outgoing.AttackBoost);
+    EndTimedBoostTurn(outgoing.DefenseBoost);
+    EndTimedBoostTurn(outgoing.AccuracyBoost);
     for(int index=0;index<SkillCount;++index) {
         if(index!=state_.UsedSkill && outgoing.Cooldowns[index]>0) --outgoing.Cooldowns[index];
     }

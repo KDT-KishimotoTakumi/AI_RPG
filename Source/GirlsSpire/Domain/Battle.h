@@ -2,6 +2,7 @@
 #include "Random.h"
 #include "Combo.h"
 #include "BattleBond.h"
+#include "TimedBoost.h"
 #include <vector>
 #include <array>
 
@@ -42,6 +43,7 @@ struct BattleUnit {
     bool AttackCursed=false;
     bool MovementWebbed=false;
     int SummonerId=-1;
+    TimedBoost AttackBoost,DefenseBoost,AccuracyBoost;
     bool operator==(const BattleUnit&) const = default;
 };
 struct BattleSnapshot {

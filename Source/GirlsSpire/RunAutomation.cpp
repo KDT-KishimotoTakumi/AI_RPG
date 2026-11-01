@@ -26,6 +26,7 @@
 #include "../../Tests/E2E/PortraitSpec.cpp"
 #include "../../Tests/E2E/CharacterRosterSpec.cpp"
 #include "../../Tests/E2E/HeroAbilitySpec.cpp"
+#include "../../Tests/E2E/BattleBoostSpec.cpp"
 #include "../../Tests/E2E/StorageContentionSpec.cpp"
 #include "../../Tests/E2E/ResumeControlSpec.cpp"
 #include "../../Tests/E2E/ResumeSpec.cpp"

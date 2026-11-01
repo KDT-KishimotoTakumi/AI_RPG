@@ -175,5 +175,7 @@ int main()
     failed += TestAbilityContext();
     extern int TestTimedBoost();
     failed += TestTimedBoost();
+    extern int TestBattleBoost();
+    failed += TestBattleBoost();
     return failed == 0 ? 0 : 1;
 }

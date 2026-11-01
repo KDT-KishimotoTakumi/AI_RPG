@@ -139,6 +139,10 @@ void SCombatScreen::Refresh()
         Text(FString::Printf(TEXT("人物%d：糸縛り / 現在の移動力%d（−2・下限0）・自身の手番終了まで。"),unit.Id,Combat->MovementAllowance(unit.Id)),*FString::Printf(TEXT("battle.web.%d"),unit.Id),14);
     for(const auto& unit:state.Units)if(unit.Hp>0 && unit.AttackCursed)
         Text(FString::Printf(TEXT("人物%d：呪詛 / 攻撃力−4（下限0）・自身の手番終了まで。通常・技・必殺に反映。"),unit.Id),*FString::Printf(TEXT("battle.curse.%d"),unit.Id),14);
+    for(const auto& unit:state.Units)if(unit.Hp>0 && (unit.AttackBoost.Amount || unit.DefenseBoost.Amount || unit.AccuracyBoost.Amount)) {
+        const auto expiry=[](const GirlsSpire::TimedBoost& boost){return !boost.Amount?TEXT("なし"):boost.SkipCurrentEnd?TEXT("使用手番を除外し次の自身の手番終了まで"):TEXT("自身の手番終了まで");};
+        Text(FString::Printf(TEXT("人物%d：強化 攻撃+%d / 防御+%d / 命中+%d\n攻撃：%s / 防御：%s / 命中：%s"),unit.Id,unit.AttackBoost.Amount,unit.DefenseBoost.Amount,unit.AccuracyBoost.Amount,expiry(unit.AttackBoost),expiry(unit.DefenseBoost),expiry(unit.AccuracyBoost)),*FString::Printf(TEXT("battle.boost.%d"),unit.Id),14);
+    }
     for(const auto& unit:state.Units)if(unit.Hp>0 && unit.CreatesCover)
         Text(FString::Printf(TEXT("絡繰鎧（敵%d） 防御%d：偶数ラウンドの手番開始時に遮蔽1個を生成。生成後も通常行動します。"),unit.Id,unit.Defense),*FString::Printf(TEXT("battle.cover.rule.%d"),unit.Id),14);
     if(OnSuspend) Action(TEXT("保存して中断する"),"save.suspend",[this] {

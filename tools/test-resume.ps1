@@ -23,7 +23,7 @@ foreach ($stage in @('Save','Verify')) {
     if ($LASTEXITCODE) { throw "別プロセス再開の$stage 段階が失敗しました。" }
 }
 $markers = @(Get-ChildItem -LiteralPath $actualRoot -Filter '*.done')
-if ($markers.Count -ne 36 -or @($markers | Where-Object { (Get-Content -LiteralPath $_.FullName -Raw).Trim() -ne 'pass' }).Count -gt 0) {
-    throw '戦闘外10・戦闘内26地点の成功記録が揃っていません。'
+if ($markers.Count -ne 38 -or @($markers | Where-Object { (Get-Content -LiteralPath $_.FullName -Raw).Trim() -ne 'pass' }).Count -gt 0) {
+    throw '戦闘外10・戦闘内28地点の成功記録が揃っていません。'
 }
-"別UEプロセスの保存→終了→再起動→画面から消費再開: 36地点成功。試験データ: $actualRoot"
+"別UEプロセスの保存→終了→再起動→画面から消費再開: 38地点成功。試験データ: $actualRoot"

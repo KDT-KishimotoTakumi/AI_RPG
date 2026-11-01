@@ -41,6 +41,9 @@ bool Battle::ValidSetup(bool initial) const
             if(count>3)return false;
         }
         for(int cooldown:unit.Cooldowns) if(!Between(cooldown,0,3)) return false;
+        const std::pair<TimedBoost,int> boosts[]={{unit.AttackBoost,6},{unit.DefenseBoost,4},{unit.AccuracyBoost,15}};
+        for(const auto& [boost,maximum]:boosts)
+            if(!ValidTimedBoost(boost) || boost.Amount>maximum || (s.AbilityRules==AbilityRuleSet::Legacy && boost.Amount!=0))return false;
         ++factions[static_cast<int>(unit.Side)];
     }
     int lords=0;for(const auto& unit:s.Units)if(unit.Role==BattleRole::CastleLord)++lords;

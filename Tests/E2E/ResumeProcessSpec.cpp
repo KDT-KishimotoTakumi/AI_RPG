@@ -41,6 +41,13 @@ struct ProcessResumeFixture {
 std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
     using namespace GirlsSpire;
+    if(point>=36) {
+        auto fixture=ProcessFixture(34);if(!fixture)return std::nullopt;
+        auto& checkpoint=fixture->State.Combat->Battle;
+        checkpoint.State.Units[0].AttackBoost={6,true};checkpoint.State.Units[0].DefenseBoost={4,true};checkpoint.State.Units[0].AccuracyBoost={15,true};
+        if(point==37){auto battle=Battle::Restore(checkpoint);if(!battle || !battle->EndTurn(battle->Snapshot().Revision,0,Facing::South))return std::nullopt;checkpoint=battle->Checkpoint();}
+        return fixture;
+    }
     if(point>=34) {
         auto fixture=ProcessFixture(10+point-34);if(!fixture || !fixture->State.Combat)return std::nullopt;
         auto& combat=*fixture->State.Combat;
@@ -229,10 +236,10 @@ void FGirlsSpireResumeProcessSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(stage==TEXT("Save")?TEXT("36地点を別プロセス用に保存する"):TEXT("別プロセスで36地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
+    It(stage==TEXT("Save")?TEXT("38地点を別プロセス用に保存する"):TEXT("別プロセスで38地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<36;++point) {
+        for(int point=0;point<38;++point) {
             const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));
