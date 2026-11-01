@@ -155,5 +155,17 @@ int main()
     failed += TestFinalBoss();
     extern int TestFinalGuests();
     failed += TestFinalGuests();
+    extern int TestComboDiscovery();
+    failed += TestComboDiscovery();
+    extern int TestComboCatalog();
+    failed += TestComboCatalog();
+    extern int TestCharacterCatalog();
+    failed += TestCharacterCatalog();
+    extern int TestPreferences();
+    failed += TestPreferences();
+    extern int TestHeroAbilities();
+    failed += TestHeroAbilities();
+    extern int TestStorageContention();
+    failed += TestStorageContention();
     return failed == 0 ? 0 : 1;
 }

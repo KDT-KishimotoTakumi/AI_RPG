@@ -63,6 +63,10 @@ std::vector<int> Run::Unrecruited() const
 {
     return Unrecruited(state_);
 }
+bool Run::DiscoverCombo(int recipeId)
+{
+    return GirlsSpire::DiscoverCombo(profile_,recipeId);
+}
 std::vector<int> Run::Unrecruited(const RunSnapshot& state)
 {
     std::vector<int> result;

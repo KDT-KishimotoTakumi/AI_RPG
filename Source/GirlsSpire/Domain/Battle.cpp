@@ -308,7 +308,8 @@ bool Battle::EndTurn(std::uint64_t revision, int actorId, Facing facing)
     if (revision != state_.Revision || !Active(actorId) || !Between(static_cast<int>(facing),0,3)) return false;
     Find(actorId)->Direction = facing;
     ++state_.Revision;
-    RecordCombo(actorId,Opening,true);
+    // 攻撃後の終了を追加の「起」にしない。回復/アイテム後の待機は従来どおり。
+    if(!state_.Acted || lastHits_.empty())RecordCombo(actorId,Opening,true);
     AdvanceTurn();
     Evaluate();
     GeneratePeriodicCover();

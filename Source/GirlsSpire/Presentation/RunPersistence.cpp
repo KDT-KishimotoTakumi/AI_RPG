@@ -34,7 +34,10 @@ bool SRunScreen::SaveCurrent(bool suspend)
 bool SRunScreen::SaveCombat(const GirlsSpire::SavedCombat& combat,bool suspend,std::uint64_t revision)
 {
     if(!CurrentRun || CurrentRun->Snapshot().Revision!=revision) return false;
-    return PersistState(GirlsSpire::RunSaveState{CurrentRun->Checkpoint(),combat,suspend},CurrentRun->ProfileState());
+    auto next=*CurrentRun;
+    if(combat.Battle.State.LastCombo && !next.DiscoverCombo(combat.Battle.State.LastCombo->RecipeId))return false;
+    if(!PersistState(GirlsSpire::RunSaveState{next.Checkpoint(),combat,suspend},next.ProfileState()))return false;
+    *CurrentRun=std::move(next);return true;
 }
 void SRunScreen::ShowSaveError(TFunction<void()> retry)
 {
@@ -100,8 +103,8 @@ void SRunScreen::ShowCombat(TSharedPtr<GirlsSpire::Battle> combat,const FString&
 {
     const auto revision=CurrentRun->Snapshot().Revision;
     TFunction<bool(const GirlsSpire::SavedCombat&)> checkpoint,suspend;
+    checkpoint=[this,revision](const GirlsSpire::SavedCombat& saved){return SaveCombat(saved,false,revision);};
     if(SaveService) {
-        checkpoint=[this,revision](const GirlsSpire::SavedCombat& saved){return SaveCombat(saved,false,revision);};
         suspend=[this,revision](const GirlsSpire::SavedCombat& saved) {
             if(!SaveCombat(saved,true,revision)) return false;
             RetainedProfile=CurrentRun->ProfileState();CurrentRun.reset();ShowTitle();return true;

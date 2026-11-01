@@ -1,4 +1,5 @@
 #include "Encounter.h"
+#include "Domain/CharacterCatalog.h"
 #include <algorithm>
 #include <set>
 #include <stdexcept>
@@ -19,19 +20,13 @@ Battle Encounter::Create(const RunSnapshot& run, std::uint64_t seed, GenerationR
     if(kind==NodeKind::Rescue && (run.Active.Candidate<0 || run.Active.Candidate>=8 || recruited.contains(run.Active.Candidate)))
         throw std::invalid_argument("救出候補が無効です");
     std::vector<BattleUnit> units;
-    BattleUnit hero; hero.Id=0; hero.At={1,1}; hero.MaxHp=hero.Hp=80; hero.Attack=18; hero.Speed=20; hero.Accuracy=95;
+    auto hero=CreateCharacter(0,{1,1});
     const int ranges[]={1,2,3,5}; hero.Range=ranges[static_cast<int>(run.Role)];
     if(run.Role==HeroRole::Matchlock) { hero.Role=BattleRole::Gunner; hero.Movement=2; }
     units.push_back(hero);
-    units.back().Skills={true,true};
     int slot=2;
-    const BattleRole roles[]={BattleRole::Standard,BattleRole::Dancer,BattleRole::Ninja,BattleRole::Standard,
-        BattleRole::Archer,BattleRole::Gunner,BattleRole::Standard,BattleRole::Dancer};
     for(int id:run.Recruited) {
-        BattleUnit ally; ally.Id=id+1; ally.At={1,slot++}; ally.Role=roles[id];
-        ally.Speed=15; ally.MaxHp=ally.Hp=40; ally.Range=ally.Role==BattleRole::Archer?4:ally.Role==BattleRole::Gunner?5:1;
-        units.push_back(ally);
-        units.back().Skills={true,true};
+        units.push_back(CreateCharacter(id+1,{1,slot++}));
     }
     const int enemyCount=boss?1:1+(run.Day-1)/4;
     for(auto& unit:units) {
@@ -52,11 +47,9 @@ Battle Encounter::Create(const RunSnapshot& run, std::uint64_t seed, GenerationR
         for(int id:Run::Unrecruited(run)) {
             // 人物ごとに独立させ、経路生成・命中・戦闘判断の乱数位置を進めない。
             Random allegiance(seed ^ (UINT64_C(0x9e3779b97f4a7c15)*static_cast<std::uint64_t>(id+1)));
-            BattleUnit guest;guest.Id=id+1;guest.Side=allegiance.Uniform(2)==0?Faction::Enemy:Faction::Neutral;
-            guest.At={8,2+guestSlot++};guest.Role=roles[id];guest.Speed=15;
-            guest.MaxHp=guest.Hp=guest.Side==Faction::Enemy?40*(80+20*static_cast<int>(run.Level))/100:40;
-            guest.Range=guest.Role==BattleRole::Archer?4:guest.Role==BattleRole::Gunner?5:1;
-            guest.Skills={true,true};units.push_back(guest);
+            auto guest=CreateCharacter(id+1,{8,2+guestSlot++});guest.Side=allegiance.Uniform(2)==0?Faction::Enemy:Faction::Neutral;
+            if(guest.Side==Faction::Enemy)guest.MaxHp=guest.Hp=guest.MaxHp*(80+20*static_cast<int>(run.Level))/100;
+            units.push_back(guest);
         }
     }
     for(int index=0;index<enemyCount;++index) {

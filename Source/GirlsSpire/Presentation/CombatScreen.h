@@ -34,6 +34,7 @@ private:
     void RefreshSkills();
     void RefreshMedicine();
     static const TCHAR* SkillLabel(GirlsSpire::Skill skill);
+    static FString OwnedSkillLabel(int actorId,GirlsSpire::Skill skill);
     void RefreshCombos();
     void RefreshUltimate();
     void RefreshTeamUltimate();
@@ -70,4 +71,7 @@ private:
     FString Message;
     FString GenerationSummary;
     GirlsSpire::CombatControl Control;
+    std::vector<int> KnownCombos;
+    std::uint64_t SeenComboSequence=0;
+    bool NewComboDiscovery=false;
 };

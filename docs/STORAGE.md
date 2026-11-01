@@ -63,3 +63,23 @@ GS-034: 全体ゲート合格後、23ba3ccbfbdb465189075f3e047b0e07のprofraw3�
 GS-035: 全体ゲート合格後、aa6ce94affb64ad3af8350412404f0ccのprofraw3件2,725,179,440 bytes（約2.54GiB）を自動整理。raw-cleanup.json、gate.json、coverage.json/profdataと実行物を保持。人物画像は既存素材を共用し、ゲーム内容・仕様・保存データ・検証結果を削除していない。
 
 2026-10-31・コミット前整理: 再生成可能なSharedPCHのpch/objとCachedAssetRegistry_0.binの3件、2,557,134,884 bytes（2.382GiB）を削減。削減対象外5,102ファイルは整理前後のSHA-256一致（変更0件）。起動用Binaries・素材・仕様・設定・セーブ・集計を保持。次回ビルドでPCHの再生成が必要。監査Saved/StorageAudit-d6963e2fa68f495da09898ae3d238acb/result.json。秘密情報を含むConfig/DefaultEngine.iniはローカルの内容を保持し.gitignoreでGit対象外。公開候補の資格情報形式/秘密値代入の検査は検出0件。
+
+2026-11-01 GS-036: 全体ゲート合格後、bfb09030a60c459fbfcaa3f352bb56e3のprofraw3件2,728,464,616 bytes（約2.54GiB）を自動整理。JSON/profdata/実行物・ゲーム素材・セーブ・仕様・検証結果を保持。前回削減したPCHは本開発ビルドに伴い再生成されたため、生計測の削減量はワークスペース全体の純減量とは別。
+
+2026-11-01 GS-037: 全体ゲート合格後、7d1f20aff4e54091ab7a41916cecf20aのprofraw3件2,731,215,824 bytes（約2.54GiB）を自動整理。JSON/profdata/実行物とゲーム素材・セーブ・仕様・検証結果を保持。カタログは共用し、表示用に別の画像/データコピーを増やしていない。
+
+2026-11-01 GS-038: 全体ゲート合格後、177e7f7761de46c09937285957644389の生計測3件2,733,616,880 bytes（約2.55GiB）を自動整理。raw-cleanup.json、JSON/profdata/実行物を保持。画像は既存9枚を共用し、ゲーム素材・仕様・セーブ・検証結果は削除していない。削減量は生計測の整理分であり、ワークスペース全体の純減とは区別する。
+
+2026-11-01 Context Mode: ログ処理用のローカル開発ツールをSaved/Tools/ContextModeへ追加（node_modules実ファイル合計38,413,098 bytes、約36.63MiB）。これは削減量ではなく追加使用量。ゲーム配布へ含めず、素材/セーブ/集計は変更なし。状態はSaved/ContextMode、版/再生成手順はDEV_SKILLS.md。
+
+2026-11-01 Codex導入後整理: Intermediate（517ファイル/27フォルダ）とDerivedDataCache（6ファイル/2フォルダ）を再生成可能な対象として削除。合計2,625,132,996 bytes（約2.44GiB）、523ファイル/29フォルダ。削除前に解決済み絶対パスの作業ツリー内包含・実リンク不在・UE/コンパイラー非稼働を確認。管理資料更新前の対象外10,725件のうち10,724件はSHA-256一致、唯一の差分はSaved/ContextMode/sessions/stats-pid-22140.jsonの実行統計更新。元の差分一覧を保持し、ゲーム変更と区別。Config/DefaultEngine.iniは内容非参照でサイズ/更新日時不変。素材/ソース/セーブ/検証結果/Binaries/LLVM/スキル/独立Gitコピーを保持。次回ビルドで中間生成物の再生成が必要。監査Saved/StorageAudit-b99bd559e48645b293f1493436d4e775/result.json、protected-before.json。ゲームの再ビルド/E2Eは未実行（内容変更なし、ハッシュで保全確認）。
+
+2026-11-01 コンテキスト整理: Codex共通版と独立Gitコピーに12ファイル全てのSHA-256が一致することを確認後、未追跡の.agents/skills重複8件（162,158 bytes）を整理。共通スキル/MCP/Gitコピーは保持。以後二重スキル説明は次のターンから解消する。監査Saved/ContextArchive/skill-deduplication.json。CONTEXT.mdは12,714→5,973 bytes（初回短縮時53.0%）、PLAN.mdは27,155→3,021 bytes（88.9%）へ圧縮。実トークン数/会話履歴自体の削除率は未測定。旧PLANはContextArchiveへ保全。
+
+GS-039: 全体ゲート合格後、e13fa389241c4388b0916a4d245e1f92の生計測3件2,733,722,960 bytes（約2.55GiB）を自動整理。JSON/profdata/実行物・ゲーム素材/セーブ/証跡を保持。直前に削減したIntermediateは検証ビルドで再生成されたため、生計測の削減量とワークスペース全体の純減は区別する。
+
+GS-040: 全体ゲート合格後、ec94552cbf35472c815c8103d904e9fcの生計測3件2,735,946,488 bytes（約2.55GiB）を自動整理。JSON/profdata/実行物・素材/セーブ/証跡を保持。互換テスト用の架空v11固定データ271,819 bytesを追加。実利用者のセーブは含まない。
+
+2026-11-02 GS-041: 合格した全体計測d5eb95047349454f8ba3e07a4b3a14bdの生計測3件2,738,283,128 bytesを自動整理。JSON/profdata/実行物を保持。失敗計測ff2d38fd43ac4eea87cf089883a33a2eは合格扱いで削除せず、対応DLL/ソース/診断を保持する。
+
+2026-11-02 終了前整理: Intermediate 496ファイル/27フォルダ2,619,259,957 bytesとDDC 6ファイル/2フォルダ1,886,808 bytesを削除（計2,621,146,765 bytes）。失敗計測ff2d38fd43ac4eea87cf089883a33a2eのprofraw2件2,738,281,280 bytesはCoverageArchives/ff2d38fd43ac4eea87cf089883a33a2e-failed.zipへ無損失圧縮し453,752,674 bytes。全エントリーの長さ/SHA-256・圧縮中の原本不変を検証して未圧縮の重複だけを整理（2,284,528,606 bytes削減）。対応DLL/CoreTests/ソース/失敗診断と全バイトは保持。今回操作対象の削減合計4,905,675,371 bytes（約4.57GiB、監査ファイル等の追加分・ディスク割当サイズは含まない）。対象外ゲーム/素材/セーブ/検証結果5,128件のSHA-256が全一致。秘密設定は内容非参照でサイズ/更新日時一致。Binaries/ツール/スキル/独立Gitコピーを保持。次回ビルドで中間生成物を再生成する。監査Saved/StorageAudit-1fe4d3b9ef0946749205be6264c1b7f3/result.json、lossless-archive.json、protected-before.json。整理後は内容不変のハッシュ確認のみで再ビルドはしていない。

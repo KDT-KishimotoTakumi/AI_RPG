@@ -1,12 +1,15 @@
 #include "CombatScreen.h"
+#include "Domain/CharacterCatalog.h"
 
 void SCombatScreen::RefreshUltimate()
 {
     if(SelectingUltimate && SelectingTeamUltimate) { RefreshTeamUltimate(); return; }
     const auto& state=Combat->Snapshot();
     if(!SelectingUltimate) {
-        const FString label=state.Acted?TEXT("開発用個人必殺（行動済み）"):
-            state.Combos.Gauge<50?TEXT("開発用個人必殺（ゲージ50必要）"):TEXT("開発用個人必殺（結・ゲージ50消費）");
+        const auto name=GirlsSpire::CharacterUltimateName(state.ActiveId);
+        const FString title=name.empty()?TEXT("開発用個人必殺"):UTF8_TO_TCHAR(name.data());
+        const FString label=title+(state.Acted?TEXT("（行動済み）"):
+            state.Combos.Gauge<50?TEXT("（ゲージ50必要）"):TEXT("（結・ゲージ50消費）"));
         Action(label,"battle.ultimate.select",[this] {
             SelectingTeamUltimate=false;SelectingUltimate=true;SelectedSkill.reset();MoveTarget.reset();Selected.reset();Message.Empty();Refresh();
         },!state.Acted && state.Combos.Gauge>=50);

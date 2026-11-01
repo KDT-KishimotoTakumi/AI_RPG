@@ -242,10 +242,10 @@ void FGirlsSpireBattleUiSpec::Define()
         TestTrue(TEXT("技の効果を予告"),preview.Contains(heal?TEXT("回復20"):TEXT("ダメージ18")));
         if(!TestTrue(TEXT("技を確定"),ClickAndDrain(Driver->FindElement(By::Id("battle.skill.confirm"))))) return;
         TestTrue(TEXT("HPに反映"),Driver->FindElement(By::Id(heal?"battle.celllabel.1.1":"battle.celllabel.2.1"))->GetText().ToString().Contains(heal?TEXT("30"):TEXT("82")));
-        TestTrue(TEXT("再使用まで2回と表示"),Driver->FindElement(By::Id("battle.skill.status"))->GetText().ToString().Contains(heal?TEXT("応急手当:2"):TEXT("強撃:2")));
+        TestTrue(TEXT("再使用まで2回と表示"),Driver->FindElement(By::Id("battle.skill.status"))->GetText().ToString().Contains(heal?TEXT("野戦の手当:2"):TEXT("鍛冶の一撃:2")));
         TestFalse(TEXT("直ちに再使用不可"),Driver->FindElement(By::Id(heal?"battle.skill.1":"battle.skill.0"))->IsInteractable());
         if(!TestTrue(TEXT("次の自分の手番へ"),ClickAndDrain(Driver->FindElement(By::Id("battle.wait.south"))))) return;
-        TestTrue(TEXT("使用直後の次手番も残り2"),Driver->FindElement(By::Id("battle.skill.status"))->GetText().ToString().Contains(heal?TEXT("応急手当:2"):TEXT("強撃:2")));
+        TestTrue(TEXT("使用直後の次手番も残り2"),Driver->FindElement(By::Id("battle.skill.status"))->GetText().ToString().Contains(heal?TEXT("野戦の手当:2"):TEXT("鍛冶の一撃:2")));
     });
     It(TEXT("仲間の支援で回復技を予告して実行する"), EAsyncExecution::ThreadPool,
         FTimespan::FromSeconds(120), [this] {
@@ -287,7 +287,7 @@ void FGirlsSpireBattleUiSpec::Define()
         TestTrue(TEXT("確定20ダメージを予告"),Driver->FindElement(By::Id("battle.skill.preview"))->GetText().ToString().Contains(TEXT("ダメージ20")));
         if(!TestTrue(TEXT("障害物へ強撃"),ClickAndDrain(Driver->FindElement(By::Id("battle.skill.confirm"))))) return;
         TestFalse(TEXT("障害物が消える"),Driver->FindElement(By::Id("battle.celllabel.2.1"))->GetText().ToString().Contains(TEXT("障")));
-        TestTrue(TEXT("破壊を表示"),Driver->FindElement(By::Id("battle.log"))->GetText().ToString().Contains(TEXT("障害物へ強撃")));
+        TestTrue(TEXT("破壊を表示"),Driver->FindElement(By::Id("battle.log"))->GetText().ToString().Contains(TEXT("障害物へ鍛冶の一撃")));
     });
     AfterEach([this] {
         FSlateApplication::Get().CloseToolTip();

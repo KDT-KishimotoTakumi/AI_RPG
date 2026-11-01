@@ -1,11 +1,22 @@
 #include "CombatScreen.h"
+#include "Domain/CharacterCatalog.h"
 #include "Widgets/SBoxPanel.h"
 #include <algorithm>
 
 const TCHAR* SCombatScreen::SkillLabel(GirlsSpire::Skill skill)
 {
-    static const TCHAR* names[]={TEXT("強撃"),TEXT("応急手当"),TEXT("薙ぎ払い"),TEXT("遠当て"),TEXT("癒しの術")};
-    return names[static_cast<int>(skill)];
+    static const std::array<FString,GirlsSpire::SkillCount> names=[] {
+        std::array<FString,GirlsSpire::SkillCount> result;
+        for(int i=0;i<GirlsSpire::SkillCount;++i)result[i]=UTF8_TO_TCHAR(GirlsSpire::CommonSkillName(static_cast<GirlsSpire::Skill>(i)).data());
+        return result;
+    }();
+    return *names[static_cast<int>(skill)];
+}
+FString SCombatScreen::OwnedSkillLabel(int actorId,GirlsSpire::Skill skill)
+{
+    const auto name=GirlsSpire::CharacterSkillName(actorId,skill);
+    if(name.empty())return SkillLabel(skill);
+    return UTF8_TO_TCHAR(name.data());
 }
 
 void SCombatScreen::RefreshSkills()
@@ -15,13 +26,13 @@ void SCombatScreen::RefreshSkills()
     const auto actor=std::find_if(state.Units.begin(),state.Units.end(),[&](const BattleUnit& unit) {return unit.Id==state.ActiveId;});
     if(std::none_of(actor->Skills.begin(),actor->Skills.end(),[](bool owned){return owned;})) return;
     FString status=TEXT("技 / 再使用待ち ");
-    for(int i=0;i<SkillCount;++i) if(actor->Skills[i]) status+=FString::Printf(TEXT("%s:%d "),SkillLabel(static_cast<Skill>(i)),actor->Cooldowns[i]);
+    for(int i=0;i<SkillCount;++i) if(actor->Skills[i]) status+=FString::Printf(TEXT("%s:%d "),*OwnedSkillLabel(actor->Id,static_cast<Skill>(i)),actor->Cooldowns[i]);
     Text(status,"battle.skill.status",13);
     const auto row=SNew(SHorizontalBox);
     Panel->AddSlot().AutoHeight()[row];
     for(int index=0;index<SkillCount;++index) {
         if(index>=2 && !actor->Skills[index]) continue;
-        Action(SkillLabel(static_cast<Skill>(index)),*FString::Printf(TEXT("battle.skill.%d"),index),[this,index] {
+        Action(OwnedSkillLabel(actor->Id,static_cast<Skill>(index)),*FString::Printf(TEXT("battle.skill.%d"),index),[this,index] {
             SelectedSkill=static_cast<Skill>(index); Selected.reset(); MoveTarget.reset(); Refresh();
         },actor->Skills[index] && actor->Cooldowns[index]==0 && !state.Acted,row);
     }
@@ -42,7 +53,7 @@ void SCombatScreen::RefreshSkills()
     Action(TEXT("技を確定"),"battle.skill.confirm",[this,revision=state.Revision,actorId=state.ActiveId,skill=*SelectedSkill,target=*Selected,preview] {
         if(Combat->UseSkill(revision,actorId,skill,target)) {
             if(preview.Healing>0) Message=FString::Printf(TEXT("対象%dを%d回復しました"),preview.TargetId,preview.Healing);
-            else if(preview.Attack.TerrainDamage>0) Message=TEXT("障害物へ強撃しました");
+            else if(preview.Attack.TerrainDamage>0) Message=TEXT("障害物へ")+OwnedSkillLabel(actorId,skill)+TEXT("しました");
             else DescribeHits();
         }
         SelectedSkill.reset(); Selected.reset(); Refresh();

@@ -34,7 +34,14 @@ void FGirlsSpireRuntimeSpec::Define()
                     if(!target->IsVisible()){(panel->Exists()?panel:outer)->ScrollToEndUntil(By::Id(id));DrainSlateLayout();}
                 }
             }
-            return TestTrue(*FString::Printf(TEXT("ゲーム操作 %hs"),id),ClickAndDrain(target));
+            if(!TestTrue(*FString::Printf(TEXT("ゲーム操作 %hs"),id),ClickAndDrain(target)))return false;
+            // 実IOが失敗した場合も、結果を作り直さず製品の再試行操作を検証する。
+            if(Driver->FindElement(By::Id("save.error"))->Exists()) {
+                AddWarning(FString::Printf(TEXT("%hs 後に保存エラーを表示。同じ内容の再試行を1回検証する。"),id));
+                if(!TestTrue(TEXT("保存を画面から再試行"),ClickAndDrain(Driver->FindElement(By::Id("save.retry")))))return false;
+                if(!TestFalse(TEXT("再試行後に保存停止を解消"),Driver->FindElement(By::Id("save.error"))->Exists()))return false;
+            }
+            return true;
         };
         if(!click("title.start") || !click("role.confirm") || !click("route.node.0")) return;
         TestFalse(TEXT("進行検証の勝利入力を表示しない"),Driver->FindElement(By::Id("preview.complete"))->Exists());

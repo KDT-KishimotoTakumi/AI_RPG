@@ -14,6 +14,8 @@
 #include "Infrastructure/DiskSlotFiles.h"
 #include "Application/Encounter.h"
 #include "AI/BasicTurn.h"
+#include "Domain/ComboCatalog.h"
+#include "../Fixtures/ComboCatalogCases.h"
 #include <algorithm>
 #include <atomic>
 
@@ -40,9 +42,43 @@ std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
     using namespace GirlsSpire;
     Profile profile;profile.Bonds.fill(25+point);
+    if(point%2)profile.DiscoveredCombos={2,3,5};
     for(int i=0;i<8;++i)profile.SpecialConversations[i]=(point&(1<<(i%4)))!=0;
     for(int i=0;i<9;++i)profile.Epilogues[i]=(point&(1<<(i%5)))!=0;
     Run run(42+point,static_cast<Difficulty>(point%3),static_cast<HeroRole>(point%4),profile);
+    if(point>=32) {
+        profile.Bonds.fill(75);profile.DiscoveredCombos.clear();
+        for(const auto& recipe:ComboCatalog())if(recipe.Id!=102)profile.DiscoveredCombos.push_back(recipe.Id);
+        auto progress=run.Checkpoint();progress.State.Day=5;progress.State.Phase=RunPhase::Event;progress.State.Role=HeroRole::Matchlock;
+        progress.State.Active={NodeKind::Battle};progress.State.Choices.clear();progress.State.Recruited={4};
+        BattleUnit hero;hero.At={1,1};hero.Hp=hero.MaxHp=80;hero.Speed=20;hero.Role=BattleRole::Gunner;hero.Range=5;hero.Accuracy=200;
+        auto ally=hero;ally.Id=5;ally.At={2,1};ally.Hp=ally.MaxHp=40;ally.Speed=15;ally.Role=BattleRole::Archer;ally.Range=4;
+        BattleUnit enemy;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={1,2};enemy.Hp=enemy.MaxHp=1000;enemy.Speed=0;enemy.Attack=0;enemy.Movement=0;
+        auto second=enemy;second.Id=101;second.At={2,2};
+        Battle battle(8,8,std::vector<Tile>(64),{hero,ally,enemy,second},TestData::ComboWinningSeed());
+        if(!battle.Attack(0,0,enemy.At) || !battle.EndTurn(battle.Snapshot().Revision,0,Facing::South))return std::nullopt;
+        if(point==33) {
+            if(!battle.Attack(battle.Snapshot().Revision,5,second.At) || !battle.Snapshot().LastCombo || battle.Snapshot().LastCombo->RecipeId!=102 || !DiscoverCombo(profile,102))return std::nullopt;
+        }
+        CombatControl control;control.ProfileDriven=true;control.Trust[5]=75;
+        return ProcessResumeFixture{{progress,SavedCombat{battle.Checkpoint(),control.Checkpoint()}},profile};
+    }
+    if(point>=30) {
+        profile.Bonds.fill(75);profile.DiscoveredCombos={3,5};
+        auto progress=run.Checkpoint();progress.State.Day=5;progress.State.Phase=RunPhase::Event;
+        progress.State.Active={NodeKind::Battle};progress.State.Choices.clear();progress.State.Recruited={0};
+        BattleUnit hero;hero.At={1,1};hero.Hp=hero.MaxHp=80;hero.Speed=20;
+        auto ally=hero;ally.Id=1;ally.At={2,1};ally.Hp=ally.MaxHp=40;ally.Speed=15;ally.Range=8;ally.Accuracy=200;
+        BattleUnit enemy;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={6,1};enemy.Hp=enemy.MaxHp=1000;enemy.Speed=0;enemy.Attack=0;enemy.Movement=0;
+        Battle battle(8,8,std::vector<Tile>(64),{hero,ally,enemy},0);
+        if(!battle.EndTurn(0,0,Facing::South))return std::nullopt;
+        if(point==31) {
+            if(!battle.Attack(battle.Snapshot().Revision,1,enemy.At) || !battle.Snapshot().LastCombo || battle.Snapshot().LastCombo->RecipeId!=2)return std::nullopt;
+            if(!DiscoverCombo(profile,2))return std::nullopt;
+        }
+        CombatControl control;control.ProfileDriven=true;control.Trust[1]=75;
+        return ProcessResumeFixture{{progress,SavedCombat{battle.Checkpoint(),control.Checkpoint()}},profile};
+    }
     if(point>=26) {
         auto progress=run.Checkpoint();progress.State.Day=12;progress.State.Phase=RunPhase::Event;
         progress.State.Active={NodeKind::FinalBoss};progress.State.Choices.clear();progress.State.Recruited={0,1,2,3};
@@ -182,10 +218,10 @@ void FGirlsSpireResumeProcessSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(stage==TEXT("Save")?TEXT("30地点を別プロセス用に保存する"):TEXT("別プロセスで30地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
+    It(stage==TEXT("Save")?TEXT("34地点を別プロセス用に保存する"):TEXT("別プロセスで34地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<30;++point) {
+        for(int point=0;point<34;++point) {
             const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));

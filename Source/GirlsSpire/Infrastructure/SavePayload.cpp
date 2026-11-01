@@ -118,7 +118,10 @@ template<class T> bool Fields(Wire& a,T& v)
     else if constexpr(std::is_same_v<T,CombatControlCheckpoint>) return a(v.Orders,v.Trust,v.ChoiceRandomState,v.ProfileDriven);
     else if constexpr(std::is_same_v<T,SavedCombat>) return a(v.Battle,v.Control);
     else if constexpr(std::is_same_v<T,RunSaveState>) return a(v.Run,v.Combat,v.ResumeAvailable);
-    else if constexpr(std::is_same_v<T,Profile>) return a(v.Bonds,v.SpecialConversations,v.Epilogues);
+    else if constexpr(std::is_same_v<T,Profile>) {
+        if(!a(v.Bonds,v.SpecialConversations,v.Epilogues))return false;
+        return a.Version<4 || a(v.DiscoveredCombos);
+    }
 }
 
 bool ValidState(const RunSaveState& saved)
@@ -164,6 +167,10 @@ template<class T> std::optional<T> Decode(std::string_view input,std::uint32_t e
             if(!archive(value.Bonds,value.SpecialConversations) || !archive.Complete())return std::nullopt;
             return value;
         }
+        if(version==3) {
+            if(!archive(value.Bonds,value.SpecialConversations,value.Epilogues) || !archive.Complete())return std::nullopt;
+            return value;
+        }
     }
     const bool supported=version==(expected==1?RunPayloadSchema:ProfilePayloadSchema) || (expected==1 && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10));
     if(!supported || !archive(value) || !archive.Complete()) return std::nullopt;
@@ -180,7 +187,7 @@ SaveError InspectPayload(std::string_view bytes,SaveKind expected)
     }
     if(kind!=static_cast<std::uint32_t>(expected)) return SaveError::WrongKind;
     if(version!=(expected==SaveKind::Run?RunPayloadSchema:ProfilePayloadSchema) &&
-        !(expected==SaveKind::Profile && (version==1 || version==2)) &&
+        !(expected==SaveKind::Profile && (version==1 || version==2 || version==3)) &&
         !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10))) return SaveError::UnsupportedVersion;
     return SaveError::None;
 }
@@ -205,5 +212,25 @@ std::optional<Profile> DecodeProfilePayload(std::string_view bytes)
     const auto result=Decode<Profile>(bytes,2);
     if(!result || !ValidProfile(*result)) return std::nullopt;
     return result;
+}
+std::optional<std::string> EncodePreferencesPayload(const Preferences& preferences)
+{
+    if(!ValidPreferences(preferences))return std::nullopt;
+    // 周回/恒久と署名・版を分け、既存形式の更新や乱数操作を伴わない。
+    Wire archive(false);std::uint32_t signature=0x46505347,version=1;
+    auto value=preferences;
+    archive(signature,version,value.Text,value.BgmVolume,value.SfxVolume,
+        value.Subtitles,value.ReducedEffects,value.SuppressIntimacy);
+    return archive.Output;
+}
+std::optional<Preferences> DecodePreferencesPayload(std::string_view bytes)
+{
+    // 固定長の基本型だけで構成し、余剰・切断・過大入力を読込前に拒否する。
+    if(bytes.size()!=23)return std::nullopt;
+    Wire archive(true,bytes);std::uint32_t signature=0,version=0;Preferences value;
+    if(!archive(signature,version,value.Text,value.BgmVolume,value.SfxVolume,
+        value.Subtitles,value.ReducedEffects,value.SuppressIntimacy) ||
+        signature!=0x46505347 || version!=1 || !ValidPreferences(value))return std::nullopt;
+    return value;
 }
 }

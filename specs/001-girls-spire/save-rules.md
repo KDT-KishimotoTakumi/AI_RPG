@@ -41,3 +41,9 @@ CombatControlCheckpointは人物ID0～8のOrders/Trust、ChoiceRandomState、Pro
 ## 連携履歴の復元契約
 
 ComboLedgerはラウンド1以上、ゲージ0～100、解決済み番号≦最新番号、保留行動番号の正数・昇順・最新番号以下、行動者ID0～9999を検証してから状態全体を置換する。不正入力時は元の状態を保持する。成立で選択外だった古い保留行動や同じ人物の複数行動は有効なため削除しない。構文属性と対象列はObserveで受け付けた内容をそのまま保持し、戦場との所属・対象整合性は戦闘復元側の責務とする。復元だけでは加算・再抽選・履歴消費を起こさず、成立済み番号の再解決を引き続き拒否する。
+
+## 一時的なファイル置換競合（GS-041）
+
+書込/フラッシュ/クローズ済みの同一一時ファイルに対し、置換のOSエラー5/32/33だけを最大3試行（追加待機20・40ms）とする。成功前に選択や乱数を再計算しない。その他のエラーは即時失敗し、恒常競合も上限後は既存の保存停止/同内容再試行へ返す。確定ファイルを先に削除しない。診断には最後のMoveエラーと試行数を保持する。
+APIの根拠: [MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw)、[CreateFileWの共有モード](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)。上限/待機値は本プロジェクトの実装方針で、API保証ではない。
+現在は単体119項目・UI6件成功、全体検証中。過去の実行時警告の原因プロセスを特定したとは扱わない。

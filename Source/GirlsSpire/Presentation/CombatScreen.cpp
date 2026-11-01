@@ -16,6 +16,7 @@ void SCombatScreen::Construct(const FArguments& Args)
     Combat=Args._Combat; OnFinished=Args._OnFinished;
     OnCheckpoint=Args._OnCheckpoint;OnSuspend=Args._OnSuspend;
     GenerationSummary=Args._GenerationSummary;
+    if(Args._BondProfile)KnownCombos=Args._BondProfile->DiscoveredCombos;
     check(Combat.IsValid());
     if(Args._SavedControl) {
         const auto restored=GirlsSpire::CombatControl::Restore(*Args._SavedControl,*Combat);

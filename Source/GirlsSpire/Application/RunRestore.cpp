@@ -1,4 +1,5 @@
 #include "Run.h"
+#include "Domain/CharacterCatalog.h"
 #include <algorithm>
 #include <limits>
 #include <set>
@@ -38,7 +39,7 @@ bool ValidState(const RunCheckpoint& checkpoint)
         auto level=s.Levels[id];
         if(!GainExperience(level,0) || level!=s.Levels[id] || !Between(s.Health[id].Wounds,0,4) ||
            !Between(static_cast<int>(s.Accessories[id]),0,2)) return false;
-        const int maxHp=EffectiveMaxHp((id==0?80:40)+s.Growth[id].Bonuses[0]+LevelHpBonus(level),s.Health[id].Wounds);
+        const int maxHp=EffectiveMaxHp(FindCharacter(id)->MaxHp+s.Growth[id].Bonuses[0]+LevelHpBonus(level),s.Health[id].Wounds);
         if(!Between(s.Health[id].Hp,-1,maxHp)) return false;
     }
     if(s.Phase!=RunPhase::Reward) return s.RewardRecipient==-1 && s.Rewards.empty();

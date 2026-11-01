@@ -2,11 +2,12 @@
 #include "Application/Run.h"
 #include "Application/CombatControl.h"
 #include "SaveEnvelope.h"
+#include "Domain/Preferences.h"
 #include <string>
 #include <string_view>
 
 namespace GirlsSpire {
-inline constexpr std::uint32_t RunPayloadSchema=11,ProfilePayloadSchema=3;
+inline constexpr std::uint32_t RunPayloadSchema=11,ProfilePayloadSchema=4;
 SaveError InspectPayload(std::string_view bytes,SaveKind expected);
 struct SavedCombat {
     BattleCheckpoint Battle;
@@ -23,4 +24,6 @@ std::optional<std::string> EncodeRunPayload(const RunSaveState& state);
 std::optional<RunSaveState> DecodeRunPayload(std::string_view bytes);
 std::optional<std::string> EncodeProfilePayload(const Profile& profile);
 std::optional<Profile> DecodeProfilePayload(std::string_view bytes);
+std::optional<std::string> EncodePreferencesPayload(const Preferences& preferences);
+std::optional<Preferences> DecodePreferencesPayload(std::string_view bytes);
 }

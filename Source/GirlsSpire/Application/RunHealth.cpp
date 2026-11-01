@@ -1,4 +1,5 @@
 #include "Run.h"
+#include "Domain/CharacterCatalog.h"
 #include <algorithm>
 #include <set>
 namespace GirlsSpire {
@@ -13,7 +14,7 @@ int Run::MaxHp(int id) const
 }
 int Run::BaseMaxHp(int id) const
 {
-    return (id==0?80:40)+state_.Growth[id].Bonuses[0]+LevelHpBonus(state_.Levels[id]);
+    return FindCharacter(id)->MaxHp+state_.Growth[id].Bonuses[0]+LevelHpBonus(state_.Levels[id]);
 }
 int Run::CurrentHp(int id) const
 {

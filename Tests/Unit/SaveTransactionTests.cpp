@@ -27,6 +27,7 @@ int TestSaveTransaction()
     Run first(1,Difficulty::Beginner,HeroRole::Sword),second(2,Difficulty::Advanced,HeroRole::Matchlock);
     const RunSaveState a{first.Checkpoint(),{}},b{second.Checkpoint(),{}};
     Profile oldProfile,newProfile;newProfile.Bonds[0]=25;
+    oldProfile.DiscoveredCombos={2};newProfile.DiscoveredCombos={2,3,5};
     for(int failure=1;failure<=6;++failure) {
         TransactionMemory memory;SaveTransaction tx(memory,memory);
         check(tx.Load().RunIssue==SlotIssue::Empty,"初回は空");

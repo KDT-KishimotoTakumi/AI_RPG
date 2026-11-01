@@ -1,4 +1,7 @@
 #include "RunScreen.h"
+#include "ComboLabels.h"
+#include "CharacterPortraits.h"
+#include "Domain/CharacterCatalog.h"
 #include "CombatScreen.h"
 #include "Application/Encounter.h"
 #include "Framework/MetaData/DriverMetaData.h"
@@ -13,14 +16,19 @@
 namespace {
 const TCHAR* const Roles[] = {TEXT("太刀"), TEXT("薙刀"), TEXT("軍配"), TEXT("火縄銃")};
 const TCHAR* const Levels[] = {TEXT("初級"), TEXT("中級"), TEXT("上級")};
-const TCHAR* const Candidates[] = {TEXT("真田 茜"), TEXT("白峰 澪"), TEXT("朧"), TEXT("土御門 紫苑"),
-    TEXT("鷹司 楓"), TEXT("雑賀 火乃香"), TEXT("柳生 千景"), TEXT("鈴鹿 小夜")};
 const TCHAR* const Nodes[] = {TEXT("合戦"), TEXT("強敵"), TEXT("救出"), TEXT("交流"), TEXT("商店"),
     TEXT("休息"), TEXT("怪異"), TEXT("中間ボス — 落城姫"), TEXT("最終ボス — 歴史喰らいの城主")};
 FString NodeLabel(const GirlsSpire::RouteNode& Node)
 {
     FString Label = Nodes[static_cast<int>(Node.Kind)];
-    if (Node.Kind == GirlsSpire::NodeKind::Rescue) Label += FString(TEXT(" — ")) + Candidates[Node.Candidate];
+    if (Node.Kind == GirlsSpire::NodeKind::Rescue) {
+        const int actor=Node.Candidate+1;
+        Label+=FString(TEXT(" — "))+FCharacterPortraits::Name(actor);
+        if(const auto definition=GirlsSpire::FindCharacter(actor)) {
+            const auto unit=GirlsSpire::CreateCharacter(actor,{});
+            Label+=FString::Printf(TEXT("（%s / 移動%d・射程%d）"),UTF8_TO_TCHAR(definition->RoleName.data()),unit.Movement,unit.Range);
+        }
+    }
     return Label;
 }
 }
@@ -90,6 +98,10 @@ void SRunScreen::ShowTitle()
     if(std::any_of(RetainedProfile.Epilogues.begin(),RetainedProfile.Epilogues.end(),[](bool read){return read;}))
         AddAction(TEXT("後日談の本を開く"),"title.epilogues",[this]{ShowEpilogueLibrary();});
     AddText(ProfileLabel(),"title.bonds",14);
+    FString discoveries=TEXT("発見済み連携: ");
+    if(RetainedProfile.DiscoveredCombos.empty())discoveries+=TEXT("なし");
+    for(int id:RetainedProfile.DiscoveredCombos)discoveries+=ComboDisplayName(id)+TEXT(" / ");
+    AddText(discoveries,"title.combos",14);
 }
 
 void SRunScreen::ShowSetup()
@@ -134,8 +146,8 @@ void SRunScreen::RefreshRun()
     Body->ClearChildren();
     AddText(FString::Printf(TEXT("第 %d 日 / 十二日　 |　 %s ・ %s"), State.Day,
         Levels[static_cast<int>(State.Level)], Roles[static_cast<int>(State.Role)]), "run.day", 27);
-    FString Party = FString::Printf(TEXT("黒鉄 蓮 ＋ 仲間%d人"), static_cast<int>(State.Recruited.size()));
-    for (int Candidate : State.Recruited) Party += FString(TEXT("　/　")) + Candidates[Candidate];
+    FString Party = FString::Printf(TEXT("%s ＋ 仲間%d人"),FCharacterPortraits::Name(0),static_cast<int>(State.Recruited.size()));
+    for (int Candidate : State.Recruited) Party += FString(TEXT("　/　")) + FCharacterPortraits::Name(Candidate+1);
     AddText(Party, "run.party", 18);
     AddText(FString::Printf(TEXT("所持金%d銭 / 傷薬%d/5"),State.Wallet.Coins,State.Wallet.Medicines),"run.wallet",16);
     if(SaveService) AddAction(TEXT("保存して中断する"),"save.suspend",[this]{SuspendRun();});

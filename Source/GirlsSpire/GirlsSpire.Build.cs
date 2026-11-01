@@ -4,6 +4,8 @@ public class GirlsSpire : ModuleRules
 {
     public GirlsSpire(ReadOnlyTargetRules Target) : base(Target)
     {
+        // 匿名名前空間の補助関数を翻訳単位ごとに分離し、Gitの変更状態でビルド結果を変えない。
+        bUseUnity = false;
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         CppStandard = CppStandardVersion.Cpp20;
         bEnableExceptions = true;

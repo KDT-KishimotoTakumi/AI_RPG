@@ -1,10 +1,9 @@
 #include "RunScreen.h"
+#include "CharacterPortraits.h"
 #include <algorithm>
 FString SRunScreen::ActorName(int id)
 {
-    const TCHAR* names[]={TEXT("黒鉄 蓮"),TEXT("真田 茜"),TEXT("白峰 澪"),TEXT("朧"),TEXT("土御門 紫苑"),
-        TEXT("鷹司 楓"),TEXT("雑賀 火乃香"),TEXT("柳生 千景"),TEXT("鈴鹿 小夜")};
-    return names[id];
+    return FCharacterPortraits::Name(id);
 }
 namespace {
 FString RewardLabel(GirlsSpire::Reward reward)

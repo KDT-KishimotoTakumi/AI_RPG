@@ -82,6 +82,7 @@ bool DiskSlotFiles::Replace(SaveKind kind,bool backup,std::string_view bytes)
 }
 bool DiskSlotFiles::ReplaceAt(const std::filesystem::path& path,std::string_view bytes) const
 {
+    lastMoveError_=0;lastMoveAttempts_=0;
     if(bytes.size()>MaxSavePayload+32) return false;
     std::error_code error;
     std::filesystem::create_directories(root_,error);
@@ -96,6 +97,18 @@ bool DiskSlotFiles::ReplaceAt(const std::filesystem::path& path,std::string_view
     complete=(CloseHandle(file)!=0) && complete;
     if(!complete) return false;
     // 同一フォルダの一時ファイルを置換する。既存の正常ファイルを先に消さない。
-    return MoveFileExW(temporary.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)!=0;
+    // 同期ソフト等の短い共有競合だけを、同じ書込済み一時ファイルで有限再試行する。
+    // 恒常失敗は旧確定ファイルを保ち、上位の進行停止/同内容再試行へ返す。
+    for(unsigned attempt=1;attempt<=3;++attempt) {
+        lastMoveAttempts_=attempt;
+        if(MoveFileExW(temporary.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH))return true;
+        lastMoveError_=static_cast<std::uint32_t>(GetLastError());
+        if(lastMoveError_!=ERROR_ACCESS_DENIED && lastMoveError_!=ERROR_SHARING_VIOLATION && lastMoveError_!=ERROR_LOCK_VIOLATION)return false;
+        if(attempt<3) {
+            if(wait_)wait_(20*attempt);
+            else Sleep(20*attempt);
+        }
+    }
+    return false;
 }
 }

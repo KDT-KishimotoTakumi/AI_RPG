@@ -1,25 +1,27 @@
 #include "CharacterPortraits.h"
+#include "Domain/CharacterCatalog.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Rendering/SlateRenderer.h"
 #include "Misc/Paths.h"
 
-namespace {
-const TCHAR* const Names[]={TEXT("黒鉄 蓮"),TEXT("真田 茜"),TEXT("白峰 澪"),TEXT("朧"),TEXT("土御門 紫苑"),
-    TEXT("鷹司 楓"),TEXT("雑賀 火乃香"),TEXT("柳生 千景"),TEXT("鈴鹿 小夜")};
-const TCHAR* const Files[]={TEXT("hero-ren"),TEXT("akane"),TEXT("mio"),TEXT("oboro"),TEXT("shion"),
-    TEXT("kaede"),TEXT("honoka"),TEXT("chikage"),TEXT("sayo")};
-}
 FCharacterPortraits::FCharacterPortraits():FCharacterPortraits(FPaths::ProjectContentDir()/TEXT("Art/Characters")) {}
 FCharacterPortraits::FCharacterPortraits(FString root):Root(MoveTemp(root)) {}
 const TCHAR* FCharacterPortraits::Name(int actor)
 {
-    return actor>=0 && actor<9?Names[actor]:TEXT("不明な人物");
+    if(!GirlsSpire::FindCharacter(actor))return TEXT("不明な人物");
+    // 返した文字列の寿命と既存APIを維持し、画像の読込とは独立して名前を参照する。
+    static const std::array<FString,9> names=[] {
+        std::array<FString,9> values;
+        for(int id=0;id<9;++id)values[id]=UTF8_TO_TCHAR(GirlsSpire::FindCharacter(id)->Name.data());
+        return values;
+    }();
+    return *names[actor];
 }
 TSharedPtr<FSlateDynamicImageBrush> FCharacterPortraits::Get(int actor)
 {
-    if(actor<0 || actor>=9)return nullptr;
+    const auto definition=GirlsSpire::FindCharacter(actor);if(!definition)return nullptr;
     if(Images[actor])return Images[actor];
-    const auto path=FPaths::ConvertRelativePathToFull(Root/(FString(Files[actor])+TEXT("-v1.png")));
+    const auto path=FPaths::ConvertRelativePathToFull(Root/(FString(UTF8_TO_TCHAR(definition->Portrait.data()))+TEXT("-v1.png")));
     if(!FPaths::FileExists(path))return nullptr;
     const FName resource(*path);
     const auto size=FSlateApplication::Get().GetRenderer()->GenerateDynamicImageResource(resource);
