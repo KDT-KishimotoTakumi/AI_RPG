@@ -36,3 +36,5 @@
 AbilityCatalog.h/.cppは18初期技能/9個人必殺/8強化版のデータ定義。FormalSkill(actorId, slot)は既存枠0/1のみ、報酬枠2～4は共通処理へ返す。FormalUltimate(actorId, startingBond)は0～100だけを受け、100で該当8人のみ強化。Range=0は通常射程の継承、Self対象は自身、SelfRadiusは自身中心・自身を含む味方、TargetCrossは対象中心と上下左右1マス、CardinalLineは指定方向、AdjacentFourは上下左右隣接。Penaltyは減算の正の量、SelfDefenseBuffは敵範囲攻撃と併用する使用者自身の強化。返却は値コピー、名称の参照先は静的文字列。現行UIでは主人公の既存名称だけを共用し、正式効果/新構文/絆100の実行はまだ接続しない。
 
 GS-044でRun v12にAbilityRules/StartingBonds[8]を保存する境界を追加。既存生成はLegacyのまま。次に一時強化と所有者別の技能効果・構文を保存互換付きで接続し、全正式効果の実行が揃ってから新規ゲームの戦闘生成へProfileを渡して有効化する。旧戦闘を途中から自動変換しない。
+
+GS-045のTimedBoostは強度AmountとSkipCurrentEndを持つ純粋な期限処理。ApplyTimedBoostは正の強度を最大値で再付与し、期限を今回の付与で更新する。EndTimedBoostTurnは受け手の手番終了時だけ呼び、自己使用手番を1回除外する。0強度＋除外フラグは不正。不正状態/付与は無変更で拒否。攻撃/防御/命中は独立した状態を持つ予定。現段階でBattleUnit/能力値/保存には未接続。整数上限の試験は期限処理の非加算/オーバーフロー回避を確認するもので、技能表の強度を増やすものではない。範囲回復/強化で使用者自身も対象になる場合は、その人物だけduringRecipientTurn=trueとする。

@@ -20,7 +20,7 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 ## 【現在の進捗】
 - GS-033～038: ボス2体、未救出再登場、連携恒久発見/20種実戦、9人物カタログ共有/救出役割表示まで接続。戦闘/成長/商店/交流/後日談/中断と初期立ち絵は部分実装。
 - GS-039設定payload基盤のみ、GS-040主人公正式名/既存効果一致のみ完了。正式新構文/仲間固有技/絆100と設定UI/ファイル/反映は未接続。
-- 最新GS-044/T029e完了: Run v12へAbilityRules/StartingBonds[8]を保存、旧形式はLegacy/全0。CharacterはControlの固定信頼/開始時絆の一致とProfileDrivenを必須にする。新規生成はLegacy、正式効果/構文/絆100は未接続。Native2,226項目＋旧v11原本603＋全単体、全UE199＋起動、別プロセス36地点、通常MSVC＋UI12＋起動が警告0/失敗0。行98.80/関数98.09/分岐91.05%、Missing=[]。Coverage/24ad70423a4048eca9e7877e90ee886f、ability-context-*.log。技能共通定義GS-042/固定v11原本GS-043も完了。
+- 最新GS-045/T013j完了: TimedBoostの自己/他者期限・同種最大/期限更新・不正時無変更を共通化。Native514＋全単体、全UE199＋起動、別プロセス36地点、通常MSVC＋UI12＋起動が警告0/失敗0。行98.80/関数98.11/分岐91.08%、Missing=[]。Coverage/de8bb69beebc4375b983c83b58a5bde9、timed-boost-*.log。BattleUnit/能力値/保存/UIは未接続。GS-044のRun v12識別/開始時絆と信頼整合、GS-042技能定義、GS-043固定v11原本検証は完了。
 - ゲームGit: origin KDT-KishimotoTakumi/AI_RPG。2026-11-02、終了前のコミット/pull/pushを利用者が明示承認。最新送信状態はgit status/logとリモートで確認。秘密設定/セーブ/生成物は除外する。
 - 支援8スキルはCodex共通領域を使用。二重登録を避けてプロジェクト重複版は整理済み。Context Mode1.0.169はプロジェクト限定MCP、全体フックなし。配布元/設定はDEV_SKILLS参照。
 - スキルコピーは別の非公開リポジトリKDT-KishimotoTakumi/AI-Development-Skillsへpush済み（d1c5fe4ff2f466340edc916181bf3a610f2a429e）。独立コピーSaved/Exports/AI-Development-Skillsを保持。
@@ -36,10 +36,10 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 - パスは環境から解決。既存tools/*.ps1はEpic manifest/vswhere/検証済み一時junctionを利用。実ビルド/IOは承認済みのescalated方式。審査拒否を迂回しない。
 - GirlsSpire.Build.csのbUseUnity=falseを維持（匿名名前空間衝突対策）。全資料/スキル一括読込禁止、Spec Kitは工程ごと。
 - 全体計測合格後のみ当該profrawをcleanup-measurements.ps1で整理。JSON/profdataを保持。
-- 直近整理: Intermediate/DDC 2,620,709,840 bytes（約2.44GiB）削除、対象外5,613ハッシュと秘密設定メタデータ不変。監査Saved/StorageAudit-5a87094df14e455dbfffe2a64bc34e80。次回ビルドでPCH等再生成。旧v11原本・実セーブ・開発セーブ・検証結果を保持。過去の失敗計測原本はSaved/CoverageArchivesの復元照合済みZIP、対応DLL/ソース/診断は元Coverageディレクトリに保持。
+- 直近整理: Intermediate/DDC 2,620,752,582 bytes（約2.44GiB）削除、対象外5,862ハッシュと秘密設定メタデータ不変。監査Saved/StorageAudit-c816273fb6b6424583fcb6b04e13a341。次回ビルドでPCH等再生成。互換原本・実セーブ・開発セーブ・検証結果を保持。失敗計測はSaved/CoverageArchivesの照合済みZIPと元Coverageの対応DLL/ソース/診断を保持。
 
 ## 【次に行う作業】
-次はformal-abilities-plan.mdに従い承認済み固有技能/必殺/絆100連携をTDDで接続する。SkillCount5を維持し、正式/旧戦闘を区別する方針。旧v11架空100例Tests/Fixtures/roster-v11.bin（SHA256=665E25786A877735E219CB08BCE3420709EB83527BE958FBCA2179986ABFCDFD）は再生成しない。LegacyRosterTests.cppで固定原本の読込/旧ハッシュ/意味一致/現行形式往復を検証済み。v12移行時に従来の現行v11エンコードハッシュ検証だけを現行形式往復へ分離済み。固定原本の100ハッシュ/意味/読込識別は維持。次は一時強化の期限/保存と正式技能効果の接続。
+次はformal-abilities-plan.mdに従い承認済み固有技能/必殺/絆100連携をTDDで接続する。SkillCount5を維持し、正式/旧戦闘を区別する方針。旧v11架空100例Tests/Fixtures/roster-v11.bin（SHA256=665E25786A877735E219CB08BCE3420709EB83527BE958FBCA2179986ABFCDFD）は再生成しない。LegacyRosterTests.cppで固定原本の読込/旧ハッシュ/意味一致/現行形式往復を検証済み。v12移行時に従来の現行v11エンコードハッシュ検証だけを現行形式往復へ分離済み。固定原本の100ハッシュ/意味/読込識別は維持。次はTimedBoostを各能力の独立状態としてBattleUnit/能力値/予告/期限/保存へ接続する。現行v12も補完対象として維持し、正式技能の付与/実行を接続する。
 1. 実際のgit statusと対象タスク/要件だけ確認して未完了実装を続ける。既合格GS-038を理由なく再試験しない。
 2. 必要な設計確認は具体案を示し、独立作業を並行する。関連検証後に管理資料を更新。
 3. 大きなログはファイル保持＋絞り込み、正本への参照で引継ぎを短く保つ。

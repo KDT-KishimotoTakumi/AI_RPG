@@ -173,5 +173,7 @@ int main()
     failed += TestLegacyRoster();
     extern int TestAbilityContext();
     failed += TestAbilityContext();
+    extern int TestTimedBoost();
+    failed += TestTimedBoost();
     return failed == 0 ? 0 : 1;
 }
