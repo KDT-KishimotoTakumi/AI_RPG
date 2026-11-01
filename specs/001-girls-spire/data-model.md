@@ -31,3 +31,5 @@ GS-035（実装・検証済み）: 未救出者は加入者との差集合（Run
 GS-036（実装・検証済み）: Profile.DiscoveredCombosに正のレシピIDの厳密昇順・重複なしの配列を追加。ProfilePayloadSchema=4、旧v1～v3は既存値を維持し空の発見列を補う。RunPayloadSchema=11は変更しない。発見更新は戦闘スナップショットと同じ保存取引で確定し、失敗中は固定結果の再試行以外の進行を止める。
 
 GS-037（実装・検証済み）: 承認済み20連携の定義はDomain/ComboCatalogへ集約。ID2/3/5を維持し、追加は101～117。照合と名前/理由表示で共用する。既存のBattleCheckpoint/ComboResolution/Profile.DiscoveredCombosで保存できるためRun v11/Profile v4は変更しない。
+
+GS-044: BattleSnapshotにAbilityRulesとStartingBonds[8]を追加し、Run v12へ保存。旧v11以下はLegacy/全0を補完。正式状態は固定信頼と整合させ、恒久Profileから復元時に置換しない。Profile v4は不変。技能効果/一時強化/絆100の実行接続は未完了。

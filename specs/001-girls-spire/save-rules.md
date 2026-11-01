@@ -47,3 +47,7 @@ ComboLedgerはラウンド1以上、ゲージ0～100、解決済み番号≦最�
 書込/フラッシュ/クローズ済みの同一一時ファイルに対し、置換のOSエラー5/32/33だけを最大3試行（追加待機20・40ms）とする。成功前に選択や乱数を再計算しない。その他のエラーは即時失敗し、恒常競合も上限後は既存の保存停止/同内容再試行へ返す。確定ファイルを先に削除しない。診断には最後のMoveエラーと試行数を保持する。
 APIの根拠: [MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw)、[CreateFileWの共有モード](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)。上限/待機値は本プロジェクトの実装方針で、API保証ではない。
 現在は単体119項目・UI6件成功、全体検証中。過去の実行時警告の原因プロセスを特定したとは扱わない。
+
+## GS-044 戦闘ルールと開始時絆（Run v12）
+
+BattleSnapshot.AbilityRules（Legacy/Character）とStartingBonds[8]を明示的なlittle-endian整数で保存する。旧v2～v11はLegacy/全0へ補完し、旧効果/構文/乱数位置は変換しない。Legacyで非0絆、未知識別、0～100外の絆は拒否。CharacterではCombatControl.ProfileDriven=trueとTrust[1～8]との一致を必須とし、現在の恒久絆から開始時絆を再計算しない。Profile形式はv4を維持する。この段階では正式技能の効果実行は未接続で、新規戦闘の生成もLegacyを維持する。

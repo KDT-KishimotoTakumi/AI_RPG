@@ -171,5 +171,7 @@ int main()
     failed += TestAbilityCatalog();
     extern int TestLegacyRoster();
     failed += TestLegacyRoster();
+    extern int TestAbilityContext();
+    failed += TestAbilityContext();
     return failed == 0 ? 0 : 1;
 }

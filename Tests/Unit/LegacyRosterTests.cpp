@@ -26,6 +26,7 @@ int TestLegacyRoster()
         if(!check(length<=bytes.size()-offset,"payloadの境界を越えない"))return finish();
         const std::string_view payload(bytes.data()+offset,length);offset+=length;
         check(TestData::RosterPayloadHash(payload)==TestData::RosterBaselineHashes[seed],"各v11 payloadは共用前の既知100ハッシュに一致");
+        check(InspectPayload(payload,SaveKind::Run)==SaveError::None,"保存スロットも旧v11を対応形式として識別");
         const auto decoded=DecodeRunPayload(payload);
         check(decoded && *decoded==TestData::RosterCase(seed),"旧形式の全状態/人物/戦場/乱数を同じ意味で復元");
         if(!decoded)continue;

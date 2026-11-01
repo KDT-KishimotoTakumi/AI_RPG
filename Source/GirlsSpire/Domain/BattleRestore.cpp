@@ -9,6 +9,9 @@ BattleCheckpoint Battle::Checkpoint() const { return {state_,random_.State(),goa
 bool Battle::ValidCheckpoint() const
 {
     const auto& s=state_;
+    if(s.AbilityRules!=AbilityRuleSet::Legacy && s.AbilityRules!=AbilityRuleSet::Character)return false;
+    for(int rank:s.StartingBonds)
+        if(rank<0 || rank>100 || (s.AbilityRules==AbilityRuleSet::Legacy && rank!=0))return false;
     if(s.ChargeReady) {
         const auto actor=Find(s.ActiveId);
         if(!s.Moved || s.Acted || !actor || actor->Role!=BattleRole::Cavalry || actor->Hp<=0)return false;

@@ -41,6 +41,17 @@ struct ProcessResumeFixture {
 std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
     using namespace GirlsSpire;
+    if(point>=34) {
+        auto fixture=ProcessFixture(10+point-34);if(!fixture || !fixture->State.Combat)return std::nullopt;
+        auto& combat=*fixture->State.Combat;
+        combat.Battle.State.AbilityRules=AbilityRuleSet::Character;combat.Control.ProfileDriven=true;
+        for(int id=0;id<8;++id){
+            const int rank=point==34?((id%2)?100:0):10*(id+1);
+            combat.Battle.State.StartingBonds[id]=rank;combat.Control.Trust[id+1]=rank;
+        }
+        // 現在の恒久絆から戦闘開始時絆を再計算しないことも検証する。
+        fixture->Permanent.Bonds.fill(42);return fixture;
+    }
     Profile profile;profile.Bonds.fill(25+point);
     if(point%2)profile.DiscoveredCombos={2,3,5};
     for(int i=0;i<8;++i)profile.SpecialConversations[i]=(point&(1<<(i%4)))!=0;
@@ -218,10 +229,10 @@ void FGirlsSpireResumeProcessSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(stage==TEXT("Save")?TEXT("34地点を別プロセス用に保存する"):TEXT("別プロセスで34地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
+    It(stage==TEXT("Save")?TEXT("36地点を別プロセス用に保存する"):TEXT("別プロセスで36地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<34;++point) {
+        for(int point=0;point<36;++point) {
             const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));

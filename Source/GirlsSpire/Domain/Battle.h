@@ -11,6 +11,7 @@ enum class Facing { North, East, South, West };
 enum class BattleGoal { Eliminate, Survive, Rescue, DefeatLord };
 enum class BattleOutcome { Ongoing, Won, Lost };
 enum class Skill { PowerStrike, FirstAid, Sweep, FarStrike, Heal };
+enum class AbilityRuleSet { Legacy, Character };
 inline constexpr int SkillCount=5;
 struct Tile {
     bool Wall = false;
@@ -61,6 +62,8 @@ struct BattleSnapshot {
     BattleBond BondGains;
     ComboSnapshot Combos;
     std::optional<ComboResolution> LastCombo;
+    AbilityRuleSet AbilityRules=AbilityRuleSet::Legacy;
+    std::array<int,8> StartingBonds{};
     bool operator==(const BattleSnapshot&) const = default;
 };
 struct PredictedHit {

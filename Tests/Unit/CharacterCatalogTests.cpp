@@ -29,7 +29,7 @@ int TestCharacterCatalog()
     }
     for(unsigned seed=0;seed<100;++seed) {
         const auto state=TestData::RosterCase(seed);const auto bytes=EncodeRunPayload(state);
-        check(bytes && TestData::RosterPayloadHash(*bytes)==TestData::RosterBaselineHashes[seed],"100シードの人物・編成・戦場・乱数・保存が共用前と一致");
+        check(bytes && DecodeRunPayload(*bytes)==state,"100シードの人物・編成・戦場・乱数を現行形式で往復。旧v11のハッシュは固定原本で検証");
     }
     for(int id=1;id<=8;++id) {
         RunSnapshot joined;joined.Level=Difficulty::Intermediate;joined.Day=5;joined.Phase=RunPhase::Event;joined.Active={NodeKind::Battle};joined.Recruited={id-1};
