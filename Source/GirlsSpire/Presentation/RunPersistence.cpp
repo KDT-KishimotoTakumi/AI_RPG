@@ -111,7 +111,7 @@ void SRunScreen::ShowCombat(TSharedPtr<GirlsSpire::Battle> combat,const FString&
         };
     }
     Body->ClearChildren();Body->AddSlot().AutoHeight()
-    [ SNew(SCombatScreen).Combat(combat).GenerationSummary(summary).BondProfile(CurrentRun->ProfileState()).SavedControl(control).DisplayPreferences(DisplayPreferences)
+    [ SNew(SCombatScreen).Combat(combat).GenerationSummary(summary).BondProfile(CurrentRun->ProfileState()).SavedControl(control).DisplayPreferences(DisplayPreferences).Audio(Audio)
         .OnCheckpoint(MoveTemp(checkpoint)).OnSuspend(MoveTemp(suspend))
         .OnFinished(FSimpleDelegate::CreateLambda([this,combat,revision] {
             if(!CurrentRun || !CurrentRun->CompleteBattle(revision,combat->Snapshot())) return;

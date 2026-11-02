@@ -1,6 +1,6 @@
 # 素材台帳
 
-最終更新: 2026-10-30。主人公と女性8人の初期画像9枚を戦闘表示へ接続。正式な状態差分・敵・背景・音素材、配布検証は未完了。
+最終更新: 2026-11-02。主人公と女性8人の初期画像9枚を戦闘表示へ接続。正式な状態差分・敵・背景・音素材、配布検証は未完了。
 
 ## 方針
 
@@ -22,3 +22,7 @@
 - 検証画像: 上記プレビューの実行画面をUEから生成しSaved/Screenshotsへ保存。正式ゲーム素材には使用しない。
 
 GS-035（2026-10-31）: 最終戦では未救出者を含む全9人物の通常立ち絵を表示。既存の同じPNG/名前を共用し、画像ファイルの複製や差分素材は追加していない。敵/中立を文字で区別する実UI2件と全149件・通常MSVC確認が成功。
+
+2026-11-02 GS-052 初期音素材: Content/Audio/Source/のbgm-castle-v1.wav（20秒）、sfx-confirm-v1.wav（0.16秒）、sfx-impact-v1.wav（0.24秒）。tools/generate-audio.pyで本プロジェクト専用に数式合成したモノラル22050Hz/16-bit PCM。独自の32拍の音列・減衰する倍音・低音・簡易打楽器を使用し、外部の曲/録音/音源/演奏の転載やサンプリングはない。生成条件/原本SHA-256は同フォルダmanifest.json、波形の検査はtools/test-audio-assets.py。ピーク/RMSは順に0.194/0.044、0.235/0.086、0.234/0.041、無音でないこと・範囲・DC偏り・波形端を確認。
+UE素材はContent/Audio/BGM_Castle_V1.uasset、SFX_Confirm_V1.uasset、SFX_Impact_V1.uasset。tools/import-audio.pyでPCM設定へ取り込み、BGMのみループ指定。取込時だけPythonScriptPlugin/EditorScriptingUtilitiesをCLI有効化し、プロジェクトプラグイン設定は変更しない。初回は無音コマンドレットのBINKAデコーダー未初期化で停止、音声初期化を有効にしたPCM取込は0エラー（別名パス大文字小文字判定の警告2件）で成功。原記録Saved/audio-import*.log。
+初期素材として使用し、最終音楽/ミックスの聴感・長時間ループ・配布同梱/権利一覧の最終確認は未完了。Config/DefaultGame.iniに/Game/Audioの常時cookを追加したが、配布パッケージを実測するまで配布完了としない。

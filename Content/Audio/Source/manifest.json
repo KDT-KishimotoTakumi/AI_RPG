@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "method": "本プロジェクト専用の数式合成。外部音源なし。",
+  "clips": [
+    {
+      "file": "bgm-castle-v1.wav",
+      "sha256": "01c4605ca70deb20187548975a23dfc6f1e1f3bda9865eb577657f0d797bdedf",
+      "seconds": 20,
+      "sample_rate": 22050
+    },
+    {
+      "file": "sfx-confirm-v1.wav",
+      "sha256": "1f003f0ca4c450046d2f7134e0e7dd9173230e90299c06b7f6647ab1757d65cc",
+      "seconds": 0.16,
+      "sample_rate": 22050
+    },
+    {
+      "file": "sfx-impact-v1.wav",
+      "sha256": "5ed178364de84807bcb56200048f7960be5b9bdeabe8242f6ea9b019cd04e57f",
+      "seconds": 0.24,
+      "sample_rate": 22050
+    }
+  ]
+}

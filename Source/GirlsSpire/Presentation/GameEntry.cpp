@@ -1,4 +1,5 @@
 #include "GameEntry.h"
+#include "GameAudio.h"
 #include "RunScreen.h"
 #include "Infrastructure/DiskSlotFiles.h"
 #include "Engine/GameViewportClient.h"
@@ -33,7 +34,7 @@ void AGirlsSpireController::BeginPlay()
 #endif
     Files=std::make_shared<GirlsSpire::DiskSlotFiles>(std::filesystem::path(*root));
     Service=std::make_shared<GirlsSpire::SaveTransaction>(*Files,*Files);
-    Screen=SNew(SRunScreen).SaveService(Service).PreferencesService(std::make_shared<GirlsSpire::PreferencesStore>(*Files)).DevelopmentTools(false);
+    Screen=SNew(SRunScreen).SaveService(Service).PreferencesService(std::make_shared<GirlsSpire::PreferencesStore>(*Files)).Audio(std::make_shared<FGameAudio>()).DevelopmentTools(false);
     viewport->AddViewportWidgetContent(Screen.ToSharedRef(),100);
     viewport->SetMouseCaptureMode(EMouseCaptureMode::NoCapture);
     viewport->SetMouseLockMode(EMouseLockMode::DoNotLock);

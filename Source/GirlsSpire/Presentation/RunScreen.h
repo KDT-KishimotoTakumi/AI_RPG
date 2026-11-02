@@ -7,6 +7,7 @@
 
 class SVerticalBox;
 class SHorizontalBox;
+class IGameAudio;
 class SRunScreen : public SCompoundWidget
 {
 public:
@@ -15,9 +16,11 @@ public:
         SLATE_ARGUMENT(std::shared_ptr<GirlsSpire::SaveTransaction>, SaveService)
         SLATE_ARGUMENT(bool, DevelopmentTools)
         SLATE_ARGUMENT(std::shared_ptr<GirlsSpire::PreferencesStore>, PreferencesService)
+        SLATE_ARGUMENT(std::shared_ptr<IGameAudio>, Audio)
     SLATE_END_ARGS()
     void Construct(const FArguments& Args);
 private:
+    std::shared_ptr<IGameAudio> Audio;
     void ShowPreferences(bool resetDraft=true);
     void RefreshPreferences();
     void SavePreferences();

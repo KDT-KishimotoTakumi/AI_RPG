@@ -1,5 +1,5 @@
 #requires -Version 7.0
-param([string] $Filter = 'GirlsSpire.Foundation', [switch] $UI, [string[]] $ExtraArgs = @())
+param([string] $Filter = 'GirlsSpire.Foundation', [switch] $UI, [switch] $Audio, [string[]] $ExtraArgs = @())
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'automation-result.ps1')
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -19,11 +19,12 @@ if ($projectRoot -match '[^\x00-\x7F]') {
 }
 $report = Join-Path $launchRoot ('Saved/Automation/' + [Guid]::NewGuid().ToString('N'))
 $render = if ($UI) { @('-RenderOffscreen', '-ResX=1280', '-ResY=900') } else { @('-NullRHI') }
+$sound = if($Audio){@("-AudioMixer")}else{@("-nosound")}
 $oldProfile = $env:LLVM_PROFILE_FILE
 try {
     # 個別の動作確認では巨大な既定プロファイルを残さない。本計測の指定先は維持する。
     if ([string]::IsNullOrWhiteSpace($oldProfile)) { $env:LLVM_PROFILE_FILE = 'NUL' }
-    & (Join-Path $engine.InstallLocation 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe') "$launchRoot/GirlsSpire.uproject" -unattended @render -nosound -nocef @ExtraArgs "-ExecCmds=Automation RunTests $Filter" '-TestExit=Automation Test Queue Empty' "-ReportExportPath=$report" '-log=FoundationTests.log'
+    & (Join-Path $engine.InstallLocation 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe') "$launchRoot/GirlsSpire.uproject" -unattended @render @sound -nocef @ExtraArgs "-ExecCmds=Automation RunTests $Filter" '-TestExit=Automation Test Queue Empty' "-ReportExportPath=$report" '-log=FoundationTests.log'
 } finally {
     $env:LLVM_PROFILE_FILE = $oldProfile
 }

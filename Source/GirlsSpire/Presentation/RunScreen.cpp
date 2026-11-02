@@ -1,4 +1,5 @@
 #include "RunScreen.h"
+#include "GameAudio.h"
 #include "ComboLabels.h"
 #include "CharacterPortraits.h"
 #include "Domain/CharacterCatalog.h"
@@ -37,6 +38,7 @@ void SRunScreen::Construct(const FArguments& Args)
 {
     SaveService=Args._SaveService;PreferencesService=Args._PreferencesService;
     if(PreferencesService){const auto loaded=PreferencesService->Load();PreferencesLoadIssue=loaded.Issue;if(loaded.Issue==GirlsSpire::PreferencesIssue::None)DisplayPreferences=loaded.Value;}
+    Audio=Args._Audio;if(Audio){Audio->Apply(DisplayPreferences);Audio->Start();}
     DevelopmentTools=Args._DevelopmentTools;
     ChildSlot [
         SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
@@ -69,7 +71,7 @@ void SRunScreen::AddAction(const FString& Text, const FName& Id, TFunction<void(
     const auto Button = SNew(SButton).ContentPadding(FMargin(20, 12)).HAlign(HAlign_Left)
         .ButtonColorAndOpacity(FLinearColor(0.25f, 0.12f, 0.18f))
         .AddMetaData(FDriverMetaData::Id(Id))
-        .OnClicked_Lambda([Action = MoveTemp(Action)] { Action(); return FReply::Handled(); })
+        .OnClicked_Lambda([this,Action = MoveTemp(Action)] { if(Audio)Audio->Cue(EGameCue::Confirm);Action(); return FReply::Handled(); })
         [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular", FontSize(19)))
             .ColorAndOpacity(FLinearColor(0.98f, 0.94f, 0.85f)) ];
     if (Row.IsValid()) Row->AddSlot().FillWidth(1).Padding(0, 0, 8, 10) [ Button ];

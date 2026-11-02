@@ -21,8 +21,9 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 - GS-033～038: ボス2体、未救出再登場、連携恒久発見/20種実戦、9人物カタログ共有/救出役割表示まで接続。戦闘/成長/商店/交流/後日談/中断と初期立ち絵は部分実装。
 - GS-042～050: 正式18技能・9個人必殺/8強化・20通常＋8専用連携を新規通常戦闘へ接続。CompleteCharacters(4)/固定開始時絆を使用し、旧APIと旧戦闘の意味/構文/RNGは維持。過去の証跡はIMPLEMENTED/VALIDATION参照。
 - GS-051/T032c完了: タイトルのマウス設定、独立preferences.sav、原本保全付き明示復旧、文字100/125/150%を周回/戦闘/人物情報へ接続。既存設定payload v1/23 bytes維持。初回不在は無書込の標準値、読込/破損は上書き停止、失敗中は未適用・下書き保持・再試行可能。周回/恒久記録と乱数は不変。preferences-rules.md。
-- 最新検証: 保存783＋設定1206＋全単体、全UE262＋起動、48地点と独立設定1件の別プロセス、通常MSVC＋実UI8＋起動が警告0/失敗0。行98.84/関数98.08/分岐91.00%、Missing=[]。Coverage/7847fef419c34b09bdb314198ebfe3e7、Saved/preferences-*.log。集計後に表示断言だけ強化したUI8件も成功、全製品ソースSHA-256不変。コピーの破損保護条件反転で10失敗を検出。
-- 音素材の実再生/個別音量、字幕/演出/親密表現の正式差分、色覚/全設定/1080p/1440p/全12日総合E2Eは残る。T032b/US7全体は完了にしない。
+- GS-052/T033a完了: 初期専用BGM20秒・確認0.16秒・打撃0.24秒、UE再生/停止、既存独立音量/消音を接続。原本Content/Audio/Source、PCMアセット/Game/Audio、出典ASSETS.md、audio-rules.md。FGCObjectで保持し終了時停止、無音/欠落でも操作継続。音は周回/乱数/保存形式へ追加しない。
+- 最新検証: Native20432＋全単体、全UE265＋通常起動＋音声有効1、48地点＋設定1の別プロセス、通常MSVC UI2＋音声1＋起動が警告0/失敗0。行98.83/関数97.96/分岐90.82%、Missing=[]。Coverage/bd7dcad316ff44039ce85ec0dc5147e6、Saved/audio-*.log。音声39,072,800 bytesを統合（初回0 bytesは明示書出しで修正、空原本拒否追加）。runtime原本0は未寄与として区別。コピーの条件反転で20408失敗を検出。
+- 最終ミックス/聴感/長時間/欠落画面通知/音声有効の通常ゲーム操作・再起動/配布、字幕・演出・親密差分/色覚・全設定・1080p/1440p・全12日総合E2Eは残る。T032b/US7/製品全体は完了にしない。
 - ゲームGit: origin KDT-KishimotoTakumi/AI_RPG。2026-11-02、終了前のコミット/pull/pushを利用者が明示承認。最新送信状態はgit status/logとリモートで確認。秘密設定/セーブ/生成物は除外する。
 - 支援8スキルはCodex共通領域を使用。二重登録を避けてプロジェクト重複版は整理済み。Context Mode1.0.169はプロジェクト限定MCP、全体フックなし。配布元/設定はDEV_SKILLS参照。
 - スキルコピーは別の非公開リポジトリKDT-KishimotoTakumi/AI-Development-Skillsへpush済み（d1c5fe4ff2f466340edc916181bf3a610f2a429e）。独立コピーSaved/Exports/AI-Development-Skillsを保持。
@@ -38,10 +39,10 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 - パスは環境から解決。既存tools/*.ps1はEpic manifest/vswhere/検証済み一時junctionを利用。実ビルド/IOは承認済みのescalated方式。審査拒否を迂回しない。
 - GirlsSpire.Build.csのbUseUnity=falseを維持（匿名名前空間衝突対策）。全資料/スキル一括読込禁止、Spec Kitは工程ごと。
 - 全体計測合格後のみ当該profrawをcleanup-measurements.ps1で整理。JSON/profdataを保持。
-- 直近整理: Intermediate/DDC 2,627,399,835 bytes（約2.45GiB）削除、対象外8,024ハッシュと秘密設定メタデータ不変。監査Saved/StorageAudit-20ad10448507489b9c24aa706a62ede9。次回ビルドでPCH等再生成。素材・セーブ・互換原本・検証結果を保持。過去の失敗計測はSaved/CoverageArchivesの照合済みZIPと元Coverageの対応DLL/ソース/診断を保持。
+- 直近整理: Intermediate/DDC 2,629,346,087 bytes（約2.45GiB）削除、対象外8,743ハッシュと秘密設定メタデータ不変。監査Saved/StorageAudit-4c05d7d6cff34a0caf76161bdaded012。次回ビルドでPCH等再生成。素材・セーブ・互換原本・検証結果を保持。過去の失敗計測はSaved/CoverageArchivesの照合済みZIPと元Coverageの対応DLL/ソース/診断を保持。
 
 ## 【次に行う作業】
-次はPLANのT033音素材/個別音量の実再生と、T032bの残る表示・正式差分接続を進める。性格/難易度別敵AI等の未確定条件は補完せず実装前に確認。新規戦闘は正式効果、保存済み戦闘は途中変換しない。終了前に生成物だけ容量整理し、承認済みcommit/pull/pushを検証する。
+次はPLANのT032b/US7の残る色覚・全設定/表示と正式差分接続を確定要件から進める。音の最終聴感/通常音声有効操作/配布等も残る。性格/難易度別敵AI等の未確定条件は補完せず実装前に確認。新規戦闘は正式効果、保存済み戦闘は途中変換しない。終了前に生成物だけ容量整理し、承認済みcommit/pull/pushを検証する。
 旧固定原本Tests/Fixtures/{roster-v11,ability-v12,skill-v13,ultimate-v14,bond-v15}.binは再生成しない。各メタデータ/説明/回帰テストに既知ハッシュと意味を保持。旧v13回復構文の承/転、旧v14通常技能、旧v15識別3の意味を維持する。
 1. 実際のgit statusと対象タスク/要件だけ確認して未完了実装を続ける。既合格GS-038を理由なく再試験しない。
 2. 必要な設計確認は具体案を示し、独立作業を並行する。関連検証後に管理資料を更新。

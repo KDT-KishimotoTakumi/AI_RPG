@@ -8,12 +8,14 @@
 #include "Infrastructure/SavePayload.h"
 #include <array>
 #include <optional>
+#include <memory>
 
 class SVerticalBox;
 class SHorizontalBox;
 class SUniformGridPanel;
 class STextBlock;
 class FCharacterPortraits;
+class IGameAudio;
 class SCombatScreen : public SCompoundWidget
 {
 public:
@@ -24,6 +26,7 @@ public:
         SLATE_ARGUMENT(std::optional<GirlsSpire::CombatControlCheckpoint>, SavedControl)
         SLATE_ARGUMENT(TSharedPtr<FCharacterPortraits>, Portraits)
         SLATE_ARGUMENT(GirlsSpire::Preferences, DisplayPreferences)
+        SLATE_ARGUMENT(std::shared_ptr<IGameAudio>, Audio)
         SLATE_EVENT(FSimpleDelegate, OnFinished)
         SLATE_ARGUMENT(TFunction<bool(const GirlsSpire::SavedCombat&)>, OnCheckpoint)
         SLATE_ARGUMENT(TFunction<bool(const GirlsSpire::SavedCombat&)>, OnSuspend)
@@ -31,6 +34,7 @@ public:
     void Construct(const FArguments& Args);
     GirlsSpire::CombatControlCheckpoint ControlCheckpoint() const {return Control.Checkpoint();}
 private:
+    std::shared_ptr<IGameAudio> Audio;
     int FontSize(int base) const {return GirlsSpire::ScaledFontSize(DisplayPreferences.Text,base);}
     GirlsSpire::Preferences DisplayPreferences;
     void Refresh();

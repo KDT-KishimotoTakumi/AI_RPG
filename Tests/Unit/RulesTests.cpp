@@ -187,5 +187,7 @@ int main()
     failed += TestFormalEncounter();
     extern int TestPreferencesStore();
     failed += TestPreferencesStore();
+    extern int TestAudioLevels();
+    failed += TestAudioLevels();
     return failed == 0 ? 0 : 1;
 }

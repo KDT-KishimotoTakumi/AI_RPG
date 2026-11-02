@@ -1,11 +1,12 @@
 #include "RunScreen.h"
+#include "GameAudio.h"
 #include "Widgets/SBoxPanel.h"
 #include <algorithm>
 void SRunScreen::ShowPreferences(bool resetDraft)
 {
     if(resetDraft){
         const auto loaded=PreferencesService->Load();PreferencesLoadIssue=loaded.Issue;
-        if(loaded.Issue==GirlsSpire::PreferencesIssue::None)DisplayPreferences=loaded.Value;
+        if(loaded.Issue==GirlsSpire::PreferencesIssue::None && loaded.Value!=DisplayPreferences){DisplayPreferences=loaded.Value;if(Audio)Audio->Apply(DisplayPreferences);}
         DraftPreferences=DisplayPreferences;PreferencesMessage.Empty();
     }
     RefreshPreferences();
@@ -40,7 +41,7 @@ void SRunScreen::RefreshPreferences()
 void SRunScreen::SavePreferences()
 {
     using namespace GirlsSpire;const auto issue=PreferencesService->Save(DraftPreferences);
-    if(issue==PreferencesIssue::None){DisplayPreferences=DraftPreferences;PreferencesLoadIssue=PreferencesIssue::None;ShowTitle();return;}
+    if(issue==PreferencesIssue::None){DisplayPreferences=DraftPreferences;if(Audio)Audio->Apply(DisplayPreferences);PreferencesLoadIssue=PreferencesIssue::None;ShowTitle();return;}
     if(issue==PreferencesIssue::Corrupt || issue==PreferencesIssue::ReadFailed)PreferencesLoadIssue=issue;
     PreferencesMessage=TEXT("設定を保存できませんでした。適用済みの設定は変えていません。再試行できます。");RefreshPreferences();
 }
@@ -49,7 +50,7 @@ void SRunScreen::ConfirmPreferencesReset()
     Body->ClearChildren();AddText(TEXT("読めない設定の原本を保全して、標準設定に戻しますか？ 周回と恒久記録は変更しません。"),"settings.reset.question");
     AddAction(TEXT("原本を保全して戻す"),"settings.reset.confirm",[this]{
         const auto issue=PreferencesService->RecoverDefaults();
-        if(issue==GirlsSpire::PreferencesIssue::None){DisplayPreferences={};PreferencesLoadIssue=issue;ShowTitle();return;}
+        if(issue==GirlsSpire::PreferencesIssue::None){DisplayPreferences={};if(Audio)Audio->Apply(DisplayPreferences);PreferencesLoadIssue=issue;ShowTitle();return;}
         PreferencesMessage=TEXT("設定を復旧できませんでした。原本を変更せず停止しました。");RefreshPreferences();
     });
     AddAction(TEXT("戻る"),"settings.reset.cancel",[this]{ShowPreferences();});

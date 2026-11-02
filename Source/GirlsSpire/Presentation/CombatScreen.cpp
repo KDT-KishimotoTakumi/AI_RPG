@@ -1,4 +1,5 @@
 #include "CombatScreen.h"
+#include "GameAudio.h"
 #include "CharacterPortraits.h"
 #include "AI/BasicTurn.h"
 #include "Framework/MetaData/DriverMetaData.h"
@@ -13,7 +14,7 @@
 
 void SCombatScreen::Construct(const FArguments& Args)
 {
-    DisplayPreferences=Args._DisplayPreferences;Combat=Args._Combat; OnFinished=Args._OnFinished;
+    Audio=Args._Audio;DisplayPreferences=Args._DisplayPreferences;Combat=Args._Combat; OnFinished=Args._OnFinished;
     OnCheckpoint=Args._OnCheckpoint;OnSuspend=Args._OnSuspend;
     GenerationSummary=Args._GenerationSummary;
     if(Args._BondProfile)KnownCombos=Args._BondProfile->DiscoveredCombos;
@@ -61,7 +62,7 @@ void SCombatScreen::Text(const FString& label,const FName& id,int size)
 void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()> callback,bool enabled,TSharedPtr<SHorizontalBox> row)
 {
     const auto button=SNew(SButton).ContentPadding(FMargin(10,6)).IsEnabled(enabled).AddMetaData(FDriverMetaData::Id(id))
-        .OnClicked_Lambda([callback=MoveTemp(callback)] { callback(); return FReply::Handled(); })
+        .OnClicked_Lambda([this,callback=MoveTemp(callback)] { if(Audio)Audio->Cue(EGameCue::Confirm);callback(); return FReply::Handled(); })
         [ SNew(STextBlock).Text(FText::FromString(label)).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16))) ];
     if(row) row->AddSlot().AutoWidth().Padding(0,0,6,0) [button];
     else Panel->AddSlot().AutoHeight().Padding(0,0,0,7) [button];
@@ -244,6 +245,7 @@ void SCombatScreen::SelectCell(GirlsSpire::Position cell,std::uint64_t revision)
 
 void SCombatScreen::DescribeHits()
 {
+    if(Audio && std::any_of(Combat->LastHits().begin(),Combat->LastHits().end(),[](const auto& hit){return hit.Hit && hit.Damage>0;}))Audio->Cue(EGameCue::Impact);
     Message.Empty();
     for(const auto& hit:Combat->LastHits())
         Message+=hit.Hit?FString::Printf(TEXT("対象%dに%dダメージ。"),hit.TargetId,hit.Damage):FString::Printf(TEXT("対象%dは回避。"),hit.TargetId);

@@ -42,6 +42,11 @@ try {
         $env:LLVM_PROFILE_FILE = "$out/runtime-%p.profraw"
         & (Join-Path $PSScriptRoot 'test-runtime.ps1') -SkipBuild
         if ($LASTEXITCODE) { throw '通常ゲーム起動の計測試験に失敗しました。' }
+        $env:LLVM_PROFILE_FILE = "$out/audio-%p.profraw"
+        & (Join-Path $PSScriptRoot 'test-unreal.ps1') -UI -Audio -Filter 'GirlsSpire.Audio.Engine' -ExtraArgs @('-GirlsSpireAudioTest','-AllowCommandletAudio')
+        if ($LASTEXITCODE) { throw '音声有効時の再生試験に失敗しました。' }
+        $audioProfiles=@(Get-ChildItem $out -Filter 'audio-*.profraw')
+        if($audioProfiles.Count -lt 1 -or ($audioProfiles | Measure-Object Length -Sum).Sum -le 0){throw '音声経路の計測原本が空です。'}
         $objects += '-object'; $objects += "$root/Binaries/Win64/UnrealEditor-GirlsSpire.dll"
     }
     $profiles = @(Get-ChildItem $out -Filter '*.profraw' | Select-Object -ExpandProperty FullName)
