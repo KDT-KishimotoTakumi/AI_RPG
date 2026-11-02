@@ -12,7 +12,8 @@ enum class Facing { North, East, South, West };
 enum class BattleGoal { Eliminate, Survive, Rescue, DefeatLord };
 enum class BattleOutcome { Ongoing, Won, Lost };
 enum class Skill { PowerStrike, FirstAid, Sweep, FarStrike, Heal };
-enum class AbilityRuleSet { Legacy, Character, CharacterSkills };
+enum class AbilityRuleSet { Legacy, Character, CharacterSkills, CharacterAbilities };
+inline bool UsesCharacterSkills(AbilityRuleSet rules){return rules==AbilityRuleSet::CharacterSkills || rules==AbilityRuleSet::CharacterAbilities;}
 inline constexpr int SkillCount=5;
 struct Tile {
     bool Wall = false;
@@ -74,10 +75,17 @@ struct PredictedHit {
     int Damage;
     bool operator==(const PredictedHit&) const = default;
 };
+struct PredictedAid {
+    int TargetId=-1,Healing=0,AttackBuff=0;
+    bool Cleanse=false;
+    bool operator==(const PredictedAid&) const=default;
+};
 struct AttackPreview {
     bool Legal = false;
     std::vector<PredictedHit> Hits;
     int TerrainDamage = 0;
+    std::vector<PredictedAid> Aid;
+    int SelfDefenseBuff=0;
     bool operator==(const AttackPreview&) const = default;
 };
 struct AttackHit {
@@ -144,6 +152,8 @@ public:
     int PotentialHostileDamage(int targetId) const;
     std::vector<Position> ConnectedTerrain(Position from, bool avoidTraps=false) const;
 private:
+    AttackPreview PreviewCharacterUltimate(int actorId,Position target) const;
+    bool UseCharacterUltimate(int actorId,const AttackPreview& preview);
     SkillPreview PreviewCharacterSkill(int actorId,Skill skill,Position target) const;
     bool UseCharacterSkill(std::uint64_t revision,int actorId,Skill skill,Position target,const SkillPreview& preview);
     explicit Battle(const BattleCheckpoint& checkpoint);

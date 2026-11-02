@@ -42,3 +42,5 @@ GS-045のTimedBoostは強度AmountとSkipCurrentEndを持つ純粋な期限処�
 GS-046はTimedBoostを戦闘/予告/手番/表示/Run v13へ接続。v11原本100例と変更前v12のLegacy/Character2例を固定し旧形式では空補完。次はFormalSkillの18技能を合法判定/対象/付与/命中時弱体/回復解除/CD/構文へ接続し、人物別の実UIと援護/AIを検証する。全正式効果が揃うまで通常のEncounter生成はLegacyを維持する。
 
 GS-047でCharacterSkills(2)に18通常技能を接続、Run v14を使用。Legacy/Character(1)の旧技能を維持し、旧v13原本と実行構文を固定検証する。次は個人必殺/絆100/専用連携を、旧戦闘の意味を保持して接続する。全効果が揃うまで新規Encounter生成はLegacyを維持する。
+
+GS-048で正式9個人必殺/8強化をCharacterAbilities(3)・Run v15へ接続。旧v14原本を維持。専用連携の起/命中条件に不整合を発見し、専用8種だけ承→結にする案を利用者へ確認中。未承認の修正はしない。通常生成はLegacy維持。

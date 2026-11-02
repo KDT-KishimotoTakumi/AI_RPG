@@ -53,7 +53,7 @@ std::vector<BasicAction> RankIntentActions(const Battle& battle, const IntentOrd
         const bool healing=preview.Support || preview.Healing>0;
         if(healing!=(order.Kind==TacticalIntent::Support)) continue;
         const int focusBonus=target && victim.Id==target->Id?200000:0;
-        const auto definition=state.AbilityRules==AbilityRuleSet::CharacterSkills?FormalSkill(actor->Id,skill):std::nullopt;
+        const auto definition=UsesCharacterSkills(state.AbilityRules)?FormalSkill(actor->Id,skill):std::nullopt;
         const int disruptBonus=order.Kind==TacticalIntent::Disrupt && definition && definition->Syntax==Twist?100000:0;
         const int score=healing?300000+focusBonus+preview.Healing*100-distance(focus,victim.At):disruptBonus+
             10000+(offensive?focusBonus:0)-distance(focus,victim.At)*100+

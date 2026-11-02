@@ -15,7 +15,7 @@ const TCHAR* SCombatScreen::SkillLabel(GirlsSpire::Skill skill)
 }
 FString SCombatScreen::OwnedSkillLabel(int actorId,GirlsSpire::Skill skill) const
 {
-    if(Combat->Snapshot().AbilityRules==GirlsSpire::AbilityRuleSet::CharacterSkills)
+    if(GirlsSpire::UsesCharacterSkills(Combat->Snapshot().AbilityRules))
         if(const auto ability=GirlsSpire::FormalSkill(actorId,skill))return UTF8_TO_TCHAR(ability->Name.data());
     const auto name=GirlsSpire::CharacterSkillName(actorId,skill);
     if(name.empty())return SkillLabel(skill);

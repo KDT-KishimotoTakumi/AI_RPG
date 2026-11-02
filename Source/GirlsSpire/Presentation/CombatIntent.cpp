@@ -63,13 +63,13 @@ void SCombatScreen::RefreshIntent()
         Action(labels[facing],ids[facing],[this,facing,revision=Combat->Snapshot().Revision] { Wait(static_cast<Facing>(facing),revision); },true,directions);
     const auto& units=Combat->Snapshot().Units;
     const auto unit=std::find_if(units.begin(),units.end(),[actor](const BattleUnit& value) {return value.Id==actor;});
-    if(Combat->Snapshot().AbilityRules==AbilityRuleSet::CharacterSkills)
+    if(UsesCharacterSkills(Combat->Snapshot().AbilityRules))
         Text(FString::Printf(TEXT("人物技能 / 再使用待ち %s:%d %s:%d"),*OwnedSkillLabel(actor,Skill::PowerStrike),unit->Cooldowns[0],*OwnedSkillLabel(actor,Skill::FirstAid),unit->Cooldowns[1]),"battle.skill.status",13);
     else Text(FString::Printf(TEXT("開発用技 / 再使用待ち 強撃:%d 応急手当:%d"),unit->Cooldowns[0],unit->Cooldowns[1]),"battle.skill.status",13);
     FString additional;
     for(int i=2;i<SkillCount;++i) if(unit->Skills[i]) additional+=FString::Printf(TEXT("%s:%d "),SkillLabel(static_cast<Skill>(i)),unit->Cooldowns[i]);
     Text(additional,"battle.skill.additional",13);
-    Text(Combat->Snapshot().AbilityRules==AbilityRuleSet::CharacterSkills?TEXT("技能の対象とクールダウンに従って候補を表示します。"):TEXT("所持する開発用技を候補化。人物固有技・妨害技は未実装です。"),"intent.notice",13);
+    Text(UsesCharacterSkills(Combat->Snapshot().AbilityRules)?TEXT("技能の対象とクールダウンに従って候補を表示します。"):TEXT("所持する開発用技を候補化。人物固有技・妨害技は未実装です。"),"intent.notice",13);
     RefreshUltimate();
     Text(Message,"battle.log",14);
 }

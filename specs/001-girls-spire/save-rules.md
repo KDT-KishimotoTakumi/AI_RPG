@@ -57,3 +57,5 @@ BattleSnapshot.AbilityRules（Legacy/Character）とStartingBonds[8]を明示的
 各BattleUnitのAttackBoost/DefenseBoost/AccuracyBoostをAmount（int）とSkipCurrentEnd（厳密bool）で保存する。旧v2～v12は全て空状態で補完し、Profile v4は維持する。強化はCharacterルールのみ非空を許可し、最大は承認表の攻撃6/防御4/命中15。不正強度/空の除外期限/Legacyへの混入は拒否する。使用者自身の手番終了を1回除外し、受け手の次手番終了で失効。別人物の終了では進めず、新しい戦闘では消去する。攻撃/命中/防御の計算を通常・技能・必殺で共用し、予告と被害予測は元状態/RNGを変えない。敵被害の予測では、敵が動くまでの受け手の手番終了に合わせて防御強化の期限をコピー内だけで進める。正式技能からの付与は未接続。
 
 GS-047（Run v14）: AbilityRuleSet=2のCharacterSkillsを追加し、旧0/1の技能効果と構文を維持。v14未満への2の混入は拒否。識別2だけ承認済み通常18技能を使用する。5技能枠/IDとProfile v4は維持。回復/強化/解除はRNGを消費せず、付与済み強化/弱体/CD/構文/作戦を中断再開で保存。通常生成はLegacyのまま。旧v13固定原本はskill-v13.binへ保全し再生成しない。
+
+GS-048: CharacterAbilities(3)/Run v15を追加し、旧識別の個人必殺を維持。v15未満への3混入は拒否。新識別は固定絆から正式必殺を選び、ゲージ/範囲結果/弱体/回復/強化/結/RNGを既存状態へ保存する。予告のAid/SelfDefenseBuffは一時表示情報で保存対象ではない。Profile v4は不変、旧v14原本を保全。

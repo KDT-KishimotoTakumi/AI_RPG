@@ -9,7 +9,7 @@ BattleCheckpoint Battle::Checkpoint() const { return {state_,random_.State(),goa
 bool Battle::ValidCheckpoint() const
 {
     const auto& s=state_;
-    if(s.AbilityRules!=AbilityRuleSet::Legacy && s.AbilityRules!=AbilityRuleSet::Character && s.AbilityRules!=AbilityRuleSet::CharacterSkills)return false;
+    if(s.AbilityRules<AbilityRuleSet::Legacy || s.AbilityRules>AbilityRuleSet::CharacterAbilities)return false;
     for(int rank:s.StartingBonds)
         if(rank<0 || rank>100 || (s.AbilityRules==AbilityRuleSet::Legacy && rank!=0))return false;
     if(s.ChargeReady) {

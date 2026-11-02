@@ -71,6 +71,6 @@ int TestCharacterSkills()
         auto battle=Battle::Restore(checkpoint);
         check(battle && battle->UseSkill(battle->Snapshot().Revision,0,Skill::FirstAid,checkpoint.State.Units[0].At) && !battle->Snapshot().Combos.Pending.empty() && battle->Snapshot().Combos.Pending.back().Attributes==(Continuation|Twist),"旧v13の回復は旧構文の承/転を維持して実行");
     }
-    check(RunPayloadSchema==14,"旧エンジンが新識別を破損扱いしないよう周回版を更新");
+    check(RunPayloadSchema>=14,"旧エンジンが新識別を破損扱いしないよう周回版を更新");
     std::cout<<"CharacterSkills: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }

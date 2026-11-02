@@ -37,3 +37,5 @@ GS-044: BattleSnapshotにAbilityRulesとStartingBonds[8]を追加し、Run v12�
 GS-046: BattleUnitに攻撃/防御/命中の独立TimedBoostを保持。Run v13へ強度と除外期限を保存し旧v12以下は空で補完。Battle初期化で消去、AdvanceTurnで退出者だけ期限更新。通常/技能/必殺の共通計算と安全予測へ反映。Characterのみに非空を許可する。正式技能による付与は別工程。v12原本ability-v12.binは再生成しない。
 
 GS-047: CharacterSkills(2)とRun v14を追加。旧識別の技能解釈は不変。SkillPreviewに支援/強化/解除の予告情報を追加（予告用で保存対象ではない）。初期2枠の18技能だけ人物別に解釈し、共通報酬技能/旧敵汎用技能は維持。CD/強化/弱体/構文は既存戦闘状態で保存する。
+
+GS-048: CharacterAbilities(3)は正式通常技能と正式個人必殺を使用し、0/1/2の旧必殺は不変。Run v15を使用する。AttackPreviewへ味方支援予告と自身防御強化情報を追加（非永続）。結果は既存HP/TimedBoost/弱体/ゲージ/構文/RNGへ一括反映して保存する。詳細character-ultimates-rules.md。
