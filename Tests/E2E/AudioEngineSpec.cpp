@@ -8,6 +8,8 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "UObject/GarbageCollection.h"
+#include "HAL/IConsoleManager.h"
+#include "Misc/ScopeExit.h"
 #if defined(GIRLS_SPIRE_COVERAGE)
 extern "C" int __llvm_profile_write_file();
 #endif
@@ -39,7 +41,33 @@ void FGirlsSpireAudioEngineSpec::Define()
             prefs.BgmVolume=100;Audio->Apply(prefs);TestTrue(TEXT("BGMを再開"),Audio->Music()->IsPlaying());Audio->Stop();TestFalse(TEXT("明示停止"),Audio->Music()->IsPlaying());
         }).Wait();
     });
-        AfterEach([this]{Audio.reset();
+    It(TEXT("増分GCの途中に作成した音声参照も完了後に保持する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(90),[this]{
+        Async(EAsyncExecution::TaskGraphMainThread,[this]{
+            auto* allow=IConsoleManager::Get().FindConsoleVariable(TEXT("gc.AllowIncrementalReachability"));
+            auto* limit=IConsoleManager::Get().FindConsoleVariable(TEXT("gc.IncrementalReachabilityTimeLimit"));
+            auto* delay=IConsoleManager::Get().FindConsoleVariable(TEXT("gc.DelayReachabilityIterations"));
+            if(!TestNotNull(TEXT("増分GC設定"),allow) || !TestNotNull(TEXT("時間制限"),limit) || !TestNotNull(TEXT("反復遅延"),delay))return;
+            const int previousAllow=allow->GetInt(),previousDelay=delay->GetInt();const float previousLimit=limit->GetFloat();
+            ON_SCOPE_EXIT {
+                delay->SetWithCurrentPriority(0);FinalizeIncrementalReachabilityAnalysis();
+                allow->SetWithCurrentPriority(previousAllow);limit->SetWithCurrentPriority(previousLimit);delay->SetWithCurrentPriority(previousDelay);
+            };
+            Audio=std::make_shared<FGameAudio>();if(!TestTrue(TEXT("GC前に音素材を読込"),Audio->Ready()))return;
+            Audio->Start();const TWeakObjectPtr<UAudioComponent> original=Audio->Music();
+            allow->SetWithCurrentPriority(1);limit->SetWithCurrentPriority(0.000001f);delay->SetWithCurrentPriority(2);
+            CollectGarbage(RF_NoFlags,false);
+            if(!TestTrue(TEXT("実際に増分到達性解析が進行中"),IsIncrementalReachabilityAnalysisPending()))return;
+            auto during=std::make_shared<FGameAudio>();during->Start();
+            const TWeakObjectPtr<UAudioComponent> created=during->Music();
+            TestTrue(TEXT("解析中も効果音を操作"),Audio->Cue(EGameCue::Impact));
+            delay->SetWithCurrentPriority(0);FinalizeIncrementalReachabilityAnalysis();
+            TestFalse(TEXT("到達性解析が完了"),IsIncrementalReachabilityAnalysisPending());
+            TestTrue(TEXT("既存と途中作成の所有物を保持"),original.IsValid() && created.IsValid() && original.Get()==Audio->Music() && created.Get()==during->Music());
+            TestTrue(TEXT("両方の3素材と再生を維持"),Audio->Ready() && during->Ready() && Audio->Music()->IsPlaying() && during->Music()->IsPlaying());
+            during->Stop();Audio->Stop();
+        }).Wait();
+    });
+    AfterEach([this]{Audio.reset();
 #if defined(GIRLS_SPIRE_COVERAGE)
         // 短い専用試験も強制終了前に記録し、0バイトの原本を成功扱いにしない。
         TestEqual(TEXT("音声経路のカバレッジ記録"),__llvm_profile_write_file(),0);

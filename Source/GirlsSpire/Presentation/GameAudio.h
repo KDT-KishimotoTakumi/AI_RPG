@@ -1,6 +1,7 @@
 #pragma once
 #include "Application/AudioLevels.h"
 #include "UObject/GCObject.h"
+#include "UObject/ObjectPtr.h"
 class UAudioComponent;
 class USoundBase;
 enum class EGameCue {Confirm,Impact};
@@ -19,18 +20,18 @@ public:
     void Start() override;
     bool Cue(EGameCue cue) override;
     void Stop();
-    UAudioComponent* Music() const {return MusicComponent;}
-    UAudioComponent* Effects() const {return EffectComponent;}
+    UAudioComponent* Music() const {return MusicComponent.Get();}
+    UAudioComponent* Effects() const {return EffectComponent.Get();}
     bool Ready() const;
     void AddReferencedObjects(FReferenceCollector& collector) override;
     FString GetReferencerName() const override {return TEXT("GirlsSpire.GameAudio");}
 private:
     void RefreshMusic();
-    UAudioComponent* MusicComponent=nullptr;
-    UAudioComponent* EffectComponent=nullptr;
-    USoundBase* MusicClip=nullptr;
-    USoundBase* ConfirmClip=nullptr;
-    USoundBase* ImpactClip=nullptr;
+    TObjectPtr<UAudioComponent> MusicComponent;
+    TObjectPtr<UAudioComponent> EffectComponent;
+    TObjectPtr<USoundBase> MusicClip;
+    TObjectPtr<USoundBase> ConfirmClip;
+    TObjectPtr<USoundBase> ImpactClip;
     GirlsSpire::AudioLevels Levels;
     bool MusicRequested=false;
 };
