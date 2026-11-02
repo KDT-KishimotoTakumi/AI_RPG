@@ -1,0 +1,39 @@
+#include "Infrastructure/PreferencesStore.h"
+#include "Infrastructure/SavePayload.h"
+#include <iostream>
+namespace {
+class PreferencesMemory : public GirlsSpire::PreferencesFiles {
+public:
+    std::optional<std::string> Bytes,Preserved;bool ReadFail=false,WriteFail=false,PreserveFail=false;int Writes=0;
+    GirlsSpire::SlotBytes ReadPreferences()override{return {ReadFail,Bytes};}
+    bool ReplacePreferences(std::string_view bytes)override{++Writes;if(WriteFail)return false;Bytes=bytes;return true;}
+    bool PreservePreferences()override{if(PreserveFail)return false;Preserved=Bytes;return true;}
+};
+}
+int TestPreferencesStore()
+{
+    using namespace GirlsSpire;int checks=0,failed=0;
+    const auto check=[&](bool pass,const char* why){++checks;if(!pass){++failed;std::cerr<<"FAIL PreferencesStore: "<<why<<'\n';}};
+    PreferencesMemory files;PreferencesStore store(files);
+    check(store.Load().Issue==PreferencesIssue::Empty && store.Load().Value==Preferences{} && files.Writes==0,"初回は既定値・無書込");
+    for(int size=0;size<3;++size)for(int bgm:{0,1,50,100})for(int sfx:{0,1,50,100})for(int flags=0;flags<8;++flags){
+        const Preferences value{static_cast<TextSize>(size),bgm,sfx,(flags&1)!=0,(flags&2)!=0,(flags&4)!=0};
+        check(store.Save(value)==PreferencesIssue::None,"全設定を保存");
+        PreferencesStore restarted(files);const auto loaded=restarted.Load();check(loaded.Issue==PreferencesIssue::None && loaded.Value==value,"再生成後も全設定を保持");
+    }
+    const auto original=files.Bytes;const auto writes=files.Writes;auto invalid=Preferences{};invalid.BgmVolume=-1;
+    check(store.Save(invalid)==PreferencesIssue::Invalid && files.Bytes==original && files.Writes==writes,"不正値はIO前に拒否");
+    files.ReadFail=true;check(store.Load().Issue==PreferencesIssue::ReadFailed && store.Save({})==PreferencesIssue::ReadFailed && files.Bytes==original,"読込失敗を初回と混同しない");files.ReadFail=false;
+    files.WriteFail=true;check(store.Save({})==PreferencesIssue::WriteFailed && files.Bytes==original,"失敗時は旧確定値を保つ");files.WriteFail=false;
+    check(store.Save({})==PreferencesIssue::None && store.Load().Value==Preferences{},"同じ内容の再試行");
+    for(const auto& corrupt:{std::string(),std::string("future-or-corrupt")}){
+        files.Bytes=corrupt;const auto count=files.Writes;
+        check(store.Load().Issue==PreferencesIssue::Corrupt && store.Save({})==PreferencesIssue::Corrupt && files.Bytes==corrupt && files.Writes==count,"破損原本を自動上書きしない");
+        files.PreserveFail=true;check(store.RecoverDefaults()==PreferencesIssue::PreserveFailed && files.Bytes==corrupt,"原本保全失敗なら初期化しない");files.PreserveFail=false;
+        files.WriteFail=true;check(store.RecoverDefaults()==PreferencesIssue::WriteFailed && files.Preserved==corrupt && files.Bytes==corrupt,"保全後の置換失敗も原本保持");files.WriteFail=false;
+        check(store.RecoverDefaults()==PreferencesIssue::None && files.Preserved==corrupt && store.Load().Issue==PreferencesIssue::None && store.Load().Value==Preferences{},"明示復旧だけ原本を保全して既定値へ");
+    }
+    check(store.RecoverDefaults()==PreferencesIssue::Invalid,"正常ファイルの復旧操作を拒否");
+    files.ReadFail=true;check(store.RecoverDefaults()==PreferencesIssue::ReadFailed,"復旧でも読込失敗を維持");
+    std::cout<<"PreferencesStore: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
+}

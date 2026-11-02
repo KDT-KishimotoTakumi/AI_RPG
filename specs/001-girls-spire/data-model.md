@@ -43,3 +43,5 @@ GS-048: CharacterAbilities(3)は正式通常技能と正式個人必殺を使用
 GS-049: CompleteCharacters(4)/Run v16は正式技能・必殺に専用連携201～208を追加する。専用候補の優先フラグは計算時のみで保存しない。既存の履歴・ゲージ・成立結果・固定絆とProfile v4の発見IDを利用し、旧識別0～3の意味を維持する。
 
 GS-050（新規戦闘への正式効果接続）: Encounter::CreateのProfile明示版は、従来生成と同じ盤面/編成/能力/手番/RNGにCompleteCharacters(4)と開始時Bonds[8]だけを付ける。不正Profileは生成前に拒否。通常のSRunScreenからこの版を使用し、固定戦場でも同じ開始時絆を保持する。Profileなしの旧APIはLegacyのまま。保存形式はRun v16/Profile v4を維持し、保存済み戦闘を新規生成で上書きしない。検証状態はVALIDATION.md/PLAN.md。
+
+GS-051: 設定payload v1/23 bytesを独立preferences.savへ保存。値/版は維持し、Run v16/Profile v4の状態/乱数に追加しない。PreferencesStoreは不在/読込失敗/破損を区別し、明示復旧時の原本保全と保存成功時だけの適用を扱う。詳細preferences-rules.md。

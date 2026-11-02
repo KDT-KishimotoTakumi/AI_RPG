@@ -8,6 +8,10 @@ int TestPreferences()
     int checks=0,failed=0;
     const auto check=[&](bool ok,const char* why){++checks;if(!ok){++failed;std::cerr<<"FAIL Preferences: "<<why<<'\n';}};
     const Preferences defaults;
+    check(ScaledFontSize(TextSize::Standard,20)==20 && ScaledFontSize(TextSize::Large,20)==25 && ScaledFontSize(TextSize::Largest,20)==30,"文字サイズ100/125/150%");
+    check(ScaledFontSize(TextSize::Large,19)==24 && ScaledFontSize(TextSize::Largest,19)==29,"文字サイズの端数は四捨五入");
+    check(ScaledFontSize(TextSize::Standard,0)==0 && ScaledFontSize(TextSize::Large,-1)==0 && ScaledFontSize(static_cast<TextSize>(3),20)==0,"不正フォント指定を拒否");
+    check(ScaledFontSize(TextSize::Largest,2147483647)==2147483647,"巨大値も整数オーバーフローしない");
     check(ValidPreferences(defaults) && defaults.Text==TextSize::Standard && defaults.BgmVolume==100 && defaults.SfxVolume==100 && defaults.Subtitles && !defaults.ReducedEffects && defaults.SuppressIntimacy,"初期値は有効で親密表現を抑制");
     for(int text=0;text<3;++text)for(int bgm:{0,1,50,100})for(int sfx:{0,1,50,100})for(int flags=0;flags<8;++flags) {
         const Preferences value{static_cast<TextSize>(text),bgm,sfx,(flags&1)!=0,(flags&2)!=0,(flags&4)!=0};

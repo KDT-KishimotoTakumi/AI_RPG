@@ -2,6 +2,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Domain/Battle.h"
 #include "Domain/Bond.h"
+#include "Domain/Preferences.h"
 #include "AI/Intent.h"
 #include "Application/CombatControl.h"
 #include "Infrastructure/SavePayload.h"
@@ -22,6 +23,7 @@ public:
         SLATE_ARGUMENT(std::optional<GirlsSpire::Profile>, BondProfile)
         SLATE_ARGUMENT(std::optional<GirlsSpire::CombatControlCheckpoint>, SavedControl)
         SLATE_ARGUMENT(TSharedPtr<FCharacterPortraits>, Portraits)
+        SLATE_ARGUMENT(GirlsSpire::Preferences, DisplayPreferences)
         SLATE_EVENT(FSimpleDelegate, OnFinished)
         SLATE_ARGUMENT(TFunction<bool(const GirlsSpire::SavedCombat&)>, OnCheckpoint)
         SLATE_ARGUMENT(TFunction<bool(const GirlsSpire::SavedCombat&)>, OnSuspend)
@@ -29,6 +31,8 @@ public:
     void Construct(const FArguments& Args);
     GirlsSpire::CombatControlCheckpoint ControlCheckpoint() const {return Control.Checkpoint();}
 private:
+    int FontSize(int base) const {return GirlsSpire::ScaledFontSize(DisplayPreferences.Text,base);}
+    GirlsSpire::Preferences DisplayPreferences;
     void Refresh();
     void RefreshPortraits();
     void RefreshSkills();

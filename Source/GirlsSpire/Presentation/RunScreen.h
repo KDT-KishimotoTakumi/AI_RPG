@@ -2,6 +2,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "Application/Run.h"
 #include "Infrastructure/SaveTransaction.h"
+#include "Infrastructure/PreferencesStore.h"
 #include <memory>
 
 class SVerticalBox;
@@ -13,9 +14,19 @@ public:
         SLATE_ARGUMENT(std::shared_ptr<GirlsSpire::Run>, InitialRun)
         SLATE_ARGUMENT(std::shared_ptr<GirlsSpire::SaveTransaction>, SaveService)
         SLATE_ARGUMENT(bool, DevelopmentTools)
+        SLATE_ARGUMENT(std::shared_ptr<GirlsSpire::PreferencesStore>, PreferencesService)
     SLATE_END_ARGS()
     void Construct(const FArguments& Args);
 private:
+    void ShowPreferences(bool resetDraft=true);
+    void RefreshPreferences();
+    void SavePreferences();
+    void ConfirmPreferencesReset();
+    int FontSize(int base) const {return GirlsSpire::ScaledFontSize(DisplayPreferences.Text,base);}
+    std::shared_ptr<GirlsSpire::PreferencesStore> PreferencesService;
+    GirlsSpire::Preferences DisplayPreferences,DraftPreferences;
+    GirlsSpire::PreferencesIssue PreferencesLoadIssue=GirlsSpire::PreferencesIssue::Empty;
+    FString PreferencesMessage;
     void ShowTitle();
     void ShowSetup();
     void StartRun();

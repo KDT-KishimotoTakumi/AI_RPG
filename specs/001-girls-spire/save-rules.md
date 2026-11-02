@@ -63,3 +63,5 @@ GS-048: CharacterAbilities(3)/Run v15を追加し、旧識別の個人必殺を�
 GS-049（Run v16）: CompleteCharacters(4)だけで専用8連携を照合する。v16未満への4混入は拒否し、旧v2～15を読み込む。旧v15原本bond-v15.binを保全し再生成しない。専用の候補フラグは非永続、成立結果と発見IDは既存状態へ保存。Profile v4と旧識別0～3の技能/必殺/連携は維持する。
 
 GS-050: 新規戦闘の開始時にProfileの絆をコピーして固定し、CombatControlのProfileDriven/Trustと一致させる。戦闘中にProfileから再計算しない。中断再開では保存済みのBattle/Controlを復元する従来経路を維持し、旧戦闘の識別・技能・構文・乱数を途中変換しない。新しい保存フィールド/版は追加しない（Run v16/Profile v4）。
+
+GS-051: preferences.savはrun.sav/profile.sav/transaction.savから独立。設定の読込だけでは書き込まず、保存前の再読込で検出した異常は上書きしない。既存の一時ファイル/flush/有限再試行/原子的置換を共有し、明示復旧はCorrupt/preferences-*へ原本保全が成功した場合だけ行う。Run v16/Profile v4と旧原本の意味は不変。

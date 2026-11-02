@@ -1,12 +1,13 @@
 #pragma once
 #include "SaveSlot.h"
 #include "SaveTransaction.h"
+#include "PreferencesStore.h"
 #include <filesystem>
 #include <functional>
 #include <cstdint>
 
 namespace GirlsSpire {
-class DiskSlotFiles : public SlotFiles,public JournalFiles {
+class DiskSlotFiles : public SlotFiles,public JournalFiles,public PreferencesFiles {
 public:
     using RetryWait=std::function<void(unsigned)>;
     explicit DiskSlotFiles(std::filesystem::path root,RetryWait wait={}) : root_(std::move(root)),wait_(std::move(wait)) {}
@@ -18,6 +19,9 @@ public:
     bool ReplaceJournal(std::string_view bytes) override;
     bool Preserve(SaveKind kind) override;
     bool PreserveJournal() override;
+    SlotBytes ReadPreferences() override;
+    bool ReplacePreferences(std::string_view bytes) override;
+    bool PreservePreferences() override;
 private:
     bool PreserveFiles(std::string_view prefix,std::initializer_list<std::filesystem::path> sources);
     std::optional<std::filesystem::path> Path(SaveKind kind,bool backup) const;

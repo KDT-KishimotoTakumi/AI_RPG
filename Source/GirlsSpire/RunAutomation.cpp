@@ -31,6 +31,8 @@
 #include "../../Tests/E2E/CharacterUltimateSpec.cpp"
 #include "../../Tests/E2E/BondComboSpec.cpp"
 #include "../../Tests/E2E/FormalEncounterSpec.cpp"
+#include "../../Tests/E2E/PreferencesSpec.cpp"
+#include "../../Tests/E2E/PreferencesProcessSpec.cpp"
 #include "../../Tests/E2E/StorageContentionSpec.cpp"
 #include "../../Tests/E2E/ResumeControlSpec.cpp"
 #include "../../Tests/E2E/ResumeSpec.cpp"

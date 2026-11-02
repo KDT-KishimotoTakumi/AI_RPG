@@ -185,5 +185,7 @@ int main()
     failed += TestBondCombos();
     extern int TestFormalEncounter();
     failed += TestFormalEncounter();
+    extern int TestPreferencesStore();
+    failed += TestPreferencesStore();
     return failed == 0 ? 0 : 1;
 }

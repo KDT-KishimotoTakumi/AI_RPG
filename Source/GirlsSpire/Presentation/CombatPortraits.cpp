@@ -25,7 +25,7 @@ void SCombatScreen::RefreshPortraits()
                         .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.portrait.image.%d"),unit.Id)))]];
         } else {
             card->AddSlot().AutoHeight()[SNew(STextBlock).Text(FText::FromString(TEXT("画像未読込")))
-                .Font(FCoreStyle::GetDefaultFontStyle("Regular",12))
+                .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(12)))
                 .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.portrait.missing.%d"),unit.Id)))];
         }
         const FString values[]={FCharacterPortraits::Name(unit.Id),FString::Printf(TEXT("HP %d / %d"),unit.Hp,unit.MaxHp),
@@ -34,7 +34,7 @@ void SCombatScreen::RefreshPortraits()
         const TCHAR* fields[]={TEXT("name"),TEXT("hp"),TEXT("state"),TEXT("faction")};
         for(int i=0;i<4;++i)card->AddSlot().AutoHeight()
             [SNew(STextBlock).Text(FText::FromString(values[i])).AutoWrapText(true)
-                .Font(FCoreStyle::GetDefaultFontStyle("Regular",12))
+                .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(12)))
                 .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.portrait.%s.%d"),fields[i],unit.Id)))];
     }
 }

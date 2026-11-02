@@ -9,4 +9,5 @@ struct Preferences {
 };
 bool ValidPreferences(const Preferences& value);
 int TextScalePercent(TextSize size);
+int ScaledFontSize(TextSize size,int base);
 }

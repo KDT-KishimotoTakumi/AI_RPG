@@ -13,7 +13,7 @@
 
 void SCombatScreen::Construct(const FArguments& Args)
 {
-    Combat=Args._Combat; OnFinished=Args._OnFinished;
+    DisplayPreferences=Args._DisplayPreferences;Combat=Args._Combat; OnFinished=Args._OnFinished;
     OnCheckpoint=Args._OnCheckpoint;OnSuspend=Args._OnSuspend;
     GenerationSummary=Args._GenerationSummary;
     if(Args._BondProfile)KnownCombos=Args._BondProfile->DiscoveredCombos;
@@ -39,10 +39,10 @@ void SCombatScreen::Construct(const FArguments& Args)
                 + SVerticalBox::Slot().AutoHeight() [ SAssignNew(Grid,SUniformGridPanel).SlotPadding(2) ]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,10,0,6)[SAssignNew(PortraitPanel,SHorizontalBox)]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,12,0,6)
-                    [ SAssignNew(ComboGauge,STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",18))
+                    [ SAssignNew(ComboGauge,STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(18)))
                         .AddMetaData(FDriverMetaData::Id("battle.combo.gauge")) ]
                 + SVerticalBox::Slot().AutoHeight()
-                    [ SAssignNew(ComboResult,STextBlock).WrapTextAt(390).Font(FCoreStyle::GetDefaultFontStyle("Regular",14))
+                    [ SAssignNew(ComboResult,STextBlock).WrapTextAt(390).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(14)))
                         .AddMetaData(FDriverMetaData::Id("battle.combo.result")) ] ]
         + SHorizontalBox::Slot().FillWidth(1)
             [ SNew(SBox).HeightOverride(490)
@@ -55,14 +55,14 @@ void SCombatScreen::Text(const FString& label,const FName& id,int size)
 {
     Panel->AddSlot().AutoHeight().Padding(0,0,0,10)
     [ SNew(STextBlock).Text(FText::FromString(label)).AutoWrapText(true)
-        .Font(FCoreStyle::GetDefaultFontStyle("Regular",size)).AddMetaData(FDriverMetaData::Id(id)) ];
+        .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(size))).AddMetaData(FDriverMetaData::Id(id)) ];
 }
 
 void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()> callback,bool enabled,TSharedPtr<SHorizontalBox> row)
 {
     const auto button=SNew(SButton).ContentPadding(FMargin(10,6)).IsEnabled(enabled).AddMetaData(FDriverMetaData::Id(id))
         .OnClicked_Lambda([callback=MoveTemp(callback)] { callback(); return FReply::Handled(); })
-        [ SNew(STextBlock).Text(FText::FromString(label)).Font(FCoreStyle::GetDefaultFontStyle("Regular",16)) ];
+        [ SNew(STextBlock).Text(FText::FromString(label)).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16))) ];
     if(row) row->AddSlot().AutoWidth().Padding(0,0,6,0) [button];
     else Panel->AddSlot().AutoHeight().Padding(0,0,0,7) [button];
 }
@@ -125,7 +125,7 @@ void SCombatScreen::Refresh()
                 .OnClicked_Lambda([this,at,revision=state.Revision] { SelectCell(at,revision); return FReply::Handled(); })
                 [ SNew(STextBlock).Text(FText::FromString(label)).Justification(ETextJustify::Center)
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.celllabel.%d.%d"),x,y)))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",large?8:11)).ColorAndOpacity(FLinearColor::White) ] ] ];
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White) ] ] ];
     }
     Text(FString::Printf(TEXT("第%dラウンド"),state.Round),"battle.round",23);
     Text(GenerationSummary,"battle.generation",13);

@@ -13,6 +13,9 @@
 #include <Windows.h>
 #endif
 namespace GirlsSpire {
+SlotBytes DiskSlotFiles::ReadPreferences(){return ReadAt(root_/"preferences.sav");}
+bool DiskSlotFiles::ReplacePreferences(std::string_view bytes){return ReplaceAt(root_/"preferences.sav",bytes);}
+bool DiskSlotFiles::PreservePreferences(){return PreserveFiles("preferences-",{root_/"preferences.sav"});}
 bool DiskSlotFiles::Preserve(SaveKind kind)
 {
     if(!Path(kind,false)) return false;

@@ -35,7 +35,8 @@ FString NodeLabel(const GirlsSpire::RouteNode& Node)
 
 void SRunScreen::Construct(const FArguments& Args)
 {
-    SaveService=Args._SaveService;
+    SaveService=Args._SaveService;PreferencesService=Args._PreferencesService;
+    if(PreferencesService){const auto loaded=PreferencesService->Load();PreferencesLoadIssue=loaded.Issue;if(loaded.Issue==GirlsSpire::PreferencesIssue::None)DisplayPreferences=loaded.Value;}
     DevelopmentTools=Args._DevelopmentTools;
     ChildSlot [
         SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
@@ -43,10 +44,10 @@ void SRunScreen::Construct(const FArguments& Args)
         [ SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
             [ SNew(STextBlock).Text(FText::FromString(TEXT("GIRLS SPIRE  /  死者の城")))
-                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 30)).ColorAndOpacity(FLinearColor(0.94f, 0.79f, 0.58f)) ]
+                .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Bold",FontSize(30));}).ColorAndOpacity(FLinearColor(0.94f, 0.79f, 0.58f)) ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 24)
             [ SNew(STextBlock).Text(FText::FromString(DevelopmentTools?TEXT("開発版 — 戦闘・作戦予告・三択報酬 / 正式素材は開発中"):TEXT("十二日後、死者の城が歴史を書き換える。")))
-                .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16)).ColorAndOpacity(FLinearColor(0.8f, 0.65f, 0.65f)) ]
+                .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16));}).ColorAndOpacity(FLinearColor(0.8f, 0.65f, 0.65f)) ]
             + SVerticalBox::Slot().FillHeight(1)
             [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("run.scroll")) + SScrollBox::Slot() [ SAssignNew(Body, SVerticalBox) ] ]
         ]
@@ -59,7 +60,7 @@ void SRunScreen::AddText(const FString& Text, const FName& Id, int Size)
 {
     Body->AddSlot().AutoHeight().Padding(0, 0, 0, 16)
     [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true)
-        .Font(FCoreStyle::GetDefaultFontStyle("Regular", Size))
+        .Font(FCoreStyle::GetDefaultFontStyle("Regular", FontSize(Size)))
         .ColorAndOpacity(FLinearColor(0.92f, 0.89f, 0.83f)).AddMetaData(FDriverMetaData::Id(Id)) ];
 }
 
@@ -69,7 +70,7 @@ void SRunScreen::AddAction(const FString& Text, const FName& Id, TFunction<void(
         .ButtonColorAndOpacity(FLinearColor(0.25f, 0.12f, 0.18f))
         .AddMetaData(FDriverMetaData::Id(Id))
         .OnClicked_Lambda([Action = MoveTemp(Action)] { Action(); return FReply::Handled(); })
-        [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular", 19))
+        [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular", FontSize(19)))
             .ColorAndOpacity(FLinearColor(0.98f, 0.94f, 0.85f)) ];
     if (Row.IsValid()) Row->AddSlot().FillWidth(1).Padding(0, 0, 8, 10) [ Button ];
     else Body->AddSlot().AutoHeight().Padding(0, 0, 0, 10) [ Button ];
@@ -95,6 +96,8 @@ void SRunScreen::ShowTitle()
     if(StorageRecovered) AddText(TEXT("保存記録を復旧しました。直近の有効な状態を使用しています。"),"save.recovered",16);
     if(!SaveNotice.IsEmpty()) AddText(SaveNotice,"save.reset.result",16);
     AddAction(TEXT("新しい周回へ"), "title.start", [this] {if(StoredRun) ConfirmAbandon();else ShowSetup();});
+    if(PreferencesService) AddAction(TEXT("設定"),"title.settings",[this]{ShowPreferences();});
+    if(PreferencesLoadIssue==GirlsSpire::PreferencesIssue::Corrupt || PreferencesLoadIssue==GirlsSpire::PreferencesIssue::ReadFailed) AddText(TEXT("設定を読み込めません。設定画面から確認できます。"),"title.settings.error",16);
     if(std::any_of(RetainedProfile.Epilogues.begin(),RetainedProfile.Epilogues.end(),[](bool read){return read;}))
         AddAction(TEXT("後日談の本を開く"),"title.epilogues",[this]{ShowEpilogueLibrary();});
     AddText(ProfileLabel(),"title.bonds",14);

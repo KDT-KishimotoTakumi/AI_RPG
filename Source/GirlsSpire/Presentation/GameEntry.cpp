@@ -33,7 +33,7 @@ void AGirlsSpireController::BeginPlay()
 #endif
     Files=std::make_shared<GirlsSpire::DiskSlotFiles>(std::filesystem::path(*root));
     Service=std::make_shared<GirlsSpire::SaveTransaction>(*Files,*Files);
-    Screen=SNew(SRunScreen).SaveService(Service).DevelopmentTools(false);
+    Screen=SNew(SRunScreen).SaveService(Service).PreferencesService(std::make_shared<GirlsSpire::PreferencesStore>(*Files)).DevelopmentTools(false);
     viewport->AddViewportWidgetContent(Screen.ToSharedRef(),100);
     viewport->SetMouseCaptureMode(EMouseCaptureMode::NoCapture);
     viewport->SetMouseLockMode(EMouseLockMode::DoNotLock);
