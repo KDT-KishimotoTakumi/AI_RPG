@@ -1,4 +1,5 @@
 #include "Battle.h"
+#include "AbilityCatalog.h"
 #include <algorithm>
 #include <cstdlib>
 namespace GirlsSpire {
@@ -8,6 +9,7 @@ SkillPreview Battle::PreviewSkill(int actorId,Skill skill,Position target) const
     if(index<0 || index>=SkillCount || !Active(actorId) || state_.Acted || !Inside(target)) return {};
     const auto& actor=*Find(actorId);
     if(!actor.Skills[index] || actor.Cooldowns[index]>0) return {};
+    if(state_.AbilityRules==AbilityRuleSet::CharacterSkills && FormalSkill(actorId,skill))return PreviewCharacterSkill(actorId,skill,target);
     SkillPreview preview;
     if(skill==Skill::PowerStrike || skill==Skill::Sweep || skill==Skill::FarStrike) {
         if(skill!=Skill::PowerStrike) {
@@ -36,6 +38,7 @@ bool Battle::UseSkill(std::uint64_t revision,int actorId,Skill skill,Position ta
     if(revision!=state_.Revision) return false;
     const auto preview=PreviewSkill(actorId,skill,target);
     if(!preview.Legal) return false;
+    if(state_.AbilityRules==AbilityRuleSet::CharacterSkills && FormalSkill(actorId,skill))return UseCharacterSkill(revision,actorId,skill,target,preview);
     state_.ChargeReady=false;
     auto& actor=*Find(actorId);
     if(preview.Healing==0) {

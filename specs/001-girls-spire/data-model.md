@@ -35,3 +35,5 @@ GS-037（実装・検証済み）: 承認済み20連携の定義はDomain/ComboC
 GS-044: BattleSnapshotにAbilityRulesとStartingBonds[8]を追加し、Run v12へ保存。旧v11以下はLegacy/全0を補完。正式状態は固定信頼と整合させ、恒久Profileから復元時に置換しない。Profile v4は不変。技能効果/一時強化/絆100の実行接続は未完了。
 
 GS-046: BattleUnitに攻撃/防御/命中の独立TimedBoostを保持。Run v13へ強度と除外期限を保存し旧v12以下は空で補完。Battle初期化で消去、AdvanceTurnで退出者だけ期限更新。通常/技能/必殺の共通計算と安全予測へ反映。Characterのみに非空を許可する。正式技能による付与は別工程。v12原本ability-v12.binは再生成しない。
+
+GS-047: CharacterSkills(2)とRun v14を追加。旧識別の技能解釈は不変。SkillPreviewに支援/強化/解除の予告情報を追加（予告用で保存対象ではない）。初期2枠の18技能だけ人物別に解釈し、共通報酬技能/旧敵汎用技能は維持。CD/強化/弱体/構文は既存戦闘状態で保存する。

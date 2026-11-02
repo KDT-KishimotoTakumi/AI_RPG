@@ -109,7 +109,8 @@ template<class T> bool Fields(Wire& a,T& v)
     else if constexpr(std::is_same_v<T,BattleSnapshot>) {
         if(!a(v.Width,v.Height,v.Tiles,v.Units,v.Order,v.ActiveId,v.Round,v.Moved,v.Acted,v.Outcome,v.Revision,v.UsedSkill,v.Medicines,v.BondGains,v.Combos,v.LastCombo))return false;
         if(a.Version>=5 && !a(v.ChargeReady))return false;
-        return a.Version<12 || a(v.AbilityRules,v.StartingBonds);
+        if(a.Version>=12 && !a(v.AbilityRules,v.StartingBonds))return false;
+        return a.Version>=14 || v.AbilityRules!=AbilityRuleSet::CharacterSkills;
     }
     else if constexpr(std::is_same_v<T,AttackHit>) return a(v.TargetId,v.Hit,v.Damage);
     else if constexpr(std::is_same_v<T,BattleCheckpoint>) {
@@ -175,7 +176,7 @@ template<class T> std::optional<T> Decode(std::string_view input,std::uint32_t e
             return value;
         }
     }
-    const bool supported=version==(expected==1?RunPayloadSchema:ProfilePayloadSchema) || (expected==1 && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12));
+    const bool supported=version==(expected==1?RunPayloadSchema:ProfilePayloadSchema) || (expected==1 && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13));
     if(!supported || !archive(value) || !archive.Complete()) return std::nullopt;
     return value;
 }
@@ -191,7 +192,7 @@ SaveError InspectPayload(std::string_view bytes,SaveKind expected)
     if(kind!=static_cast<std::uint32_t>(expected)) return SaveError::WrongKind;
     if(version!=(expected==SaveKind::Run?RunPayloadSchema:ProfilePayloadSchema) &&
         !(expected==SaveKind::Profile && (version==1 || version==2 || version==3)) &&
-        !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12))) return SaveError::UnsupportedVersion;
+        !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13))) return SaveError::UnsupportedVersion;
     return SaveError::None;
 }
 std::optional<std::string> EncodeRunPayload(const RunSaveState& state)

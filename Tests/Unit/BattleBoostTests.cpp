@@ -50,7 +50,7 @@ int TestBattleBoost()
     hero.AttackBoost={6,true};hero.DefenseBoost={4,true};hero.AccuracyBoost={15,true};
     Battle fresh(8,8,std::vector<Tile>(64),{hero,enemy},42);check(fresh.Snapshot().Units[0].AttackBoost==TimedBoost{} && fresh.Snapshot().Units[0].DefenseBoost==TimedBoost{} && fresh.Snapshot().Units[0].AccuracyBoost==TimedBoost{},"新戦闘へ一時強化を持ち越さない");
     auto saved=TestData::AbilityContextCase(true);saved.Combat->Battle.State.Units[0].AttackBoost={4,true};saved.Combat->Battle.State.Units[0].DefenseBoost={2,false};saved.Combat->Battle.State.Units[0].AccuracyBoost={10,true};
-    const auto encoded=EncodeRunPayload(saved);check(RunPayloadSchema==13 && encoded && DecodeRunPayload(*encoded)==saved,"v13で全強化と除外期限を保存");
+    const auto encoded=EncodeRunPayload(saved);check(RunPayloadSchema>=13 && encoded && DecodeRunPayload(*encoded)==saved,"v13で全強化と除外期限を保存");
     if(encoded)for(std::size_t n=0;n<encoded->size();++n)check(!DecodeRunPayload(std::string_view(*encoded).substr(0,n)),"強化の全切断を拒否");
     const auto path=std::filesystem::path(u8"" __FILE__).parent_path().parent_path()/"Fixtures"/"ability-v12.bin";
     std::ifstream input(path,std::ios::binary);const std::string bytes{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};

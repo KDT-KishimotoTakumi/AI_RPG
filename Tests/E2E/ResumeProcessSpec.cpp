@@ -41,6 +41,18 @@ struct ProcessResumeFixture {
 std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
     using namespace GirlsSpire;
+    if(point>=38){
+        Profile profile;profile.Bonds.fill(80);Run run(42,Difficulty::Beginner,HeroRole::Sword,profile);auto progress=run.Checkpoint();
+        progress.State.Day=5;progress.State.Phase=RunPhase::Event;progress.State.Active={NodeKind::Battle};progress.State.Choices.clear();progress.State.Recruited={7};
+        BattleUnit hero;hero.At={1,1};hero.Hp=50;hero.MaxHp=80;hero.Speed=20;hero.AttackCursed=true;hero.MovementWebbed=true;
+        BattleUnit sayo;sayo.Id=8;sayo.At={1,2};sayo.Hp=sayo.MaxHp=40;sayo.Speed=30;sayo.Skills={true,true};
+        BattleUnit enemy;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={4,2};enemy.Speed=10;
+        Battle arena(8,8,std::vector<Tile>(64),{hero,sayo,enemy},42);auto checkpoint=arena.Checkpoint();checkpoint.State.AbilityRules=AbilityRuleSet::CharacterSkills;checkpoint.State.StartingBonds=profile.Bonds;
+        auto battle=Battle::Restore(checkpoint);if(!battle)return std::nullopt;
+        if(point==39 && !battle->UseSkill(battle->Snapshot().Revision,8,Skill::PowerStrike,hero.At))return std::nullopt;
+        CombatControl control;control.ProfileDriven=true;for(int id=1;id<=8;++id)control.Trust[id]=80;
+        return ProcessResumeFixture{{progress,SavedCombat{battle->Checkpoint(),control.Checkpoint()}},profile};
+    }
     if(point>=36) {
         auto fixture=ProcessFixture(34);if(!fixture)return std::nullopt;
         auto& checkpoint=fixture->State.Combat->Battle;
@@ -236,10 +248,10 @@ void FGirlsSpireResumeProcessSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(stage==TEXT("Save")?TEXT("38地点を別プロセス用に保存する"):TEXT("別プロセスで38地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
+    It(stage==TEXT("Save")?TEXT("40地点を別プロセス用に保存する"):TEXT("別プロセスで40地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<38;++point) {
+        for(int point=0;point<40;++point) {
             const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));

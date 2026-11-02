@@ -34,13 +34,14 @@ void SCombatScreen::RefreshIntent()
     if(forecast.Fallback()==IntentFallback::NoSafeCandidate) label+=TEXT("合法で安全な候補がないため待機\n");
     for(const auto& candidate : forecast.Candidates()) {
         const auto& action=candidate.Action;
-        const TCHAR* verb=action.Kind==BasicActionKind::Move?TEXT("移動"):action.Kind==BasicActionKind::Attack?TEXT("通常攻撃"):
-            action.Kind==BasicActionKind::UseSkill?SkillLabel(action.Ability):TEXT("待機");
-        label+=FString::Printf(TEXT("%s(%d,%d)　被害上限%d"),verb,action.Target.X,action.Target.Y,candidate.PotentialDamage);
+        const FString verb=action.Kind==BasicActionKind::Move?TEXT("移動"):action.Kind==BasicActionKind::Attack?TEXT("通常攻撃"):
+            action.Kind==BasicActionKind::UseSkill?OwnedSkillLabel(actor,action.Ability):FString(TEXT("待機"));
+        label+=FString::Printf(TEXT("%s(%d,%d)　被害上限%d"),*verb,action.Target.X,action.Target.Y,candidate.PotentialDamage);
         if(candidate.Probability) label+=FString::Printf(TEXT("　%d%%"),*candidate.Probability);
         if(action.Kind==BasicActionKind::UseSkill) {
             const auto preview=Combat->PreviewSkill(actor,action.Ability,action.Target);
-            if(preview.Healing>0) label+=FString::Printf(TEXT(" / 回復%d"),preview.Healing);
+            if(preview.Support)label+=FString::Printf(TEXT(" / 回復%d 攻撃+%d 防御+%d 命中+%d%s"),preview.Healing,preview.AttackBuff,preview.DefenseBuff,preview.AccuracyBuff,preview.Cleanse?TEXT(" 低下解除"):TEXT(""));
+            else if(preview.Healing>0) label+=FString::Printf(TEXT(" / 回復%d"),preview.Healing);
             else for(const auto& hit:preview.Attack.Hits)
                 label+=FString::Printf(TEXT(" / 敵%d 命中%d%% ダメージ%d"),hit.TargetId,hit.Chance,hit.Damage);
         }
@@ -62,11 +63,13 @@ void SCombatScreen::RefreshIntent()
         Action(labels[facing],ids[facing],[this,facing,revision=Combat->Snapshot().Revision] { Wait(static_cast<Facing>(facing),revision); },true,directions);
     const auto& units=Combat->Snapshot().Units;
     const auto unit=std::find_if(units.begin(),units.end(),[actor](const BattleUnit& value) {return value.Id==actor;});
-    Text(FString::Printf(TEXT("開発用技 / 再使用待ち 強撃:%d 応急手当:%d"),unit->Cooldowns[0],unit->Cooldowns[1]),"battle.skill.status",13);
+    if(Combat->Snapshot().AbilityRules==AbilityRuleSet::CharacterSkills)
+        Text(FString::Printf(TEXT("人物技能 / 再使用待ち %s:%d %s:%d"),*OwnedSkillLabel(actor,Skill::PowerStrike),unit->Cooldowns[0],*OwnedSkillLabel(actor,Skill::FirstAid),unit->Cooldowns[1]),"battle.skill.status",13);
+    else Text(FString::Printf(TEXT("開発用技 / 再使用待ち 強撃:%d 応急手当:%d"),unit->Cooldowns[0],unit->Cooldowns[1]),"battle.skill.status",13);
     FString additional;
     for(int i=2;i<SkillCount;++i) if(unit->Skills[i]) additional+=FString::Printf(TEXT("%s:%d "),SkillLabel(static_cast<Skill>(i)),unit->Cooldowns[i]);
     Text(additional,"battle.skill.additional",13);
-    Text(TEXT("所持する開発用技を候補化。人物固有技・妨害技は未実装です。"),"intent.notice",13);
+    Text(Combat->Snapshot().AbilityRules==AbilityRuleSet::CharacterSkills?TEXT("技能の対象とクールダウンに従って候補を表示します。"):TEXT("所持する開発用技を候補化。人物固有技・妨害技は未実装です。"),"intent.notice",13);
     RefreshUltimate();
     Text(Message,"battle.log",14);
 }

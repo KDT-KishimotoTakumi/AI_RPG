@@ -1,5 +1,6 @@
 #include "Intent.h"
 #include "Domain/Rules.h"
+#include "Domain/AbilityCatalog.h"
 #include <algorithm>
 #include <numeric>
 #include <tuple>
@@ -47,12 +48,14 @@ std::vector<BasicAction> RankIntentActions(const Battle& battle, const IntentOrd
     const int desired=order.Point?0:offensive?actor->Range:1;
     for(const auto& victim:state.Units) for(int index=0;index<SkillCount;++index) {
         const auto skill=static_cast<Skill>(index);
-        const bool healing=skill==Skill::FirstAid || skill==Skill::Heal;
-        if(healing!=(order.Kind==TacticalIntent::Support)) continue;
         const auto preview=battle.PreviewSkill(actor->Id,skill,victim.At);
         if(!preview.Legal) continue;
+        const bool healing=preview.Support || preview.Healing>0;
+        if(healing!=(order.Kind==TacticalIntent::Support)) continue;
         const int focusBonus=target && victim.Id==target->Id?200000:0;
-        const int score=healing?300000+focusBonus+preview.Healing*100-distance(focus,victim.At):
+        const auto definition=state.AbilityRules==AbilityRuleSet::CharacterSkills?FormalSkill(actor->Id,skill):std::nullopt;
+        const int disruptBonus=order.Kind==TacticalIntent::Disrupt && definition && definition->Syntax==Twist?100000:0;
+        const int score=healing?300000+focusBonus+preview.Healing*100-distance(focus,victim.At):disruptBonus+
             10000+(offensive?focusBonus:0)-distance(focus,victim.At)*100+
             preview.Attack.Hits.front().Chance*std::min(preview.Attack.Hits.front().Damage,victim.Hp);
         scored.push_back({score,{BasicActionKind::UseSkill,victim.At,skill}});

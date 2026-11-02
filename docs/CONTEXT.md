@@ -15,12 +15,12 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 - 20連携の条件/名称は承認済み（combo-catalog-proposal.md）。旧ID2/3/5、新101～117、人数別ゲージ10/20/40のみ。再質問不要。
 - 9人物の正式2技能/個人必殺/絆100強化版と専用連携201～208はcharacter-abilities-proposal.mdの数値表を2026-11-01一括承認済み。主人公名称/既存効果一致以外は未接続。再質問せずTDDで接続する。
 - 正式技能の構文属性もcharacter-syntax-proposal.mdで承認済み。攻撃=結/弱体付き攻撃=転/回復・味方強化=承/個人必殺=結。旧戦闘の効果・属性を維持。再質問不要。
-- Run v13（旧v2～12互換）、Profile v4（旧v1～3互換）。Profile=Bonds[8]/SpecialConversations[8]/Epilogues[9]/DiscoveredCombos（正ID厳密昇順）。乱数/確定結果を同一取引で保存、失敗中停止し同内容だけ再試行。異世代を勝手に混ぜない。
+- Run v14（旧v2～13互換）、Profile v4（旧v1～3互換）。Profile=Bonds[8]/SpecialConversations[8]/Epilogues[9]/DiscoveredCombos（正ID厳密昇順）。乱数/確定結果を同一取引で保存、失敗中停止し同内容だけ再試行。異世代を勝手に混ぜない。
 
 ## 【現在の進捗】
 - GS-033～038: ボス2体、未救出再登場、連携恒久発見/20種実戦、9人物カタログ共有/救出役割表示まで接続。戦闘/成長/商店/交流/後日談/中断と初期立ち絵は部分実装。
 - GS-039設定payload基盤のみ、GS-040主人公正式名/既存効果一致のみ完了。正式新構文/仲間固有技/絆100と設定UI/ファイル/反映は未接続。
-- 最新GS-046/T013k完了: 攻撃/防御/命中TimedBoostを戦闘/予告/期限/表示/Run v13へ接続。Characterのみ非空、最大6/4/15、旧形式は空補完。安全予測は敵が動く前の防御失効をコピー内で反映。Native3,448＋全単体、全UE202＋起動、別プロセス38地点、通常MSVC＋UI3＋起動が警告0/失敗0。行98.81/関数98.11/分岐91.11%、Missing=[]。Coverage/f71c3e3879ae4751abfcf751654744f0、battle-boost-final-*.log。技能からの付与/全正式効果は未接続、新規生成はLegacyのまま。
+- 最新GS-047/T013l完了: CharacterSkills識別(2)だけで正式18通常技能を実行/表示/作戦へ接続。旧Legacy(0)/Character(1)の技能は維持。Run v14、Profile v4。Native307＋全単体、全UE220＋起動、別プロセス40地点、通常MSVC＋UI18＋起動が警告0/失敗0。行98.83/関数98.12/分岐91.06%、Missing=[]。Coverage/bde6d033c6004b55a686d7ad7d518392、character-skills-*.log。個人必殺/絆100/敵AI正式技能選択/新規生成有効化は未完了。
 - ゲームGit: origin KDT-KishimotoTakumi/AI_RPG。2026-11-02、終了前のコミット/pull/pushを利用者が明示承認。最新送信状態はgit status/logとリモートで確認。秘密設定/セーブ/生成物は除外する。
 - 支援8スキルはCodex共通領域を使用。二重登録を避けてプロジェクト重複版は整理済み。Context Mode1.0.169はプロジェクト限定MCP、全体フックなし。配布元/設定はDEV_SKILLS参照。
 - スキルコピーは別の非公開リポジトリKDT-KishimotoTakumi/AI-Development-Skillsへpush済み（d1c5fe4ff2f466340edc916181bf3a610f2a429e）。独立コピーSaved/Exports/AI-Development-Skillsを保持。
@@ -36,10 +36,10 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 - パスは環境から解決。既存tools/*.ps1はEpic manifest/vswhere/検証済み一時junctionを利用。実ビルド/IOは承認済みのescalated方式。審査拒否を迂回しない。
 - GirlsSpire.Build.csのbUseUnity=falseを維持（匿名名前空間衝突対策）。全資料/スキル一括読込禁止、Spec Kitは工程ごと。
 - 全体計測合格後のみ当該profrawをcleanup-measurements.ps1で整理。JSON/profdataを保持。
-- 直近整理: Intermediate/DDC 2,621,613,981 bytes（約2.44GiB）削除、対象外6,381ハッシュと秘密設定メタデータ不変。監査Saved/StorageAudit-0afb8f485c344414bc8bf11f90de0ae4。次回ビルドでPCH等再生成。互換原本・素材・セーブ・検証結果を保持。過去の失敗計測はSaved/CoverageArchivesの照合済みZIPと元Coverageの対応DLL/ソース/診断を保持。
+- 直近整理: Intermediate/DDC 2,621,913,429 bytes（約2.44GiB）削除、対象外6,657ハッシュと秘密設定メタデータ不変。監査Saved/StorageAudit-2c4e8ee20d214b6a8ffc5f508e674095。次回ビルドでPCH等再生成。素材・セーブ・互換原本・検証結果を保持。過去の失敗計測はSaved/CoverageArchivesの照合済みZIPと元Coverageの対応DLL/ソース/診断を保持。
 
 ## 【次に行う作業】
-次はformal-abilities-plan.mdに従い承認済み固有技能/必殺/絆100連携をTDDで接続する。SkillCount5を維持し、正式/旧戦闘を区別する方針。旧v11架空100例Tests/Fixtures/roster-v11.bin（SHA256=665E25786A877735E219CB08BCE3420709EB83527BE958FBCA2179986ABFCDFD）は再生成しない。LegacyRosterTests.cppで固定原本の読込/旧ハッシュ/意味一致/現行形式往復を検証済み。v12移行時に従来の現行v11エンコードハッシュ検証だけを現行形式往復へ分離済み。固定原本の100ハッシュ/意味/読込識別は維持。TimedBoostの戦闘/予告/安全予測/表示/手番/保存接続は完了。旧v12原本もTests/Fixtures/ability-v12.bin（Legacy/Character2例、6,549 bytes、SHA256=A1545C1B5DC8A195780F37116FC2A390323CF504F441B0DE3A221A79E1602DB9）へ固定済み、再生成しない。次はFormalSkillの18技能の合法判定/対象/付与/弱体/解除/CD/構文を接続する。
+次はformal-abilities-plan.mdに従い承認済み固有技能/必殺/絆100連携をTDDで接続する。SkillCount5を維持し、正式/旧戦闘を区別する方針。旧v11架空100例Tests/Fixtures/roster-v11.bin（SHA256=665E25786A877735E219CB08BCE3420709EB83527BE958FBCA2179986ABFCDFD）は再生成しない。LegacyRosterTests.cppで固定原本の読込/旧ハッシュ/意味一致/現行形式往復を検証済み。v12移行時に従来の現行v11エンコードハッシュ検証だけを現行形式往復へ分離済み。固定原本の100ハッシュ/意味/読込識別は維持。TimedBoostの戦闘/予告/安全予測/表示/手番/保存接続は完了。旧v12原本もTests/Fixtures/ability-v12.bin（Legacy/Character2例、6,549 bytes、SHA256=A1545C1B5DC8A195780F37116FC2A390323CF504F441B0DE3A221A79E1602DB9）へ固定済み、再生成しない。FormalSkill18技能の接続は完了。旧v13原本Tests/Fixtures/skill-v13.bin（3,418 bytes、SHA256=31102AD9D942A10FDA0342FBFBDA9C3BCFBED7E60B18D3618B1D8CD9E357377F）も再生成しない。旧回復構文の承/転を維持する回帰を追加済み。次は正式9個人必殺/8強化と8専用連携、敵AI選択を接続する。
 1. 実際のgit statusと対象タスク/要件だけ確認して未完了実装を続ける。既合格GS-038を理由なく再試験しない。
 2. 必要な設計確認は具体案を示し、独立作業を並行する。関連検証後に管理資料を更新。
 3. 大きなログはファイル保持＋絞り込み、正本への参照で引継ぎを短く保つ。

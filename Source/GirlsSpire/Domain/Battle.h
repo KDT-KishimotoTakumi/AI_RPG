@@ -12,7 +12,7 @@ enum class Facing { North, East, South, West };
 enum class BattleGoal { Eliminate, Survive, Rescue, DefeatLord };
 enum class BattleOutcome { Ongoing, Won, Lost };
 enum class Skill { PowerStrike, FirstAid, Sweep, FarStrike, Heal };
-enum class AbilityRuleSet { Legacy, Character };
+enum class AbilityRuleSet { Legacy, Character, CharacterSkills };
 inline constexpr int SkillCount=5;
 struct Tile {
     bool Wall = false;
@@ -91,6 +91,9 @@ struct SkillPreview {
     AttackPreview Attack;
     int TargetId = -1;
     int Healing = 0;
+    bool Support = false;
+    int AttackBuff=0,DefenseBuff=0,AccuracyBuff=0;
+    bool Cleanse=false;
     bool operator==(const SkillPreview&) const = default;
 };
 struct MovePreview {
@@ -141,6 +144,8 @@ public:
     int PotentialHostileDamage(int targetId) const;
     std::vector<Position> ConnectedTerrain(Position from, bool avoidTraps=false) const;
 private:
+    SkillPreview PreviewCharacterSkill(int actorId,Skill skill,Position target) const;
+    bool UseCharacterSkill(std::uint64_t revision,int actorId,Skill skill,Position target,const SkillPreview& preview);
     explicit Battle(const BattleCheckpoint& checkpoint);
     bool ValidSetup(bool initial) const;
     bool ValidCheckpoint() const;

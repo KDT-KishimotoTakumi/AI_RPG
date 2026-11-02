@@ -10,7 +10,7 @@ CombatControlCheckpoint CombatControl::Checkpoint() const
 std::optional<CombatControl> CombatControl::Restore(const CombatControlCheckpoint& saved, const Battle& battle)
 {
     const auto& state=battle.Snapshot();
-    const bool formal=state.AbilityRules==AbilityRuleSet::Character;
+    const bool formal=state.AbilityRules!=AbilityRuleSet::Legacy;
     if(formal && !saved.ProfileDriven)return std::nullopt;
     for(std::size_t id=0;id<saved.Orders.size();++id) {
         if(formal && id>0 && saved.Trust[id]!=state.StartingBonds[id-1])return std::nullopt;

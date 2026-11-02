@@ -177,5 +177,7 @@ int main()
     failed += TestTimedBoost();
     extern int TestBattleBoost();
     failed += TestBattleBoost();
+    extern int TestCharacterSkills();
+    failed += TestCharacterSkills();
     return failed == 0 ? 0 : 1;
 }

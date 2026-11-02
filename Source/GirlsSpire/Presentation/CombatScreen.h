@@ -34,7 +34,7 @@ private:
     void RefreshSkills();
     void RefreshMedicine();
     static const TCHAR* SkillLabel(GirlsSpire::Skill skill);
-    static FString OwnedSkillLabel(int actorId,GirlsSpire::Skill skill);
+    FString OwnedSkillLabel(int actorId,GirlsSpire::Skill skill) const;
     void RefreshCombos();
     void RefreshUltimate();
     void RefreshTeamUltimate();

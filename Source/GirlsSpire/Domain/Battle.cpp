@@ -76,8 +76,12 @@ int Battle::PotentialHostileDamage(int targetId) const
                 if(center.Hp<=0 || center.Side==enemy.Side || (enemy.Side==Faction::Player && center.Side==Faction::Neutral))continue;
                 maximum=std::max(maximum,received(candidate.PreviewAttack(enemy.Id,center.At)));
             }
-            const auto skill=candidate.PreviewSkill(enemy.Id,Skill::PowerStrike,target->At);
-            return skill.Legal?std::max(maximum,received(skill.Attack)):maximum;
+            const int count=state_.AbilityRules==AbilityRuleSet::CharacterSkills?SkillCount:1;
+            for(int index=0;index<count;++index){
+                const auto skill=candidate.PreviewSkill(enemy.Id,static_cast<Skill>(index),target->At);
+                if(skill.Legal)maximum=std::max(maximum,received(skill.Attack));
+            }
+            return maximum;
         };
         int maximum=damage(projection);
         if (maximum==0) {
