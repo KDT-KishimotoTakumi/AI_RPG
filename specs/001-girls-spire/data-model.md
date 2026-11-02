@@ -39,3 +39,5 @@ GS-046: BattleUnitに攻撃/防御/命中の独立TimedBoostを保持。Run v13�
 GS-047: CharacterSkills(2)とRun v14を追加。旧識別の技能解釈は不変。SkillPreviewに支援/強化/解除の予告情報を追加（予告用で保存対象ではない）。初期2枠の18技能だけ人物別に解釈し、共通報酬技能/旧敵汎用技能は維持。CD/強化/弱体/構文は既存戦闘状態で保存する。
 
 GS-048: CharacterAbilities(3)は正式通常技能と正式個人必殺を使用し、0/1/2の旧必殺は不変。Run v15を使用する。AttackPreviewへ味方支援予告と自身防御強化情報を追加（非永続）。結果は既存HP/TimedBoost/弱体/ゲージ/構文/RNGへ一括反映して保存する。詳細character-ultimates-rules.md。
+
+GS-049: CompleteCharacters(4)/Run v16は正式技能・必殺に専用連携201～208を追加する。専用候補の優先フラグは計算時のみで保存しない。既存の履歴・ゲージ・成立結果・固定絆とProfile v4の発見IDを利用し、旧識別0～3の意味を維持する。

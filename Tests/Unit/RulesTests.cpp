@@ -181,5 +181,7 @@ int main()
     failed += TestCharacterSkills();
     extern int TestCharacterUltimates();
     failed += TestCharacterUltimates();
+    extern int TestBondCombos();
+    failed += TestBondCombos();
     return failed == 0 ? 0 : 1;
 }

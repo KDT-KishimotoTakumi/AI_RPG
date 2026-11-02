@@ -41,6 +41,7 @@ bool MatchesComboCondition(int id,const std::vector<const ComboAction*>& actions
     const auto diff=[&](int a,int b){return Separate(*actions[a],*actions[b]);};
     const bool aligned=p(0).X==p(1).X || p(0).Y==p(1).Y;
     const int distance=Distance(p(0),p(1));
+    if(id>=201 && id<=208)return actions[0]->ActorId==0 && actions[1]->ActorId==id-200 && distance==1 && same(0,1);
     if(id==2)return distance==1;
     if(id==3)return same(1,2);
     if(id==5)return std::all_of(positions.begin(),positions.end(),[&](Position at){return Distance(at,positions.back())<=4;});

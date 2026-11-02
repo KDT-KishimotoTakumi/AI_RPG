@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "970C823C87A99E4D5E9DCE853F3F7370820FDBAFC71A9F090C92D5802FFF24F4",
+    "sha256": "3D9081C2FD0FD9E52B857E1E1CB19DAF44705CAC07834D9AE2175FFDC8BCF441",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -31,8 +31,8 @@
   },
   {
     "path": "Source/GirlsSpire/Domain/ComboCatalog.h",
-    "sha256": "A35833DF517DE4F399C3859C51226B233A65FFED466A4CB24174B180819BD96D",
-    "reason": "構造体メンバーと関数宣言のみ。実装はComboCatalog.cpp/ComboConditions.cppで計測。"
+    "sha256": "079692F00EEF23266EBD260AD107BB828637DD000052BA4694B04604AD7E250C",
+    "reason": "構造体メンバーと関数宣言のみ。実装はComboCatalog.cpp/ComboConditions.cpp/BondComboRecipes.cppで計測。"
   },
   {
     "path": "Source/GirlsSpire/Domain/CharacterCatalog.h",

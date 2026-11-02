@@ -31,6 +31,9 @@ const ComboRecipeDefinition* FindComboRecipe(int id)
 {
     const auto& recipes=ComboCatalog();
     const auto at=std::find_if(recipes.begin(),recipes.end(),[id](const auto& recipe){return recipe.Id==id;});
-    return at==recipes.end()?nullptr:&*at;
+    if(at!=recipes.end())return &*at;
+    const auto& bonds=BondComboCatalog();
+    const auto bond=std::find_if(bonds.begin(),bonds.end(),[id](const auto& recipe){return recipe.Id==id;});
+    return bond==bonds.end()?nullptr:&*bond;
 }
 }

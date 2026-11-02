@@ -6,7 +6,7 @@ void SCombatScreen::RefreshUltimate()
 {
     if(SelectingUltimate && SelectingTeamUltimate) { RefreshTeamUltimate(); return; }
     const auto& state=Combat->Snapshot();
-    const auto definition=state.AbilityRules==GirlsSpire::AbilityRuleSet::CharacterAbilities?GirlsSpire::FormalUltimate(state.ActiveId,state.ActiveId>0 && state.ActiveId<=8?state.StartingBonds[state.ActiveId-1]:0):std::nullopt;
+    const auto definition=GirlsSpire::UsesCharacterAbilities(state.AbilityRules)?GirlsSpire::FormalUltimate(state.ActiveId,state.ActiveId>0 && state.ActiveId<=8?state.StartingBonds[state.ActiveId-1]:0):std::nullopt;
     if(!SelectingUltimate) {
         const auto name=definition?definition->Name:GirlsSpire::CharacterUltimateName(state.ActiveId);
         const FString title=name.empty()?TEXT("開発用個人必殺"):UTF8_TO_TCHAR(name.data());

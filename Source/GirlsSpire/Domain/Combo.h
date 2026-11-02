@@ -26,6 +26,7 @@ struct ComboAction {
 struct ComboCandidate {
     int RecipeId=0;
     std::vector<std::uint64_t> Actions;
+    bool BondExclusive=false;
 };
 struct ComboResolution {
     int RecipeId=0;

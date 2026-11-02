@@ -59,3 +59,5 @@ BattleSnapshot.AbilityRules（Legacy/Character）とStartingBonds[8]を明示的
 GS-047（Run v14）: AbilityRuleSet=2のCharacterSkillsを追加し、旧0/1の技能効果と構文を維持。v14未満への2の混入は拒否。識別2だけ承認済み通常18技能を使用する。5技能枠/IDとProfile v4は維持。回復/強化/解除はRNGを消費せず、付与済み強化/弱体/CD/構文/作戦を中断再開で保存。通常生成はLegacyのまま。旧v13固定原本はskill-v13.binへ保全し再生成しない。
 
 GS-048: CharacterAbilities(3)/Run v15を追加し、旧識別の個人必殺を維持。v15未満への3混入は拒否。新識別は固定絆から正式必殺を選び、ゲージ/範囲結果/弱体/回復/強化/結/RNGを既存状態へ保存する。予告のAid/SelfDefenseBuffは一時表示情報で保存対象ではない。Profile v4は不変、旧v14原本を保全。
+
+GS-049（Run v16）: CompleteCharacters(4)だけで専用8連携を照合する。v16未満への4混入は拒否し、旧v2～15を読み込む。旧v15原本bond-v15.binを保全し再生成しない。専用の候補フラグは非永続、成立結果と発見IDは既存状態へ保存。Profile v4と旧識別0～3の技能/必殺/連携は維持する。

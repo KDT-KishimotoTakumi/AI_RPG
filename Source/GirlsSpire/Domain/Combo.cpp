@@ -42,6 +42,7 @@ std::optional<ComboResolution> ComboLedger::Resolve(std::uint64_t sequence,const
     for(const auto& candidate:candidates) {
         const auto count=candidate.Actions.size();
         if(candidate.RecipeId<=0 || (count!=2 && count!=3 && count!=5)) continue;
+        if(candidate.BondExclusive && (candidate.RecipeId<201 || candidate.RecipeId>208 || count!=2))continue;
         std::vector<int> actors;
         std::set<int> unique;
         std::uint64_t previous=0;
@@ -53,15 +54,16 @@ std::optional<ComboResolution> ComboLedger::Resolve(std::uint64_t sequence,const
             actors.push_back(action->ActorId);
         }
         if(actors.size()!=count) continue;
+        if(candidate.BondExclusive && (actors[0]!=0 || actors[1]!=candidate.RecipeId-200))continue;
         // 同人数でも入力コンテナの並びに結果を依存させない。
         if(!best || count>best->Actions.size() || (count==best->Actions.size() &&
-            std::tie(candidate.RecipeId,candidate.Actions)<std::tie(best->RecipeId,best->Actions))) {
+            std::tuple{!candidate.BondExclusive,candidate.RecipeId,candidate.Actions}<std::tuple{!best->BondExclusive,best->RecipeId,best->Actions})) {
             best=&candidate;
             participants=std::move(actors);
         }
     }
     if(!best) return {};
-    const int nextGauge=AddComboGauge(state_.Gauge,static_cast<int>(participants.size()));
+    const int nextGauge=best->BondExclusive?std::min(100,state_.Gauge+20):AddComboGauge(state_.Gauge,static_cast<int>(participants.size()));
     ComboResolution result{best->RecipeId,participants,nextGauge-state_.Gauge};
     std::erase_if(state_.Pending,[&](const ComboAction& action) {
         return std::find(best->Actions.begin(),best->Actions.end(),action.Sequence)!=best->Actions.end();

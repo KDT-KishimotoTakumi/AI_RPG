@@ -12,8 +12,9 @@ enum class Facing { North, East, South, West };
 enum class BattleGoal { Eliminate, Survive, Rescue, DefeatLord };
 enum class BattleOutcome { Ongoing, Won, Lost };
 enum class Skill { PowerStrike, FirstAid, Sweep, FarStrike, Heal };
-enum class AbilityRuleSet { Legacy, Character, CharacterSkills, CharacterAbilities };
-inline bool UsesCharacterSkills(AbilityRuleSet rules){return rules==AbilityRuleSet::CharacterSkills || rules==AbilityRuleSet::CharacterAbilities;}
+enum class AbilityRuleSet { Legacy, Character, CharacterSkills, CharacterAbilities, CompleteCharacters };
+inline bool UsesCharacterSkills(AbilityRuleSet rules){return rules==AbilityRuleSet::CharacterSkills || rules==AbilityRuleSet::CharacterAbilities || rules==AbilityRuleSet::CompleteCharacters;}
+inline bool UsesCharacterAbilities(AbilityRuleSet rules){return rules==AbilityRuleSet::CharacterAbilities || rules==AbilityRuleSet::CompleteCharacters;}
 inline constexpr int SkillCount=5;
 struct Tile {
     bool Wall = false;

@@ -64,6 +64,6 @@ int TestCharacterUltimates()
         auto full=Battle::Restore(c);check(full && !full->PreviewUltimate(2,{1,1}).Legal,"全員満タン/解除なしの回復は不可");
         c.State.Units[1].AttackCursed=true;auto cleanse=Battle::Restore(c);check(cleanse && cleanse->PreviewUltimate(2,{1,1}).Legal && !cleanse->PreviewUltimate(2,{1,2}).Legal,"絆100は解除だけでも可、中心は自身");
     }
-    check(RunPayloadSchema==15,"新必殺識別はRun v15");
+    check(RunPayloadSchema>=15,"新必殺識別はRun v15");
     std::cout<<"CharacterUltimates: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }

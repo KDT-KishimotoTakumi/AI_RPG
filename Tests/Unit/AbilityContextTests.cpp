@@ -35,7 +35,7 @@ int TestAbilityContext()
         bad=TestData::RosterCase(0);bad.Combat->Battle.State.StartingBonds[id]=1;
         check(!Battle::Restore(bad.Combat->Battle) && !EncodeRunPayload(bad),"旧ルールに新しい絆状態を混入しない");
     }
-    for(int invalid:{-1,4,std::numeric_limits<int>::max()}){
+    for(int invalid:{-1,5,std::numeric_limits<int>::max()}){
         auto bad=valid;bad.Combat->Battle.State.AbilityRules=static_cast<AbilityRuleSet>(invalid);
         check(!Battle::Restore(bad.Combat->Battle) && !EncodeRunPayload(bad),"未知ルールを拒否");
     }
@@ -50,7 +50,7 @@ int TestAbilityContext()
         const auto offset=bytes->find(extension);
         check(offset!=std::string::npos && bytes->find(extension,offset+1)==std::string::npos,"識別と8絆を明示的なlittle-endianで一度だけ保存");
         if(offset!=std::string::npos){
-            auto corrupt=*bytes;corrupt[offset]=4;check(!DecodeRunPayload(corrupt),"読込時も未知ルールを拒否");
+            auto corrupt=*bytes;corrupt[offset]=5;check(!DecodeRunPayload(corrupt),"読込時も未知ルールを拒否");
             for(int id=0;id<8;++id){corrupt=*bytes;corrupt[offset+4+4*id]=101;check(!DecodeRunPayload(corrupt),"読込時も絆範囲を検証");}
         }
         for(std::size_t n=0;n<bytes->size();++n)check(!DecodeRunPayload(std::string_view(*bytes).substr(0,n)),"正式状態の全切断を拒否");
