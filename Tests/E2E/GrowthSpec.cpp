@@ -104,7 +104,8 @@ void FGirlsSpireGrowthUiSpec::Define()
         if(heal) {
             TestTrue(TEXT("追加回復の効果予告"),preview.Contains(TEXT("癒しの術")) && preview.Contains(TEXT("回復40")));
             if(!click("intent.execute")) return;
-            TestTrue(TEXT("主人公を40回復"),Driver->FindElement(By::Id("battle.cell.1.2"))->GetText().ToString().Contains(TEXT("50")));
+            const auto hpText=Driver->FindElement(By::Id("battle.celllabel.1.2"))->GetText().ToString();
+            TestEqual(TEXT("主人公を40回復"),hpText,FString(TEXT("味\n50")));
             TestTrue(TEXT("追加技CD表示"),Driver->FindElement(By::Id("battle.skill.additional"))->GetText().ToString().Contains(TEXT("癒しの術:3")));
         } else {
             TestTrue(TEXT("範囲技候補を表示"),preview.Contains(TEXT("薙ぎ払い")));

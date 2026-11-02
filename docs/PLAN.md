@@ -48,3 +48,7 @@ GS-052/T033aは初期音素材3件と独立音量/UE再生停止まで完了。N
 
 次はT032b/US7の残る色覚・全設定併用/表示と正式差分接続を確定要件から進める。音の最終聴感/ミックス/長時間ループ、欠落時の画面通知、音声有効の通常ゲーム操作/再起動、配布/オフライン実測も残る。
 性格による作戦順位、難易度別敵AI、正式会話本文、図鑑/外見の解放条件はcharacter-abilities-proposal.mdで別途未確定。効果/数値を勝手に補完せず実装前に具体案を確認する。全体完成には上表の残作業と製品E2E/配布検証が必要。
+
+GS-053/T031aは盤面記号・単色・予測・3文字サイズ・下端スクロールまで検証完了。全UE268/通常起動/音声、通常MSVC UI3/起動、48地点＋設定再開、各90%を確認。実績と診断はIMPLEMENTED/VALIDATION、表示境界はboard-cues-rules.md。1080p/1440pの実解像度と全設定併用はUS7総合確認に残す。
+解像度確認の注意: SWindowのClientSize指定だけでは作業領域に縮小される。次の1080p/1440p検証では実クライアント寸法と撮影寸法を断言する。UE5.7のSWindow.hでSaneWindowPlacement/AdjustInitialSizeAndPositionForDPIScale/AutoCenterを確認済みだが、大画面の実描画は未検証。
+ビルド診断の残件: GS-053のClang再計測で既存GameAudio.cppの生ポインター版AddReferencedObjectに非推奨警告10件を確認。TObjectPtr版への移行とincremental GC経路の検証を別途行う。Automationの警告件数とは区別し、ビルド全体を警告0とは記載しない。

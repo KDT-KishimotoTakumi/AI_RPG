@@ -96,7 +96,7 @@ void FGirlsSpireRecoveryUiSpec::Define()
         if(Driver->FindElement(By::Id("rescue.help"))->Exists())if(!Click("rescue.choice.1") || !Click("rescue.confirm"))return;
         TestTrue(TEXT("勝利後72まで回復"),Driver->FindElement(By::Id("run.growth"))->GetText().ToString().Contains(TEXT("HP72/80")));
         for(const char* id:{"reward.recipient.0","reward.choice.0","reward.confirm","route.node.2","preview.battle"}) if(!Click(id)) return;
-        TestTrue(TEXT("次戦で全快しない"),Driver->FindElement(By::Id("battle.cell.1.1"))->GetText().ToString().Contains(TEXT("72")));
+        TestEqual(TEXT("次戦で全快しない"),Driver->FindElement(By::Id("battle.celllabel.1.1"))->GetText().ToString(),FString(TEXT("味\n72")));
     });
     AfterEach([this] {
         FSlateApplication::Get().CloseToolTip();

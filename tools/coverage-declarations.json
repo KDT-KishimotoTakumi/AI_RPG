@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "04E3BA6F3AFD7C050A48DE8243BEED6C629D218627977764A81C206D1FAC2BDA",
+    "sha256": "4DFF244640DB29737C2758F590F88F069F95DB1678682F40048466CF8AF593FC",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -38,5 +38,10 @@
     "path": "Source/GirlsSpire/Domain/CharacterCatalog.h",
     "sha256": "F23B4697505CA81DE5C06709769EC877CE77C78145B35F32FFE59C6DD83B2B62",
     "reason": "人物定義のメンバーと関数宣言のみ。全実装はCharacterCatalog.cppで計測。"
+  },
+  {
+    "path": "Source/GirlsSpire/Application/BoardCues.h",
+    "reason": "集約構造体と関数宣言のみ。記号生成・表示計算の関数定義はBoardCues.cppで計測。",
+    "sha256": "2753A67A8F62A86BB74EFCB642B530C2AC2581C3153222BF11BC165C17B45175"
   }
 ]

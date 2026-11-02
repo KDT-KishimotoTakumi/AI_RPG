@@ -141,8 +141,11 @@ void FGirlsSpireBattleUiSpec::Define()
         if (!TestTrue(TEXT("生成失敗を注入"),ClickAndDrain(Driver->FindElement(By::Id("preview.fallback"))))) return;
         const auto Description=Driver->FindElement(By::Id("battle.generation"))->GetText().ToString();
         TestTrue(TEXT("8回失敗後の切替表示"),Description.Contains(TEXT("固定戦場")) && Description.Contains(TEXT("8回")));
-        TestTrue(TEXT("最大寸法の端も表示"),Driver->FindElement(By::Id("battle.cell.11.11"))->IsVisible());
+        const auto boardScroll=Driver->FindElement(By::Id("battle.board.scroll"));
+        Driver->FindElement(By::Id("battle.cell.0.0"))->ScrollBy(-20);DrainSlateLayout();
+        TestTrue(TEXT("最大寸法の端へスクロールして表示"),Driver->FindElement(By::Id("battle.cell.11.11"))->IsVisible());
         TestEqual(TEXT("端の座標ラベル"),Driver->FindElement(By::Id("battle.celllabel.11.11"))->GetText().ToString(),FString(TEXT("11,11")));
+        boardScroll->ScrollBy(20);DrainSlateLayout();
         TestTrue(TEXT("固定戦場でも移動"),ClickAndDrain(Driver->FindElement(By::Id("battle.cell.3.1"))));
         TestTrue(TEXT("固定戦場でも移動確定"),ClickAndDrain(Driver->FindElement(By::Id("battle.move.confirm"))));
         TestTrue(TEXT("固定戦場でも攻撃対象選択"),ClickAndDrain(Driver->FindElement(By::Id("battle.cell.4.1"))));

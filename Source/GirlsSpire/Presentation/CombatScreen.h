@@ -37,7 +37,7 @@ private:
     std::shared_ptr<IGameAudio> Audio;
     int FontSize(int base) const {return GirlsSpire::ScaledFontSize(DisplayPreferences.Text,base);}
     GirlsSpire::Preferences DisplayPreferences;
-    void Refresh();
+    void Refresh(bool persist=true);
     void RefreshPortraits();
     void RefreshSkills();
     void RefreshMedicine();
@@ -82,4 +82,5 @@ private:
     std::vector<int> KnownCombos;
     std::uint64_t SeenComboSequence=0;
     bool NewComboDiscovery=false;
+    bool MonochromeBoard=false,ShowThreats=false;
 };

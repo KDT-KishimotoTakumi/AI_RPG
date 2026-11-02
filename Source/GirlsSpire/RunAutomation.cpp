@@ -33,6 +33,7 @@
 #include "../../Tests/E2E/FormalEncounterSpec.cpp"
 #include "../../Tests/E2E/PreferencesSpec.cpp"
 #include "../../Tests/E2E/AudioUISpec.cpp"
+#include "../../Tests/E2E/BoardCuesSpec.cpp"
 #include "../../Tests/E2E/AudioEngineSpec.cpp"
 #include "../../Tests/E2E/PreferencesProcessSpec.cpp"
 #include "../../Tests/E2E/StorageContentionSpec.cpp"

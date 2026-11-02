@@ -1,5 +1,6 @@
 #include "CombatScreen.h"
 #include "GameAudio.h"
+#include "Application/BoardCues.h"
 #include "CharacterPortraits.h"
 #include "AI/BasicTurn.h"
 #include "Framework/MetaData/DriverMetaData.h"
@@ -36,7 +37,9 @@ void SCombatScreen::Construct(const FArguments& Args)
     PortraitResources=Args._Portraits?Args._Portraits:MakeShared<FCharacterPortraits>();
     ChildSlot [ SNew(SHorizontalBox)
         + SHorizontalBox::Slot().AutoWidth().Padding(0,0,20,0)
-            [ SNew(SVerticalBox)
+            [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("battle.board.scroll"))
+              + SScrollBox::Slot()
+              [ SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight() [ SAssignNew(Grid,SUniformGridPanel).SlotPadding(2) ]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,10,0,6)[SAssignNew(PortraitPanel,SHorizontalBox)]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,12,0,6)
@@ -44,7 +47,7 @@ void SCombatScreen::Construct(const FArguments& Args)
                         .AddMetaData(FDriverMetaData::Id("battle.combo.gauge")) ]
                 + SVerticalBox::Slot().AutoHeight()
                     [ SAssignNew(ComboResult,STextBlock).WrapTextAt(390).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(14)))
-                        .AddMetaData(FDriverMetaData::Id("battle.combo.result")) ] ]
+                        .AddMetaData(FDriverMetaData::Id("battle.combo.result")) ] ] ]
         + SHorizontalBox::Slot().FillWidth(1)
             [ SNew(SBox).HeightOverride(490)
                 [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("battle.scroll")) + SScrollBox::Slot() [ SAssignNew(Panel,SVerticalBox) ] ] ] ];
@@ -68,15 +71,15 @@ void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()
     else Panel->AddSlot().AutoHeight().Padding(0,0,0,7) [button];
 }
 
-void SCombatScreen::Refresh()
+void SCombatScreen::Refresh(bool persist)
 {
-    if(!PersistCheckpoint()) {ShowSaveFailure();return;}
+    if(persist && !PersistCheckpoint()) {ShowSaveFailure();return;}
     using namespace GirlsSpire;
     const auto& state=Combat->Snapshot();
     RefreshPortraits();
     RefreshCombos();
     Grid->ClearChildren(); Panel->ClearChildren();
-    const auto reachable=Combat->Reachable(state.ActiveId);
+    const auto cues=ReadBoardCues(*Combat,ShowThreats);
     const bool large=state.Width>8 || state.Height>8;
     for(int y=0;y<state.Height;++y) for(int x=0;x<state.Width;++x) {
         const Position at{x,y};
@@ -84,6 +87,7 @@ void SCombatScreen::Refresh()
             return candidate.Hp>0 && candidate.At==at;
         });
         const auto& tile=state.Tiles[y*state.Width+x];
+        const auto& cue=cues[y*state.Width+x];
         FString label=FString::Printf(TEXT("%d,%d"),x,y);
         if(tile.Elevation>0) label=FString::Printf(TEXT("高%d"),tile.Elevation);
         else if(tile.Cover>0) label=FString::Printf(TEXT("遮%d"),tile.Cover);
@@ -96,7 +100,7 @@ void SCombatScreen::Refresh()
                 (unit->Role==BattleRole::Cavalry?TEXT("敵騎"):unit->Role==BattleRole::Ninja?TEXT("敵忍"):unit->Role==BattleRole::Oni?TEXT("敵鬼"):unit->Role==BattleRole::CurseMonk?TEXT("敵僧"):unit->Role==BattleRole::Fox?TEXT("敵狐"):unit->Role==BattleRole::Spider?TEXT("敵絡"):unit->Role==BattleRole::CastleLord?TEXT("敵城"):unit->Role==BattleRole::FallenPrincess?TEXT("敵姫"):TEXT("敵")):TEXT("救");
             label=FString::Printf(TEXT("%s\n%d"),side,unit->Hp);
             color=unit->Side==Faction::Player?FLinearColor(0.05f,0.23f,0.4f):unit->Side==Faction::Enemy?FLinearColor(0.4f,0.09f,0.1f):FLinearColor(0.36f,0.28f,0.08f);
-        } else if(std::find(reachable.begin(),reachable.end(),at)!=reachable.end()) {
+        } else if(cue.Move) {
             label+=TEXT("\n移動"); color=FLinearColor(0.06f,0.28f,0.22f);
         }
         FString detail=label;
@@ -116,17 +120,26 @@ void SCombatScreen::Refresh()
             detail=TEXT("騎馬亡者 / 移動5・射程1\n実際の移動経路が直線3マス以上なら、その手番の通常攻撃の攻撃力＋6。\nスキル対象外。行動後は移動できません。");
         if(unit!=state.Units.end() && unit->AttackCursed){label+=TEXT(" 呪");detail+=TEXT("\n呪詛：攻撃力−4（下限0）、自身の手番終了まで。");}
         if(unit!=state.Units.end() && unit->MovementWebbed){label+=TEXT(" 糸");detail+=TEXT("\n糸縛り：移動力−2（下限0）、自身の手番終了まで。");}
+        detail+=FString::Printf(TEXT("\n経路の罠被害：%d"),cue.RouteTrapDamage);
+        if(ShowThreats)detail+=FString::Printf(TEXT("\n現在地/合法移動先の敵被害上限：%d（実際の敵行動を確約しません）"),cue.EnemyDamage);
+        if(MonochromeBoard)color=FLinearColor(0.12f,0.12f,0.12f);
         Grid->AddSlot(x,y)
-        [ SNew(SBox).WidthOverride(large?36:48).HeightOverride(large?36:48)
+        [ SNew(SBox).WidthOverride(FontSize(large?36:48)).HeightOverride(FontSize(large?48:60))
             [ SNew(SButton).ContentPadding(0).NormalPaddingOverride(FMargin(0)).PressedPaddingOverride(FMargin(0))
                 .ToolTipText(FText::FromString(detail))
                 .HAlign(HAlign_Fill).ButtonColorAndOpacity(color)
                 .IsEnabled(state.Outcome==BattleOutcome::Ongoing)
                 .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.cell.%d.%d"),x,y)))
                 .OnClicked_Lambda([this,at,revision=state.Revision] { SelectCell(at,revision); return FReply::Handled(); })
-                [ SNew(STextBlock).Text(FText::FromString(label)).Justification(ETextJustify::Center)
+                [ SNew(SVerticalBox)
+                  +SVerticalBox::Slot().AutoHeight()
+                  [ SNew(STextBlock).Text(FText::FromString(label)).Justification(ETextJustify::Center)
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.celllabel.%d.%d"),x,y)))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White) ] ] ];
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White) ]
+                  +SVerticalBox::Slot().AutoHeight()
+                  [ SNew(STextBlock).Text(FText::FromString(UTF8_TO_TCHAR(cue.Symbols().c_str()))).Justification(ETextJustify::Center)
+                    .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.cues.%d.%d"),x,y)))
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White) ] ] ] ];
     }
     Text(FString::Printf(TEXT("第%dラウンド"),state.Round),"battle.round",23);
     Text(GenerationSummary,"battle.generation",13);
@@ -221,6 +234,10 @@ void SCombatScreen::Refresh()
     RefreshSkills();
     RefreshUltimate();
     Text(Message,"battle.log",14);
+    Text(TEXT("○ 味方 / △ 敵 / ◇ 中立 / ＋ 移動先 / × 通常攻撃可能 / ！ 罠・予測被害"),"battle.cues.legend",13);
+    Action(MonochromeBoard?TEXT("盤面：単色（切替）"):TEXT("盤面：色付き（切替）"),"battle.cues.monochrome",[this]{MonochromeBoard=!MonochromeBoard;Refresh(false);});
+    Action(ShowThreats?TEXT("敵被害上限の予測：表示中（切替）"):TEXT("敵被害上限の予測：非表示（切替）"),"battle.cues.threats",[this]{ShowThreats=!ShowThreats;Refresh(false);});
+    if(ShowThreats)Text(TEXT("！は現在地と合法移動先の被害上限も含みます。敵の実際の行動・命中を確約する予測ではありません。詳細は各マスに表示。"),"battle.cues.scope",13);
 }
 
 void SCombatScreen::SelectCell(GirlsSpire::Position cell,std::uint64_t revision)
