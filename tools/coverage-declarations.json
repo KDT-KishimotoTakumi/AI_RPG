@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "4DFF244640DB29737C2758F590F88F069F95DB1678682F40048466CF8AF593FC",
+    "sha256": "33659E3B4C5BA0B0DA67AB97FF6AEFFEC67E2A588092F5BFBDD61D7A0491671A",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -43,5 +43,10 @@
     "path": "Source/GirlsSpire/Application/BoardCues.h",
     "reason": "集約構造体と関数宣言のみ。記号生成・表示計算の関数定義はBoardCues.cppで計測。",
     "sha256": "2753A67A8F62A86BB74EFCB642B530C2AC2581C3153222BF11BC165C17B45175"
+  },
+  {
+    "sha256": "9D42E43F121A69D5B06DF72E012410578BB3C552F4B4B2BC693F9086D7074529",
+    "path": "Source/GirlsSpire/Domain/RescueDialogue.h",
+    "reason": "集約構造体と検索関数の宣言のみ。関数定義と不変本文はRescueDialogue.cppで計測。"
   }
 ]

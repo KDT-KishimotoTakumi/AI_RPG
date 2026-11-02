@@ -52,6 +52,11 @@ void SRunScreen::Construct(const FArguments& Args)
                 .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16));}).ColorAndOpacity(FLinearColor(0.8f, 0.65f, 0.65f)) ]
             + SVerticalBox::Slot().FillHeight(1)
             [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("run.scroll")) + SScrollBox::Slot() [ SAssignNew(Body, SVerticalBox) ] ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0,8,0,0)
+            [ SNew(STextBlock).Text(FText::FromString(TEXT("音声の一部またはすべてを利用できません。音なしでもゲームを続けられます。")))
+                .AutoWrapText(true).Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Regular",FontSize(14));})
+                .Visibility_Lambda([this]{return Audio && !Audio->Ready()?EVisibility::Visible:EVisibility::Collapsed;})
+                .AddMetaData(FDriverMetaData::Id("audio.unavailable")) ]
         ]
     ];
     if(Args._InitialRun) {CurrentRun=Args._InitialRun;RefreshRun();}

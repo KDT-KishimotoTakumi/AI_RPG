@@ -38,6 +38,7 @@ void FGirlsSpireAudioEngineSpec::Define()
             GirlsSpire::Preferences prefs;prefs.BgmVolume=37;prefs.SfxVolume=50;Audio->Apply(prefs);TestTrue(TEXT("実コンポーネントの独立音量"),FMath::IsNearlyEqual(Audio->Music()->VolumeMultiplier,.37f) && FMath::IsNearlyEqual(Audio->Effects()->VolumeMultiplier,.5f));
             TestTrue(TEXT("打撃音を再生"),Audio->Cue(EGameCue::Impact));CollectGarbage(RF_NoFlags);TestTrue(TEXT("GC後も所有する音声コンポーネントを保持"),IsValid(Audio->Music()) && IsValid(Audio->Effects()));
             prefs.BgmVolume=0;Audio->Apply(prefs);TestFalse(TEXT("BGMだけ消音停止"),Audio->Music()->IsPlaying());prefs.SfxVolume=0;Audio->Apply(prefs);TestFalse(TEXT("効果音も即時消音停止"),Audio->Effects()->IsPlaying());TestFalse(TEXT("消音中は再発音しない"),Audio->Cue(EGameCue::Impact));
+            TestTrue(TEXT("両方の消音でも素材は利用可能"),Audio->Ready());
             prefs.BgmVolume=100;Audio->Apply(prefs);TestTrue(TEXT("BGMを再開"),Audio->Music()->IsPlaying());Audio->Stop();TestFalse(TEXT("明示停止"),Audio->Music()->IsPlaying());
         }).Wait();
     });

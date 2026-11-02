@@ -18,6 +18,8 @@ public:
 class RecordingGameAudio : public IGameAudio {
 public:
     GirlsSpire::Preferences Applied;int Applies=0,Starts=0,Confirms=0,Impacts=0;
+    bool Available=true;
+    bool Ready()const override{return Available;}
     bool Apply(const GirlsSpire::Preferences& value)override{if(!GirlsSpire::ResolveAudioLevels(value))return false;Applied=value;++Applies;return true;}
     void Start()override{++Starts;}
     bool Cue(EGameCue cue)override{if(cue==EGameCue::Confirm)++Confirms;else ++Impacts;return true;}
@@ -49,6 +51,17 @@ void FGirlsSpireAudioUISpec::Define()
         Async(EAsyncExecution::TaskGraphMainThread,[this,battle]{Window->SetContent(SNew(SCombatScreen).Combat(battle).Audio(Audio));}).Wait();DrainSlateLayout();
         if(!Click("battle.cell.2.1") || !Click("battle.confirm"))return;expected.Attack(expected.Snapshot().Revision,0,{2,1});
         TestTrue(TEXT("入力音/打撃音を通知し状態は非音声経路と一致"),Audio->Confirms==1 && Audio->Impacts==1 && battle->Checkpoint()==expected.Checkpoint());
+    });
+    for(bool unavailable:{false,true})It(*FString::Printf(TEXT("音声利用不可%dを通知し設定と実戦を継続できる"),unavailable),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this,unavailable]{
+        Audio->Available=!unavailable;
+        Async(EAsyncExecution::TaskGraphMainThread,[this]{Window->SetContent(SNew(SRunScreen).PreferencesService(Store).Audio(Audio).DevelopmentTools(false));}).Wait();DrainSlateLayout();
+        TestEqual(TEXT("利用不可のときだけ通知"),Driver->FindElement(By::Id("audio.unavailable"))->IsVisible(),unavailable);
+        if(!Click("title.settings") || !Click("settings.bgm.mute") || !Click("settings.sfx.mute") || !Click("settings.save"))return;
+        TestTrue(TEXT("音量0を正常に保存"),Store->Load().Value.BgmVolume==0 && Store->Load().Value.SfxVolume==0);
+        TestEqual(TEXT("消音を利用不可と混同しない"),Driver->FindElement(By::Id("audio.unavailable"))->IsVisible(),unavailable);
+        if(!Click("title.start") || !Click("role.confirm") || !Click("route.node.0") || !Click("battle.start"))return;
+        TestTrue(TEXT("通知中も実戦へ進める"),Driver->FindElement(By::Id("battle.round"))->Exists());
+        TestEqual(TEXT("通知は戦闘でも維持"),Driver->FindElement(By::Id("audio.unavailable"))->IsVisible(),unavailable);
     });
     AfterEach([this]{Driver.Reset();if(Window.IsValid()){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}Store.reset();Files.reset();Audio.reset();IAutomationDriverModule::Get().Disable();});
 }

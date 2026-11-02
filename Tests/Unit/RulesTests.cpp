@@ -191,5 +191,7 @@ int main()
     failed += TestAudioLevels();
     extern int TestBoardCues();
     failed += TestBoardCues();
+    extern int TestRescueDialogue();
+    failed += TestRescueDialogue();
     return failed == 0 ? 0 : 1;
 }

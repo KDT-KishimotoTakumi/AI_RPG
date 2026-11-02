@@ -11,6 +11,7 @@ public:
     virtual bool Apply(const GirlsSpire::Preferences& value)=0;
     virtual void Start()=0;
     virtual bool Cue(EGameCue cue)=0;
+    virtual bool Ready() const=0;
 };
 class FGameAudio final : public IGameAudio,public FGCObject {
 public:
@@ -22,7 +23,7 @@ public:
     void Stop();
     UAudioComponent* Music() const {return MusicComponent.Get();}
     UAudioComponent* Effects() const {return EffectComponent.Get();}
-    bool Ready() const;
+    bool Ready() const override;
     void AddReferencedObjects(FReferenceCollector& collector) override;
     FString GetReferencerName() const override {return TEXT("GirlsSpire.GameAudio");}
 private:
