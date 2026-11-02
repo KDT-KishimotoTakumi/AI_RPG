@@ -9,5 +9,7 @@ class Encounter {
 public:
     static Battle Create(const RunSnapshot& run, std::uint64_t seed,
         GenerationResult* details = nullptr, bool forceGenerationFailure = false);
+    static Battle Create(const RunSnapshot& run, std::uint64_t seed, const Profile& profile,
+        GenerationResult* details = nullptr, bool forceGenerationFailure = false);
 };
 }

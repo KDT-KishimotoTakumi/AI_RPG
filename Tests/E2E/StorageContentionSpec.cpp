@@ -57,7 +57,7 @@ void FGirlsSpireStorageContentionSpec::Define()
         if(!TestTrue(TEXT("実ハンドルでバックアップ置換を競合させる"),state->Lock!=INVALID_HANDLE_VALUE))return;
         auto expected=*run;if(phase==0)expected.ChooseNode(expected.Snapshot().Revision,0);
         std::optional<BattleCheckpoint> expectedCombat;
-        if(phase==1)expectedCombat=Encounter::Create(expected.Snapshot(),expected.RandomState()).Checkpoint();
+        if(phase==1)expectedCombat=Encounter::Create(expected.Snapshot(),expected.RandomState(),expected.ProfileState()).Checkpoint();
         const char* ready=phase==0?"battle.start":"battle.ultimate.select";
         const auto click=[&](const char* id) {
             const auto target=Driver->FindElement(By::Id(id));

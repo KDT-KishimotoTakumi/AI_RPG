@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "3D9081C2FD0FD9E52B857E1E1CB19DAF44705CAC07834D9AE2175FFDC8BCF441",
+    "sha256": "D8D28C55D88179479BA1D697B9AD551BFAFBC9BBD9409493C070FAD6A0469FCB",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -21,8 +21,8 @@
   },
   {
     "path": "Source/GirlsSpire/Application/Encounter.h",
-    "sha256": "32A026BB3CDD315DAC58BEBF6F05B64DAA76CC3E484BD159938EEEB6B7D61F7C",
-    "reason": "生成関数の宣言のみ。関数定義はEncounter.cppで計測。"
+    "sha256": "F118B2A18616BFD9A74A4BF92ED77F1160BBF16E44006F3F1B75275D61C82175",
+    "reason": "生成関数の宣言のみ。関数定義はEncounter.cpp/FormalEncounter.cppで計測。"
   },
   {
     "path": "Source/GirlsSpire/Presentation/CharacterPortraits.h",

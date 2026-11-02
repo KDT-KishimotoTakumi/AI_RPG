@@ -195,7 +195,7 @@ void SRunScreen::StartBattle(bool forceGenerationFailure)
 {
     const auto state=CurrentRun->Snapshot();
     GirlsSpire::GenerationResult generation;
-    const auto combat=MakeShared<GirlsSpire::Battle>(GirlsSpire::Encounter::Create(state,CurrentRun->RandomState(),&generation,forceGenerationFailure));
+    const auto combat=MakeShared<GirlsSpire::Battle>(GirlsSpire::Encounter::Create(state,CurrentRun->RandomState(),CurrentRun->ProfileState(),&generation,forceGenerationFailure));
     const auto description=FString::Printf(TEXT("%s %d×%d / 生成試行%d回"),
         generation.UsedFallback?TEXT("固定戦場へ切替"):TEXT("自動生成"),
         generation.Layout.Width,generation.Layout.Height,generation.Attempts);

@@ -41,3 +41,5 @@ GS-047: CharacterSkills(2)とRun v14を追加。旧識別の技能解釈は不�
 GS-048: CharacterAbilities(3)は正式通常技能と正式個人必殺を使用し、0/1/2の旧必殺は不変。Run v15を使用する。AttackPreviewへ味方支援予告と自身防御強化情報を追加（非永続）。結果は既存HP/TimedBoost/弱体/ゲージ/構文/RNGへ一括反映して保存する。詳細character-ultimates-rules.md。
 
 GS-049: CompleteCharacters(4)/Run v16は正式技能・必殺に専用連携201～208を追加する。専用候補の優先フラグは計算時のみで保存しない。既存の履歴・ゲージ・成立結果・固定絆とProfile v4の発見IDを利用し、旧識別0～3の意味を維持する。
+
+GS-050（新規戦闘への正式効果接続）: Encounter::CreateのProfile明示版は、従来生成と同じ盤面/編成/能力/手番/RNGにCompleteCharacters(4)と開始時Bonds[8]だけを付ける。不正Profileは生成前に拒否。通常のSRunScreenからこの版を使用し、固定戦場でも同じ開始時絆を保持する。Profileなしの旧APIはLegacyのまま。保存形式はRun v16/Profile v4を維持し、保存済み戦闘を新規生成で上書きしない。検証状態はVALIDATION.md/PLAN.md。

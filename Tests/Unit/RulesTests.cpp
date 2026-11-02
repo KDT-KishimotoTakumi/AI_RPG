@@ -183,5 +183,7 @@ int main()
     failed += TestCharacterUltimates();
     extern int TestBondCombos();
     failed += TestBondCombos();
+    extern int TestFormalEncounter();
+    failed += TestFormalEncounter();
     return failed == 0 ? 0 : 1;
 }

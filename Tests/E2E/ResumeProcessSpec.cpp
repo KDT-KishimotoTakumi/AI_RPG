@@ -41,6 +41,15 @@ struct ProcessResumeFixture {
 std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
     using namespace GirlsSpire;
+    if(point>=46){
+        Profile profile;profile.Bonds={0,24,49,50,74,75,99,100};
+        Run run(42,Difficulty::Beginner,HeroRole::Sword,profile);run.ChooseNode(0,0);auto progress=run.Checkpoint();progress.State.Health[0].Hp=30;
+        auto restored=Run::Restore(progress,profile);if(!restored)return std::nullopt;
+        auto battle=Encounter::Create(restored->Snapshot(),restored->RandomState(),profile);
+        if(point==47 && !battle.UseSkill(battle.Snapshot().Revision,0,Skill::FirstAid,battle.Snapshot().Units.front().At))return std::nullopt;
+        CombatControl control;control.ProfileDriven=true;control.ChoiceRandom=Random(battle.RandomState());for(int id=1;id<=8;++id)control.Trust[id]=profile.Bonds[id-1];
+        return ProcessResumeFixture{RunSaveState{progress,SavedCombat{battle.Checkpoint(),control.Checkpoint()}},profile};
+    }
     if(point>=44){
         auto fixture=ProcessFixture(30);if(!fixture)return std::nullopt;auto& checkpoint=fixture->State.Combat->Battle;
         checkpoint.State.AbilityRules=AbilityRuleSet::CompleteCharacters;checkpoint.State.StartingBonds.fill(100);fixture->Permanent.Bonds.fill(100);for(int id=1;id<=8;++id)fixture->State.Combat->Control.Trust[id]=100;
@@ -262,10 +271,10 @@ void FGirlsSpireResumeProcessSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(stage==TEXT("Save")?TEXT("46地点を別プロセス用に保存する"):TEXT("別プロセスで46地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
+    It(stage==TEXT("Save")?TEXT("48地点を別プロセス用に保存する"):TEXT("別プロセスで48地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<46;++point) {
+        for(int point=0;point<48;++point) {
             const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));

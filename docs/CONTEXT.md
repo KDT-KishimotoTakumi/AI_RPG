@@ -13,7 +13,7 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 - 周回性能は全滅で消失。絆0～100は恒久で戦闘開始時信頼へ固定。救出後3択は+10/0/−5、時間消費なし。専用交流は加入済み/絆80以上/交流1回消費、完了恒久。後日談は勝利＋当該周回加入＋絆80＋専用交流完了、全達成者/単独から選択。複数恋愛可、嫉妬等なし。
 - 未救出者は独立周回シードで敵50%/中立50%、再開不変。中立手番なし。城主撃破で配下が残っても勝利。
 - 20連携の条件/名称は承認済み（combo-catalog-proposal.md）。旧ID2/3/5、新101～117、人数別ゲージ10/20/40のみ。再質問不要。
-- 9人物の正式2技能/個人必殺/絆100強化版と専用連携201～208はcharacter-abilities-proposal.mdの数値表を2026-11-01一括承認済み。正式技能/必殺はGS-047/048で接続済み。専用連携はGS-049完了。通常生成の有効化は次工程。
+- 9人物の正式2技能/個人必殺/絆100強化版と専用連携201～208はcharacter-abilities-proposal.mdの数値表を2026-11-01一括承認済み。正式技能/必殺はGS-047/048で接続済み。専用連携はGS-049完了。GS-050で新規通常戦闘に有効化済み。
 - 正式技能の構文属性もcharacter-syntax-proposal.mdで承認済み。攻撃=結/弱体付き攻撃=転/回復・味方強化=承/個人必殺=結。旧戦闘の効果・属性を維持。再質問不要。
 - Run v16（旧v2～15互換）、Profile v4（旧v1～3互換）。Profile=Bonds[8]/SpecialConversations[8]/Epilogues[9]/DiscoveredCombos（正ID厳密昇順）。乱数/確定結果を同一取引で保存、失敗中停止し同内容だけ再試行。異世代を勝手に混ぜない。
 
@@ -21,12 +21,13 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 - GS-033～038: ボス2体、未救出再登場、連携恒久発見/20種実戦、9人物カタログ共有/救出役割表示まで接続。戦闘/成長/商店/交流/後日談/中断と初期立ち絵は部分実装。
 - GS-039設定payload基盤のみ、GS-040主人公正式名/既存効果一致のみ完了。正式技能/必殺は後続GS-047/048で接続。設定UI/ファイル/反映は未接続。
 - GS-047/048で正式18技能・9個人必殺/8強化を実行/表示/保存へ接続済み。GS-049完了: 専用201～208を承→結/同一敵/隣接/固定絆100/優先/ゲージ20で接続。CompleteCharacters(4)/Run v16、旧識別0～3の意味は維持。Native1709＋全単体/全UE246＋起動成功、行98.81/関数97.96/分岐90.73%、Missing=[]。Coverage/96ce76d87cce427e810620e69e31d107。46地点再開・通常MSVC＋専用UI8＋起動も成功。通常生成はLegacy維持。
+- GS-050/T013m完了: 新規EncounterへProfileを渡しCompleteCharacters/開始時絆を固定。旧API/旧保存の意味とRun v16/Profile v4を維持。Native5419＋全単体、全UE254＋起動、48地点再開、通常MSVC＋実UI8＋起動が警告0/失敗0。行98.81/関数97.96/分岐90.83%、Missing=[]。Coverage/f8096f7e648145d493a574983378bff8、Saved/formal-encounter-*.log。入れ子スクロールのDriver制約は画像/UE実装で確認し、実ホイール操作で解消。識別4を3へ退行させるコピー試験は601失敗で検出し製品ソース不変。
 - ゲームGit: origin KDT-KishimotoTakumi/AI_RPG。2026-11-02、終了前のコミット/pull/pushを利用者が明示承認。最新送信状態はgit status/logとリモートで確認。秘密設定/セーブ/生成物は除外する。
 - 支援8スキルはCodex共通領域を使用。二重登録を避けてプロジェクト重複版は整理済み。Context Mode1.0.169はプロジェクト限定MCP、全体フックなし。配布元/設定はDEV_SKILLS参照。
 - スキルコピーは別の非公開リポジトリKDT-KishimotoTakumi/AI-Development-Skillsへpush済み（d1c5fe4ff2f466340edc916181bf3a610f2a429e）。独立コピーSaved/Exports/AI-Development-Skillsを保持。
 
 ## 【未解決の課題】
-- 新規生成への正式人物効果有効化、性格/難易度別敵AI、正式物語/恋愛、図鑑/難易度解放/外見、正式画像差分/敵/背景/BGM/SFX、設定/アクセシビリティ。
+- 性格/難易度別敵AI、正式物語/恋愛、図鑑/難易度解放/外見、正式画像差分/敵/背景/BGM/SFX、設定/アクセシビリティ。
 - T029b破損取引/世代不一致の確認付き復旧、実戦12日完走/全7ストーリーE2E、1080/1440、Windows配布/オフライン/フォント/性能/45～90分の実測。
 - 通常起動でbattle.start未検出2回、原因未確定。Automation/f85691d8d7254b30a6f0668dc3ba4d06、154cef32add743f3869bc826fea10cf7と確定前取引を保全。RuntimeSpecに保存停止検出/既存UI1回再試行を追加後、警告0で成功。原因修正は断定しない。過去のOS置換エラー5も未特定。
 
@@ -36,10 +37,10 @@ Girls Spireを承認済み仕様どおり完成させる。ゲーム全体は未
 - パスは環境から解決。既存tools/*.ps1はEpic manifest/vswhere/検証済み一時junctionを利用。実ビルド/IOは承認済みのescalated方式。審査拒否を迂回しない。
 - GirlsSpire.Build.csのbUseUnity=falseを維持（匿名名前空間衝突対策）。全資料/スキル一括読込禁止、Spec Kitは工程ごと。
 - 全体計測合格後のみ当該profrawをcleanup-measurements.ps1で整理。JSON/profdataを保持。
-- 直近整理: Intermediate/DDC 2,624,098,002 bytes（約2.44GiB）削除、対象外7,270ハッシュと秘密設定メタデータ不変。監査Saved/StorageAudit-83f1bdafa1bb4a7b84cb7ae59dbad47b。次回ビルドでPCH等再生成。素材・セーブ・互換原本・検証結果を保持。過去の失敗計測はSaved/CoverageArchivesの照合済みZIPと元Coverageの対応DLL/ソース/診断を保持。
+- 直近整理: Intermediate/DDC 2,624,956,286 bytes（約2.44GiB）削除、対象外7,604ハッシュと秘密設定メタデータ不変。監査Saved/StorageAudit-740743af1b13405eab4e9665e78bd14c。次回ビルドでPCH等再生成。素材・セーブ・互換原本・検証結果を保持。過去の失敗計測はSaved/CoverageArchivesの照合済みZIPと元Coverageの対応DLL/ソース/診断を保持。
 
 ## 【次に行う作業】
-formal-abilities-plan.mdの新規EncounterへProfileを渡す工程。新規戦闘だけCompleteCharactersと固定絆を適用し、旧戦闘は変換しない。
+次はPLANのT032b設定UI・実ファイル保存・反映の確定要件を進める。性格/難易度別敵AI等の未確定条件は補完せず実装前に確認。新規戦闘は正式効果、保存済み戦闘は途中変換しない。終了前に生成物だけ容量整理し、承認済みcommit/pull/pushを検証する。
 旧固定原本Tests/Fixtures/{roster-v11,ability-v12,skill-v13,ultimate-v14,bond-v15}.binは再生成しない。各メタデータ/説明/回帰テストに既知ハッシュと意味を保持。旧v13回復構文の承/転、旧v14通常技能、旧v15識別3の意味を維持する。
 1. 実際のgit statusと対象タスク/要件だけ確認して未完了実装を続ける。既合格GS-038を理由なく再試験しない。
 2. 必要な設計確認は具体案を示し、独立作業を並行する。関連検証後に管理資料を更新。
