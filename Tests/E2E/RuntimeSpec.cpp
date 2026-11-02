@@ -9,20 +9,48 @@
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
 #include "Infrastructure/DiskSlotFiles.h"
+#include "Infrastructure/PreferencesStore.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
+#include "UObject/UObjectIterator.h"
 #include <algorithm>
+#if defined(GIRLS_SPIRE_COVERAGE)
+extern "C" int __llvm_profile_write_file();
+#endif
 
 BEGIN_DEFINE_SPEC(FGirlsSpireRuntimeSpec,"GirlsSpire.Runtime.GameEntry",EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter)
     FAutomationDriverPtr Driver;
+    bool CheckAudio(float bgm,float sfx,bool effects){
+        bool valid=false;
+        Async(EAsyncExecution::TaskGraphMainThread,[this,bgm,sfx,effects,&valid]{
+            if(!TestTrue(TEXT("音声を有効にした通常ゲーム"),GEngine && GEngine->UseSound() && GEngine->GetMainAudioDeviceRaw()))return;
+            UAudioComponent* music=nullptr;UAudioComponent* effect=nullptr;int musicCount=0;
+            for(TObjectIterator<UAudioComponent> it;it;++it){
+                if(!it->GetSound())continue;const auto path=it->GetSound()->GetPathName();
+                if(path==TEXT("/Game/Audio/BGM_Castle_V1.BGM_Castle_V1")){music=*it;++musicCount;}
+                if(path==TEXT("/Game/Audio/SFX_Confirm_V1.SFX_Confirm_V1"))effect=*it;
+            }
+            if(!TestTrue(TEXT("通常ゲームにBGM所有者が1つ"),musicCount==1 && music))return;
+            valid=TestTrue(TEXT("BGM独立音量と再生/消音"),FMath::IsNearlyEqual(music->VolumeMultiplier,bgm) && music->IsPlaying()==(bgm>0));
+            if(effects)valid=TestTrue(TEXT("実際の入力音源と独立効果音量"),effect && FMath::IsNearlyEqual(effect->VolumeMultiplier,sfx)) && valid;
+        }).Wait();return valid;
+    }
 END_DEFINE_SPEC(FGirlsSpireRuntimeSpec)
 void FGirlsSpireRuntimeSpec::Define()
 {
     if(!FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeTest"))) return;
     BeforeEach([this]{FSlateApplication::Get().CloseToolTip();IAutomationDriverModule::Get().Enable();Driver=IAutomationDriverModule::Get().CreateDriver();});
     LatentBeforeEach(WaitForSlateLayout);
-    It(TEXT("通常ゲームの画面から出発・実戦・保存・中断できる"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this] {
+    if(!FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeAudioResume")))It(TEXT("通常ゲームの画面から出発・実戦・保存・中断できる"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("ゲーム用ビューポート"),GEngine && GEngine->GameViewport)) return;
         if(!TestTrue(TEXT("通常起動でタイトルを表示"),Driver->FindElement(By::Id("title.start"))->Exists())) return;
+        const bool audio=FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeAudioTest"));
+        if(audio && !CheckAudio(1.f,1.f,false))return;
+        if(!audio){
+            bool quiet=false;Async(EAsyncExecution::TaskGraphMainThread,[&quiet]{quiet=GEngine && !GEngine->UseSound() && !GEngine->GetMainAudioDeviceRaw();}).Wait();
+            if(!TestTrue(TEXT("既定経路は実際に無音で音声デバイスを作らない"),quiet))return;
+        }
         const auto click=[&](const char* id) {
             const auto target=Driver->FindElement(By::Id(id));
             if(!target->IsVisible()) {
@@ -43,6 +71,13 @@ void FGirlsSpireRuntimeSpec::Define()
             }
             return true;
         };
+        if(audio){
+            TestFalse(TEXT("正常音声で利用不可通知を表示しない"),Driver->FindElement(By::Id("audio.unavailable"))->IsVisible());
+            if(!click("title.settings") || !click("settings.bgm.mute") || !click("settings.sfx.down") || !click("settings.save"))return;
+            if(!CheckAudio(0.f,.9f,true))return;
+            TestFalse(TEXT("消音でも利用不可通知を表示しない"),Driver->FindElement(By::Id("audio.unavailable"))->IsVisible());
+            if(!click("title.settings") || !click("settings.bgm.up") || !click("settings.save") || !CheckAudio(.1f,.9f,true))return;
+        }
         if(!click("title.start") || !click("role.confirm") || !click("route.node.0")) return;
         TestFalse(TEXT("進行検証の勝利入力を表示しない"),Driver->FindElement(By::Id("preview.complete"))->Exists());
         if(!click("battle.start")) return;
@@ -52,6 +87,7 @@ void FGirlsSpireRuntimeSpec::Define()
         DiskSlotFiles files{std::filesystem::path(*root)};SaveTransaction service(files,files);
         const auto entered=service.Load();
         if(!TestTrue(TEXT("実戦の開始を保存"),entered.Run && entered.Run->Combat)) return;
+        if(audio && !CheckAudio(.1f,.9f,true))return;
         const auto battle=Battle::Restore(entered.Run->Combat->Battle);
         if(!TestTrue(TEXT("実戦復元"),battle.has_value())) return;
         const auto reachable=battle->Reachable(battle->Snapshot().ActiveId);
@@ -63,6 +99,29 @@ void FGirlsSpireRuntimeSpec::Define()
         TestTrue(TEXT("通常起動の行動も保存される"),moved.Run && moved.Run->Combat && moved.Run->Combat->Battle.State.Revision>entered.Run->Combat->Battle.State.Revision);
         if(!click("save.suspend")) return;
         TestTrue(TEXT("通常起動の中断と再開操作"),Driver->FindElement(By::Id("title.resume"))->Exists());
+        if(audio){PreferencesStore prefs(files);TestTrue(TEXT("独立音量を実ファイルへ保存"),prefs.Load().Issue==PreferencesIssue::None && prefs.Load().Value.BgmVolume==10 && prefs.Load().Value.SfxVolume==90);CheckAudio(.1f,.9f,true);}
     });
-    AfterEach([this]{Driver.Reset();IAutomationDriverModule::Get().Disable();});
+    if(FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeAudioResume")))It(TEXT("音声有効の別プロセスで音量と中断実戦を再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this]{
+        using namespace GirlsSpire;FString root;FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireRuntimeRoot="),root);root=FPaths::ConvertRelativePathToFull(root);
+        const auto prefix=FPaths::ConvertRelativePathToFull(FPaths::ProjectDir()/TEXT("Saved/Tests/Runtime"));
+        if(!TestTrue(TEXT("既存の専用保存先"),root!=prefix && FPaths::IsUnderDirectory(root,prefix)))return;
+        DiskSlotFiles files{std::filesystem::path(*root)};SaveTransaction saves(files,files);PreferencesStore prefs(files);
+        const auto before=saves.Load();const auto preferences=files.ReadPreferences();
+        if(!TestTrue(TEXT("前プロセスの中断を検出"),before.Run && before.Run->Combat && before.Run->ResumeAvailable))return;
+        TestTrue(TEXT("音量10/90を再読込"),prefs.Load().Issue==PreferencesIssue::None && prefs.Load().Value.BgmVolume==10 && prefs.Load().Value.SfxVolume==90);
+        if(!CheckAudio(.1f,.9f,false))return;
+        TestFalse(TEXT("再起動後も正常音声"),Driver->FindElement(By::Id("audio.unavailable"))->IsVisible());
+        if(!TestTrue(TEXT("通常画面から中断再開"),ClickAndDrain(Driver->FindElement(By::Id("title.resume")))))return;
+        TestTrue(TEXT("再開した実戦を表示"),Driver->FindElement(By::Id("battle.round"))->Exists());
+        const auto after=saves.Load();
+        auto expected=*before.Run;expected.ResumeAvailable=false;
+        TestTrue(TEXT("実戦全状態・乱数・恒久記録を維持"),after.Run && *after.Run==expected && after.Permanent==before.Permanent);
+        TestTrue(TEXT("再開で独立設定を書換えない"),files.ReadPreferences().Bytes==preferences.Bytes);
+        CheckAudio(.1f,.9f,true);
+    });
+    AfterEach([this]{Driver.Reset();IAutomationDriverModule::Get().Disable();
+#if defined(GIRLS_SPIRE_COVERAGE)
+        TestEqual(TEXT("通常ゲーム経路の計測を書出し"),__llvm_profile_write_file(),0);
+#endif
+    });
 }

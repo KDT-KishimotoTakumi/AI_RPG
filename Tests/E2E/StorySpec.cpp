@@ -5,6 +5,7 @@
 #include "HAL/IConsoleManager.h"
 #include "Widgets/SWindow.h"
 #include "Presentation/RunScreen.h"
+#include "Domain/RelationshipText.h"
 #include "ImageUtils.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -58,6 +59,9 @@ void FGirlsSpireStorySpec::Define()
         if(!TestTrue(TEXT("後日談の選択操作がある"),Driver->FindElement(By::Id(*key))->Exists()))return;
         if(!Click(TCHAR_TO_UTF8(*key)))return;
         TestTrue(TEXT("本のページを予告"),Driver->FindElement(By::Id("epilogue.page"))->Exists());
+        const auto* text=FindEndingText(actor);if(!TestNotNull(TEXT("承認済み後日談"),text))return;
+        TestEqual(TEXT("正式題名を予告"),Driver->FindElement(By::Id("epilogue.title"))->GetText().ToString(),FString(UTF8_TO_TCHAR(text->Title.data())));
+        TestEqual(TEXT("正式本文を予告"),Driver->FindElement(By::Id("epilogue.page"))->GetText().ToString(),FString(UTF8_TO_TCHAR(text->Page.data())));
         if(!Click("epilogue.cancel"))return;
         TestFalse(TEXT("取消では記録しない"),won->ProfileState().Epilogues[actor]);
         if(!Click(TCHAR_TO_UTF8(*key)) || !Click("epilogue.confirm") || !Click("epilogue.back"))return;
@@ -67,6 +71,7 @@ void FGirlsSpireStorySpec::Define()
         if(!Click(TCHAR_TO_UTF8(*record)))return;
         if(!Click("epilogue.library") || !Click(TCHAR_TO_UTF8(*record)))return;
         TestTrue(TEXT("再読では確定操作なし"),Driver->FindElement(By::Id("epilogue.page"))->Exists() && !Driver->FindElement(By::Id("epilogue.confirm"))->Exists());
+        TestEqual(TEXT("再読も同一の正式本文"),Driver->FindElement(By::Id("epilogue.page"))->GetText().ToString(),FString(UTF8_TO_TCHAR(text->Page.data())));
     });
     AfterEach([this] {
         if(Window.IsValid()) {

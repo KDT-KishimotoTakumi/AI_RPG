@@ -18,8 +18,8 @@ if ($projectRoot -match '[^\x00-\x7F]') {
     $launchRoot = $alias
 }
 $report = Join-Path $launchRoot ('Saved/Automation/' + [Guid]::NewGuid().ToString('N'))
-$render = if ($UI) { @('-RenderOffscreen', '-ResX=1280', '-ResY=900') } else { @('-NullRHI') }
-$sound = if($Audio){@("-AudioMixer")}else{@("-nosound")}
+[string[]]$render = if ($UI) { @('-RenderOffscreen', '-ResX=1280', '-ResY=900') } else { @('-NullRHI') }
+[string[]]$sound = if($Audio){@("-AudioMixer")}else{@("-nosound")}
 $oldProfile = $env:LLVM_PROFILE_FILE
 try {
     # 個別の動作確認では巨大な既定プロファイルを残さない。本計測の指定先は維持する。

@@ -193,5 +193,7 @@ int main()
     failed += TestBoardCues();
     extern int TestRescueDialogue();
     failed += TestRescueDialogue();
+    extern int TestRelationshipText();
+    failed += TestRelationshipText();
     return failed == 0 ? 0 : 1;
 }

@@ -5,6 +5,8 @@
 #include "HAL/IConsoleManager.h"
 #include "Widgets/SWindow.h"
 #include "Presentation/RunScreen.h"
+#include "Domain/RelationshipText.h"
+#include "Domain/CharacterCatalog.h"
 #include "ImageUtils.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -65,11 +67,16 @@ void FGirlsSpireBondUiSpec::Define()
         TestFalse(TEXT("主人公は相手でない"),Driver->FindElement(By::Id("social.actor.0"))->Exists());
         for(int id:run->Unrecruited()) TestFalse(TEXT("未加入者は非表示"),Driver->FindElement(By::Id(*FString::Printf(TEXT("social.actor.%d"),id+1)))->Exists());
         if(!Click(TCHAR_TO_UTF8(*actorId))) return;
+        const auto* text=GirlsSpire::FindSocialDialogue(actor);if(!TestNotNull(TEXT("承認済み通常交流"),text))return;
+        TestEqual(TEXT("人物別の台詞"),Driver->FindElement(By::Id("social.dialogue"))->GetText().ToString(),FString(UTF8_TO_TCHAR(GirlsSpire::FindCharacter(actor)->Name.data()))+TEXT("「")+UTF8_TO_TCHAR(text->Opening.data())+TEXT("」"));
+        const TCHAR* effects[]={TEXT("（＋10）"),TEXT("（0）"),TEXT("（−5）")};
+        for(int index=0;index<3;++index){const auto key=FString::Printf(TEXT("social.choice.%d"),index);TestEqual(TEXT("人物別3返答と既存効果"),Driver->FindElement(By::Id(*key))->GetText().ToString(),FString(UTF8_TO_TCHAR(text->Replies[index].data()))+effects[index]);}
         const int choice=actor%3;
         const auto choiceId=FString::Printf(TEXT("social.choice.%d"),choice);
         if(!Click(TCHAR_TO_UTF8(*choiceId))) return;
         const int expected=FMath::Clamp(rank+(choice==0?10:choice==2?-5:0),0,100);
         TestTrue(TEXT("絆前後値予告"),Driver->FindElement(By::Id("social.preview"))->GetText().ToString().Contains(FString::Printf(TEXT("%d→%d"),rank,expected)));
+        TestTrue(TEXT("選択した本文の予告"),Driver->FindElement(By::Id("social.preview"))->GetText().ToString().Contains(UTF8_TO_TCHAR(text->Replies[choice].data())));
         if(!Click("social.cancel")) return;
         TestFalse(TEXT("取消で確定欄消失"),Driver->FindElement(By::Id("social.confirm"))->Exists());
         TestTrue(TEXT("取消後も同じ相手の選択"),Driver->FindElement(By::Id(*choiceId))->Exists());
@@ -123,6 +130,7 @@ void FGirlsSpireBondUiSpec::Define()
         if(!TestTrue(TEXT("絆80で専用交流を選択可能"),Driver->FindElement(By::Id("social.special"))->Exists()))return;
         if(!Click("social.special"))return;
         TestTrue(TEXT("完了の恒久保持とイベント消費を予告"),Driver->FindElement(By::Id("social.special.preview"))->Exists());
+        TestTrue(TEXT("承認済みの専用交流本文"),Driver->FindElement(By::Id("social.special.preview"))->GetText().ToString().Contains(UTF8_TO_TCHAR(GirlsSpire::FindSocialDialogue(actor)->Special.data())));
         TestTrue(TEXT("予告は記録しない"),run->Checkpoint()==before && !run->ProfileState().SpecialConversations[actor-1]);
         if(!Click("social.special.cancel"))return;
         TestTrue(TEXT("取消は時間も記録も変えない"),run->Checkpoint()==before && !run->ProfileState().SpecialConversations[actor-1]);

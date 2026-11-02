@@ -27,3 +27,4 @@ GS-035（2026-10-31）: 最終戦では未救出者を含む全9人物の通常�
 UE素材はContent/Audio/BGM_Castle_V1.uasset、SFX_Confirm_V1.uasset、SFX_Impact_V1.uasset。tools/import-audio.pyでPCM設定へ取り込み、BGMのみループ指定。取込時だけPythonScriptPlugin/EditorScriptingUtilitiesをCLI有効化し、プロジェクトプラグイン設定は変更しない。初回は無音コマンドレットのBINKAデコーダー未初期化で停止、音声初期化を有効にしたPCM取込は0エラー（別名パス大文字小文字判定の警告2件）で成功。原記録Saved/audio-import*.log。
 初期素材として使用し、最終音楽/ミックスの聴感・長時間ループ・配布同梱/権利一覧の最終確認は未完了。Config/DefaultGame.iniに/Game/Audioの常時cookを追加したが、配布パッケージを実測するまで配布完了としない。
 2026-11-03: 救出後の人物別台詞と3返答は本会話でプロジェクト向けに作成し、利用者が8人分を一括承認。本文正本specs/001-girls-spire/rescue-dialogue-proposal.md、実装Source/GirlsSpire/Domain/RescueDialogue.cpp。外部文章の引用なし。画像・音素材を置換せず、会話の数値/加入/時間を維持する。
+2026-11-03: 通常交流/専用交流の8人別本文は本会話でプロジェクト向けに作成し、利用者が一括承認。後日談9編は既存試作をそのまま転記して正式承認。正本social-ending-dialogue-proposal.md、共有カタログSource/GirlsSpire/Domain/RelationshipText.cpp。外部文章の引用なし。画像・音素材は変更せず、条件・数値・保存形式を維持する。

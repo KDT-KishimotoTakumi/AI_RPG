@@ -48,5 +48,10 @@
     "sha256": "9D42E43F121A69D5B06DF72E012410578BB3C552F4B4B2BC693F9086D7074529",
     "path": "Source/GirlsSpire/Domain/RescueDialogue.h",
     "reason": "集約構造体と検索関数の宣言のみ。関数定義と不変本文はRescueDialogue.cppで計測。"
+  },
+  {
+    "path": "Source/GirlsSpire/Domain/RelationshipText.h",
+    "reason": "集約構造体と検索関数の宣言のみ。本文と検索関数の定義はRelationshipText.cppで計測。",
+    "sha256": "E517F6902ABEEDAB710A820F178F7591B8D758F9B009D86B59BB3B2B8DEFD612"
   }
 ]

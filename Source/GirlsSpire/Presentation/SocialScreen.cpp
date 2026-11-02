@@ -1,4 +1,5 @@
 #include "RunScreen.h"
+#include "Domain/RelationshipText.h"
 FString SRunScreen::ProfileLabel() const
 {
     const auto& profile=CurrentRun?CurrentRun->ProfileState():RetainedProfile;
@@ -20,12 +21,14 @@ void SRunScreen::RefreshSocial()
         }
         return;
     }
-    AddText(ActorName(SocialActor)+TEXT("「城へ向かう前に、少し話を聞いてほしい。」"),"social.dialogue",18);
+    const auto* text=FindSocialDialogue(SocialActor);
+    check(text); // 交流相手は検証済みの加入者IDだけ。
+    AddText(ActorName(SocialActor)+TEXT("「")+UTF8_TO_TCHAR(text->Opening.data())+TEXT("」"),"social.dialogue",18);
     if(CurrentRun->CanSpecialConverse(SocialActor)) {
         if(SocialChoice==-2) {
             auto preview=*CurrentRun;
             if(preview.SpecialConverse(state.Revision,SocialActor)) {
-                AddText(TEXT("二人の意思を確かめ、城を出た後の約束を交わします。\n1イベントを消費し、専用交流の完了を次周以降も保持します。絆の追加変動はありません。確定後は取り消せません。"),"social.special.preview",18);
+                AddText(FString(UTF8_TO_TCHAR(text->Special.data()))+TEXT("\n\n二人の意思を確かめ、城を出た後の約束を交わします。\n1イベントを消費し、専用交流の完了を次周以降も保持します。絆の追加変動はありません。確定後は取り消せません。"),"social.special.preview",18);
                 AddAction(TEXT("互いの約束を確定"),"social.special.confirm",[this,revision=state.Revision,actor=SocialActor] {
                     if(CurrentRun->SpecialConverse(revision,actor))SocialMessage=ActorName(actor)+TEXT("との約束を記録しました。専用交流の完了は次周へ引き継ぎます。");
                     SocialActor=-1;SocialChoice=-1;RefreshRun();
@@ -36,14 +39,16 @@ void SRunScreen::RefreshSocial()
         }
         AddAction(TEXT("専用交流：二人の約束"),"social.special",[this]{SocialChoice=-2;RefreshRun();});
     }
-    const TCHAR* choices[]={TEXT("話を聞き、支える（＋10）"),TEXT("今後の予定を確認する（0）"),TEXT("話を突き放す（−5）")};
+    const TCHAR* effects[]={TEXT("（＋10）"),TEXT("（0）"),TEXT("（−5）")};
+    std::array<FString,3> choices;
+    for(int i=0;i<3;++i)choices[i]=FString(UTF8_TO_TCHAR(text->Replies[i].data()))+effects[i];
     if(SocialChoice>=0) {
         const auto choice=static_cast<ConversationChoice>(SocialChoice);
         auto preview=*CurrentRun;
         const bool legal=preview.Converse(state.Revision,SocialActor,choice);
         if(legal) {
             const int before=CurrentRun->ProfileState().Bonds[SocialActor-1],after=preview.ProfileState().Bonds[SocialActor-1];
-            AddText(FString::Printf(TEXT("%s / 絆%d→%d（実変動%+d）\n会話1回でイベント終了。確定後は取り消せません。"),choices[SocialChoice],before,after,after-before),"social.preview",17);
+            AddText(FString::Printf(TEXT("%s / 絆%d→%d（実変動%+d）\n会話1回でイベント終了。確定後は取り消せません。"),*choices[SocialChoice],before,after,after-before),"social.preview",17);
             AddAction(TEXT("この返答を確定"),"social.confirm",[this,revision=state.Revision,actor=SocialActor,choice,before,after] {
                 if(CurrentRun->Converse(revision,actor,choice)) {
                     const TCHAR* reason=choice==ConversationChoice::Warm?TEXT("支えを感じた"):choice==ConversationChoice::Cold?TEXT("突き放されたと感じた"):TEXT("予定を確認した");
