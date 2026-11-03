@@ -16,6 +16,7 @@ void SCombatScreen::ShowSaveFailure()
 {
     Grid->ClearChildren();Panel->ClearChildren();
     MovingUnits->ClearChildren();Movements.Reset();
+    BoardObjects->ClearChildren();
     ComboGauge->SetText(FText::GetEmpty());ComboResult->SetText(FText::GetEmpty());
     Text(TEXT("保存に失敗しました。進行を停止しています。同じ結果の保存を再試行してください。"),"save.error");
     Action(TEXT("同じ内容で保存を再試行"),"save.retry",[this] {

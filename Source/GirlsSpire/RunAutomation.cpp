@@ -47,4 +47,5 @@
 #include "../../Tests/E2E/PresentationSpec.cpp"
 #include "../../Tests/E2E/UnitMotionSpec.cpp"
 #include "../../Tests/E2E/UnitMotionUiSpec.cpp"
+#include "../../Tests/E2E/BoardObjectsSpec.cpp"
 #endif

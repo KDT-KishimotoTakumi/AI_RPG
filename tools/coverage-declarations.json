@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "258B84FEBC2A3894F33A2CE931C3622ECCA638E6A5F208363AA797ECC9D8FAB6",
+    "sha256": "8562BF58F2613B9B39F9D18FC927EDBC47925B9ACE35B35D37F18D3A60394300",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -68,5 +68,10 @@
     "path": "Source/GirlsSpire/Presentation/UnitMotion.h",
     "sha256": "A2A72C86424720533009B6005E38E15DD4026C2491656A6526DDD2A761E002D5",
     "reason": "静的関数の宣言のみ。補間と揺れはUnitMotion.cppで計測する。"
+  },
+  {
+    "path": "Source/GirlsSpire/Presentation/BoardSprites.h",
+    "sha256": "0240CC1A73786D02E9CB7BFAF741F038F7A3C41EE544FF3331EE95E19F9E9FF1",
+    "reason": "関数宣言と保持メンバーのみ。素材読込み/UV/種別対応はBoardSprites.cppで計測する。"
   }
 ]

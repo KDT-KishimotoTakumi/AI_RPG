@@ -15,7 +15,9 @@ class SHorizontalBox;
 class SUniformGridPanel;
 class STextBlock;
 class SCanvas;
+class SWrapBox;
 class FCharacterPortraits;
+class FBoardSprites;
 class IGameAudio;
 class SCombatScreen : public SCompoundWidget
 {
@@ -26,6 +28,7 @@ public:
         SLATE_ARGUMENT(std::optional<GirlsSpire::Profile>, BondProfile)
         SLATE_ARGUMENT(std::optional<GirlsSpire::CombatControlCheckpoint>, SavedControl)
         SLATE_ARGUMENT(TSharedPtr<FCharacterPortraits>, Portraits)
+        SLATE_ARGUMENT(TSharedPtr<FBoardSprites>, Sprites)
         SLATE_ARGUMENT(GirlsSpire::Preferences, DisplayPreferences)
         SLATE_ARGUMENT(std::shared_ptr<IGameAudio>, Audio)
         SLATE_EVENT(FSimpleDelegate, OnFinished)
@@ -38,6 +41,11 @@ private:
     struct FMovementVisual {std::vector<GirlsSpire::Position> Path;double Started=0;};
     TMap<int,FMovementVisual> Movements;
     TSharedPtr<SCanvas> MovingUnits;
+    TSharedPtr<SCanvas> BoardObjects;
+    TSharedPtr<FBoardSprites> Sprites;
+    FVector2D BoardCellSize() const;
+    const FSlateBrush* UnitSprite(const GirlsSpire::BattleUnit& unit) const;
+    void RefreshObjects();
     bool MotionActive(int id) const;
     void RecordMovement(const GirlsSpire::Battle& before);
     void RefreshMovingUnits();
@@ -66,7 +74,7 @@ private:
     void SelectIntentCell(GirlsSpire::Position cell);
     void ExecuteIntent(const GirlsSpire::IntentForecast& forecast);
     void Text(const FString& label, const FName& id, int size=18);
-    void Action(const FString& label, const FName& id, TFunction<void()> callback, bool enabled=true, TSharedPtr<SHorizontalBox> row=nullptr);
+    void Action(const FString& label, const FName& id, TFunction<void()> callback, bool enabled=true, TSharedPtr<SHorizontalBox> row=nullptr,TSharedPtr<SWrapBox> wrap=nullptr);
     TSharedPtr<GirlsSpire::Battle> Combat;
     TSharedPtr<SUniformGridPanel> Grid;
     TSharedPtr<SVerticalBox> Panel;

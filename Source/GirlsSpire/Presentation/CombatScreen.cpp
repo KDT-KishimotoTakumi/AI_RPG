@@ -1,5 +1,6 @@
 #include "CombatScreen.h"
 #include "SpireStyle.h"
+#include "BoardSprites.h"
 #include "UnitMotion.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/SCanvas.h"
@@ -17,6 +18,7 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
 #include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Layout/SWrapBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 #include <algorithm>
@@ -43,14 +45,16 @@ void SCombatScreen::Construct(const FArguments& Args)
     }
     MedicineVisible=Combat->Snapshot().Medicines>0;
     PortraitResources=Args._Portraits?Args._Portraits:MakeShared<FCharacterPortraits>();
+    Sprites=Args._Sprites?Args._Sprites:MakeShared<FBoardSprites>();
     ChildSlot [ SNew(SHorizontalBox)
         + SHorizontalBox::Slot().AutoWidth().Padding(0,0,20,0)
             [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("battle.board.scroll"))
               + SScrollBox::Slot()
               [ SNew(SVerticalBox)
-                + SVerticalBox::Slot().AutoHeight()
+                + SVerticalBox::Slot().AutoHeight().Padding(0,FontSize(36),0,0)
                   [SNew(SOverlay)
                     +SOverlay::Slot()[SAssignNew(Grid,SUniformGridPanel).SlotPadding(2)]
+                    +SOverlay::Slot()[SAssignNew(BoardObjects,SCanvas).Visibility(EVisibility::HitTestInvisible)]
                     +SOverlay::Slot()[SAssignNew(MovingUnits,SCanvas).Visibility(EVisibility::HitTestInvisible)]]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,10,0,6)[SAssignNew(PortraitPanel,SHorizontalBox)]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,12,0,6)
@@ -74,12 +78,13 @@ void SCombatScreen::Text(const FString& label,const FName& id,int size)
         .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(size))).AddMetaData(FDriverMetaData::Id(id)) ];
 }
 
-void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()> callback,bool enabled,TSharedPtr<SHorizontalBox> row)
+void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()> callback,bool enabled,TSharedPtr<SHorizontalBox> row,TSharedPtr<SWrapBox> wrap)
 {
     const auto button=SNew(SButton).ButtonStyle(&FSpireStyle::Command()).ContentPadding(FMargin(10,6)).IsEnabled(enabled).AddMetaData(FDriverMetaData::Id(id))
         .OnClicked_Lambda([this,callback=MoveTemp(callback)] { if(Audio)Audio->Cue(EGameCue::Confirm);callback(); return FReply::Handled(); })
         [ SNew(STextBlock).Text(FText::FromString(label)).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16))) ];
-    if(row) row->AddSlot().AutoWidth().Padding(0,0,6,0) [button];
+    if(wrap)wrap->AddSlot()[button];
+    else if(row) row->AddSlot().AutoWidth().Padding(0,0,6,0) [button];
     else Panel->AddSlot().AutoHeight().Padding(0,0,0,7) [button];
 }
 
@@ -113,7 +118,7 @@ void SCombatScreen::Refresh(bool persist)
             label=FString::Printf(TEXT("%s\n%d"),side,unit->Hp);
             color=unit->Side==Faction::Player?FLinearColor(0.05f,0.23f,0.4f):unit->Side==Faction::Enemy?FLinearColor(0.4f,0.09f,0.1f):FLinearColor(0.36f,0.28f,0.08f);
         } else if(cue.Move) {
-            label+=TEXT("\n移動"); color=FLinearColor(0.06f,0.28f,0.22f);
+            color=FLinearColor(0.06f,0.28f,0.22f);
         }
         FString detail=label;
         if(unit!=state.Units.end() && unit->Side==Faction::Enemy && unit->Role==BattleRole::FallenPrincess)
@@ -135,11 +140,12 @@ void SCombatScreen::Refresh(bool persist)
         detail+=FString::Printf(TEXT("\n経路の罠被害：%d"),cue.RouteTrapDamage);
         if(ShowThreats)detail+=FString::Printf(TEXT("\n現在地/合法移動先の敵被害上限：%d（実際の敵行動を確約しません）"),cue.EnemyDamage);
         if(MonochromeBoard)color=FLinearColor(0.12f,0.12f,0.12f);
-        const auto art=unit!=state.Units.end() && !MonochromeBoard?PortraitResources->Get(unit->Id):nullptr;
         const int unitId=unit!=state.Units.end()?unit->Id:-1;
         const float hp=unit!=state.Units.end()?static_cast<float>(unit->Hp)/FMath::Max(1,unit->MaxHp):0.f;
+        const auto ground=MonochromeBoard?nullptr:Sprites->Terrain(x==state.Width/2 || y==state.Height/2?EBoardSprite::Paving:EBoardSprite::Grass);
+        const auto cell=BoardCellSize();
         Grid->AddSlot(x,y)
-        [ SNew(SBox).WidthOverride(FontSize(large?36:48)).HeightOverride(FontSize(large?48:60))
+        [ SNew(SBox).WidthOverride(cell.X).HeightOverride(cell.Y)
             [ SNew(SButton).ButtonStyle(&FSpireStyle::Tile()).ContentPadding(0).NormalPaddingOverride(FMargin(0)).PressedPaddingOverride(FMargin(0))
                 .ToolTipText(FText::FromString(detail))
                 .HAlign(HAlign_Fill).ButtonColorAndOpacity(color)
@@ -148,25 +154,25 @@ void SCombatScreen::Refresh(bool persist)
                 .OnClicked_Lambda([this,at,revision=state.Revision] { SelectCell(at,revision); return FReply::Handled(); })
                 [ SNew(SOverlay)
                   +SOverlay::Slot()
-                  [SNew(SImage).Image(art.Get()).ColorAndOpacity(FLinearColor(1,1,1,0.85f))
-                    .RenderTransform_Lambda([this,unitId]{return TOptional<FSlateRenderTransform>(FSlateRenderTransform(FVector2D(0,-FUnitMotion::IdleLift(FSlateApplication::Get().GetCurrentTime()+unitId*.11,DisplayPreferences.ReducedEffects))));})
-                    .Visibility_Lambda([this,art,unitId]{return art && !MotionActive(unitId)?EVisibility::HitTestInvisible:EVisibility::Collapsed;})
-                    .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.unit.art.%d"),unitId)))]
-                  +SOverlay::Slot()
-                  [ SNew(SVerticalBox)
-                  +SVerticalBox::Slot().AutoHeight()
+                  [SNew(SImage).Image(ground).ColorAndOpacity(FLinearColor(.8f,.85f,.8f,.75f))
+                    .Visibility(ground?EVisibility::HitTestInvisible:EVisibility::Collapsed)
+                    .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.ground.%d.%d"),x,y)))]
+                  +SOverlay::Slot().VAlign(VAlign_Bottom).Padding(1,0,1,5)
                   [ SNew(STextBlock).Text(FText::FromString(label)).Justification(ETextJustify::Center)
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.celllabel.%d.%d"),x,y)))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White) ]
-                  +SVerticalBox::Slot().AutoHeight()
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(unitId>=0?10:8))).ColorAndOpacity(FLinearColor::White)
+                    .ShadowOffset(FVector2D(1,1)).ShadowColorAndOpacity(FLinearColor::Black) ]
+                  +SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Top).Padding(2)
                   [ SNew(STextBlock).Text(FText::FromString(UTF8_TO_TCHAR(cue.Symbols().c_str()))).Justification(ETextJustify::Center)
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.cues.%d.%d"),x,y)))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White) ] ]
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White)
+                    .ShadowOffset(FVector2D(1,1)).ShadowColorAndOpacity(FLinearColor::Black) ]
                   +SOverlay::Slot().VAlign(VAlign_Bottom).Padding(2)
                   [SNew(SBox).HeightOverride(3).Visibility(unitId>=0?EVisibility::HitTestInvisible:EVisibility::Collapsed)
                     [SNew(SProgressBar).Percent(hp).FillColorAndOpacity(MonochromeBoard?FLinearColor::White:FLinearColor(0.55f,0.9f,0.55f))
                       .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.unit.hpbar.%d"),unitId)))]] ] ] ];
     }
+    RefreshObjects();
     RefreshMovingUnits();
     Text(FString::Printf(TEXT("第%dラウンド"),state.Round),"battle.round",23);
     Text(GenerationSummary,"battle.generation",13);

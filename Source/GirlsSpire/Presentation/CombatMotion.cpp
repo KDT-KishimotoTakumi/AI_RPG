@@ -1,6 +1,8 @@
 #include "CombatScreen.h"
 #include "UnitMotion.h"
 #include "CharacterPortraits.h"
+#include "BoardPawn.h"
+#include "BoardSprites.h"
 #include "Brushes/SlateDynamicImageBrush.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Framework/MetaData/DriverMetaData.h"
@@ -34,25 +36,24 @@ EActiveTimerReturnType SCombatScreen::AnimateUnits(double,float)
 void SCombatScreen::RefreshMovingUnits()
 {
     MovingUnits->ClearChildren();
-    const auto& state=Combat->Snapshot();const bool large=state.Width>8 || state.Height>8;
-    const FVector2D size(FontSize(large?36:48),FontSize(large?48:60)),pitch=size+FVector2D(4,4);
+    const auto& state=Combat->Snapshot();const auto size=BoardCellSize(),pitch=size+FVector2D(4,4);
     for(const auto& entry:Movements) {
         const auto id=entry.Key;if(!MotionActive(id))continue;
         const auto motion=entry.Value;const auto destination=motion.Path.back();
-        const auto art=MonochromeBoard?nullptr:PortraitResources->Get(id);
+        const auto unit=std::find_if(state.Units.begin(),state.Units.end(),[id](const auto& value){return value.Id==id;});
+        if(unit==state.Units.end())continue;
+        const auto art=UnitSprite(*unit);
         // 文字と入力は確定位置に残し、画像だけを盤面より上の非入力レイヤーで動かす。
-        TSharedPtr<SWidget> sprite;
-        if(art)sprite=SNew(SImage).Image(art.Get()).ColorAndOpacity(FLinearColor(1,1,1,.9f));
-        else sprite=SNew(STextBlock).Text(FText::FromString(TEXT("◆"))).Justification(ETextJustify::Center)
-            .Font(FCoreStyle::GetDefaultFontStyle("Bold",FontSize(30))).ColorAndOpacity(FLinearColor::White);
+        TSharedPtr<SWidget> sprite=SNew(SBoardPawn).Id(id).Side(unit->Side).Image(art).Moving(true)
+            .Active(state.ActiveId==id).Reduced(DisplayPreferences.ReducedEffects).Scale(FontSize(100)/100.f);
         sprite->AddMetadata(FDriverMetaData::Id(*FString::Printf(TEXT("battle.motion.unit.%d"),id)));
         sprite->SetVisibility(TAttribute<EVisibility>::CreateLambda([this,id]{return MotionActive(id)?EVisibility::HitTestInvisible:EVisibility::Collapsed;}));
         sprite->SetRenderTransform(TAttribute<TOptional<FSlateRenderTransform>>::CreateLambda([this,motion,destination,pitch]{
             const auto age=FSlateApplication::Get().GetCurrentTime()-motion.Started;
             const auto at=FUnitMotion::Sample(motion.Path,age,DisplayPreferences.ReducedEffects);
-            const FVector2D offset((at.X-destination.X)*pitch.X,(at.Y-destination.Y)*pitch.Y-FUnitMotion::IdleLift(age,DisplayPreferences.ReducedEffects));
+            const FVector2D offset((at.X-destination.X)*pitch.X,(at.Y-destination.Y)*pitch.Y);
             return TOptional<FSlateRenderTransform>(FSlateRenderTransform(offset));
         }));
-        MovingUnits->AddSlot().Position(FVector2D(destination.X*pitch.X+2,destination.Y*pitch.Y+2)).Size(size)[sprite.ToSharedRef()];
+        MovingUnits->AddSlot().Position(FVector2D(destination.X*pitch.X+2,destination.Y*pitch.Y+2-FontSize(36))).Size(size+FVector2D(0,FontSize(36)))[sprite.ToSharedRef()];
     }
 }

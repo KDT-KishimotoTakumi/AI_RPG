@@ -72,16 +72,24 @@ void FGirlsSpireGrowthUiSpec::Define()
             auto other=enemy;other.Id=101;other.At={4,2};
             Window->SetContent(SNew(SCombatScreen).Combat(MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy,other},0)));
         }).Wait();
-        const auto click=[this](const char* id){return TestTrue(TEXT("追加技マウス操作"),ClickAndDrain(Driver->FindElement(By::Id(id))));};
+        const auto click=[this](const char* id){
+            const auto target=Driver->FindElement(By::Id(id));
+            if(!target->IsVisible()) {
+                const auto scroll=Driver->FindElement(By::Id("battle.scroll"));
+                scroll->ScrollToBeginning();DrainSlateLayout();
+                if(!target->IsVisible()){scroll->ScrollToEndUntil(By::Id(id));DrainSlateLayout();}
+            }
+            return TestTrue(TEXT("追加技マウス操作"),ClickAndDrain(target));
+        };
         const auto id=FString::Printf(TEXT("battle.skill.%d"),skill);
         if(!TestTrue(TEXT("追加技の選択肢"),Driver->FindElement(By::Id(*id))->Exists())) return;
-        if(!TestTrue(TEXT("技選択"),ClickAndDrain(Driver->FindElement(By::Id(*id))))) return;
+        if(!click(TCHAR_TO_UTF8(*id))) return;
         if(!click(skill==4?"battle.cell.1.1":"battle.cell.4.1")) return;
         const auto preview=Driver->FindElement(By::Id("battle.skill.preview"))->GetText().ToString();
         TestTrue(TEXT("効果予告"),preview.Contains(skill==4?TEXT("回復40"):TEXT("ダメージ10")));
         if(skill==2) TestTrue(TEXT("全対象を予告"),preview.Contains(TEXT("敵101")));
         if(!click("battle.skill.cancel")) return;
-        if(!TestTrue(TEXT("再選択"),ClickAndDrain(Driver->FindElement(By::Id(*id))))) return;
+        if(!click(TCHAR_TO_UTF8(*id))) return;
         if(!click("battle.cell.0.0")) return;
         TestFalse(TEXT("無効対象は確定不可"),Driver->FindElement(By::Id("battle.skill.confirm"))->IsInteractable());
         if(!click(skill==4?"battle.cell.1.1":"battle.cell.4.1") || !click("battle.skill.confirm")) return;

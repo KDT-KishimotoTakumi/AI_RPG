@@ -2,6 +2,7 @@
 #include "Domain/CharacterCatalog.h"
 #include "Domain/AbilityCatalog.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/Layout/SWrapBox.h"
 #include <algorithm>
 
 const TCHAR* SCombatScreen::SkillLabel(GirlsSpire::Skill skill)
@@ -31,13 +32,13 @@ void SCombatScreen::RefreshSkills()
     FString status=TEXT("技 / 再使用待ち ");
     for(int i=0;i<SkillCount;++i) if(actor->Skills[i]) status+=FString::Printf(TEXT("%s:%d "),*OwnedSkillLabel(actor->Id,static_cast<Skill>(i)),actor->Cooldowns[i]);
     Text(status,"battle.skill.status",13);
-    const auto row=SNew(SHorizontalBox);
+    const auto row=SNew(SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(6,7));
     Panel->AddSlot().AutoHeight()[row];
     for(int index=0;index<SkillCount;++index) {
         if(index>=2 && !actor->Skills[index]) continue;
         Action(OwnedSkillLabel(actor->Id,static_cast<Skill>(index)),*FString::Printf(TEXT("battle.skill.%d"),index),[this,index] {
             SelectedSkill=static_cast<Skill>(index); Selected.reset(); MoveTarget.reset(); Refresh();
-        },actor->Skills[index] && actor->Cooldowns[index]==0 && !state.Acted,row);
+        },actor->Skills[index] && actor->Cooldowns[index]==0 && !state.Acted,nullptr,row);
     }
     if(!SelectedSkill) return;
     Action(TEXT("通常操作へ戻る"),"battle.skill.cancel",[this] {SelectedSkill.reset();Selected.reset();Refresh();});
