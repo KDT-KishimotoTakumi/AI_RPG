@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "33659E3B4C5BA0B0DA67AB97FF6AEFFEC67E2A588092F5BFBDD61D7A0491671A",
+    "sha256": "b0ea5ffdf00fddefa8c2bfadf38bfcc221ea115dc5bbe3bc0662c3802ea535bc",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {

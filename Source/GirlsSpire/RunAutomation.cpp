@@ -12,6 +12,7 @@
 #include "../../Tests/E2E/MedicineSpec.cpp"
 #include "../../Tests/E2E/BondSpec.cpp"
 #include "../../Tests/E2E/StorySpec.cpp"
+#include "../../Tests/E2E/NarrativeResolutionSpec.cpp"
 #include "../../Tests/E2E/EnemyCoverSpec.cpp"
 #include "../../Tests/E2E/RangedEnemySpec.cpp"
 #include "../../Tests/E2E/CavalrySpec.cpp"
