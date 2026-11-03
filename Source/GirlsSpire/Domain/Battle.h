@@ -13,6 +13,7 @@ enum class BattleGoal { Eliminate, Survive, Rescue, DefeatLord };
 enum class BattleOutcome { Ongoing, Won, Lost };
 enum class Skill { PowerStrike, FirstAid, Sweep, FarStrike, Heal };
 enum class AbilityRuleSet { Legacy, Character, CharacterSkills, CharacterAbilities, CompleteCharacters };
+enum class EnemyThinking { Legacy, Basic, Disrupt, Tactical };
 inline bool UsesCharacterSkills(AbilityRuleSet rules){return rules==AbilityRuleSet::CharacterSkills || rules==AbilityRuleSet::CharacterAbilities || rules==AbilityRuleSet::CompleteCharacters;}
 inline bool UsesCharacterAbilities(AbilityRuleSet rules){return rules==AbilityRuleSet::CharacterAbilities || rules==AbilityRuleSet::CompleteCharacters;}
 inline constexpr int SkillCount=5;
@@ -69,6 +70,7 @@ struct BattleSnapshot {
     AbilityRuleSet AbilityRules=AbilityRuleSet::Legacy;
     std::array<int,8> StartingBonds{};
     bool PersonalityAI=false;
+    EnemyThinking EnemyAI=EnemyThinking::Legacy;
     bool operator==(const BattleSnapshot&) const = default;
 };
 struct PredictedHit {

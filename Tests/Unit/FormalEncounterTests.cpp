@@ -17,6 +17,7 @@ int TestFormalEncounter()
             const auto battle=Encounter::Create(run,seed,profile);auto expected=old;
             expected.State.AbilityRules=AbilityRuleSet::CompleteCharacters;expected.State.StartingBonds=profile.Bonds;
             expected.State.PersonalityAI=true;
+            expected.State.EnemyAI=static_cast<EnemyThinking>(difficulty+1);
             check(battle.Checkpoint()==expected,"正式識別/絆/性格以外の編成/地形/能力/手番/RNGを維持");
             for(const auto& unit:battle.Snapshot().Units)if(unit.Side==Faction::Player)
                 check(battle.PotentialEnemyDamage(unit.Id)<unit.Hp,"正式技能を含めて初期即死を回避");

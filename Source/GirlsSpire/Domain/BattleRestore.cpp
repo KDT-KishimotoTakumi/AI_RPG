@@ -11,6 +11,8 @@ bool Battle::ValidCheckpoint() const
     const auto& s=state_;
     if(s.AbilityRules<AbilityRuleSet::Legacy || s.AbilityRules>AbilityRuleSet::CompleteCharacters)return false;
     if(s.PersonalityAI && s.AbilityRules!=AbilityRuleSet::CompleteCharacters)return false;
+    if(s.EnemyAI<EnemyThinking::Legacy || s.EnemyAI>EnemyThinking::Tactical ||
+       (s.EnemyAI!=EnemyThinking::Legacy && s.AbilityRules!=AbilityRuleSet::CompleteCharacters))return false;
     for(int rank:s.StartingBonds)
         if(rank<0 || rank>100 || (s.AbilityRules==AbilityRuleSet::Legacy && rank!=0))return false;
     if(s.ChargeReady) {

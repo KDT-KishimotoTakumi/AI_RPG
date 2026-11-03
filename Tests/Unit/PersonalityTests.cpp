@@ -138,7 +138,7 @@ int TestPersonality()
     expected.Combat->Battle.State.PersonalityAI=true;
     const auto encoded=EncodeRunPayload(expected);
     check(encoded && DecodeRunPayload(*encoded)==expected,"新規性格識別を保存往復");
-    check(RunPayloadSchema==17,"新識別をRun v17へ分離");
+    check(RunPayloadSchema==18,"性格識別を現行Run v18でも維持");
     for(auto rules:{AbilityRuleSet::Legacy,AbilityRuleSet::Character,AbilityRuleSet::CharacterSkills,AbilityRuleSet::CharacterAbilities}){
         auto invalid=scene;invalid.State.AbilityRules=rules;check(!Battle::Restore(invalid),"旧効果と新性格の不正な混在を拒否");
     }

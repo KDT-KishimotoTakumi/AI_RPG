@@ -1,4 +1,5 @@
 #include "BasicTurn.h"
+#include "EnemyTactics.h"
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
@@ -20,30 +21,8 @@ BasicAction ChooseBasicAction(const Battle& battle)
         }
         if(recipient)return {BasicActionKind::UseSkill,recipient->At,Skill::FirstAid};
     }
-    int bestScore = -1, bestId = std::numeric_limits<int>::max();
-    for (const auto& target : state.Units) {
-        if(target.Hp<=0 || target.Side==actor->Side || (actor->Side==Faction::Player && target.Side==Faction::Neutral))continue;
-        const auto prediction = battle.PreviewAttack(actor->Id,target.At);
-        if (!prediction.Legal) continue;
-        auto selected=prediction;
-        BasicAction candidate{BasicActionKind::Attack,target.At};
-        if(actor->Side==Faction::Enemy && actor->Role==BattleRole::Oni) {
-            const auto skill=battle.PreviewSkill(actor->Id,Skill::PowerStrike,target.At);
-            if(skill.Legal && skill.Attack.Hits.front().Damage>selected.Hits.front().Damage) {
-                selected=skill.Attack;candidate={BasicActionKind::UseSkill,target.At,Skill::PowerStrike};
-            }
-        }
-        int score=0;
-        for(const auto& hit:selected.Hits) {
-            const auto victim=std::find_if(state.Units.begin(),state.Units.end(),[&](const BattleUnit& unit){return unit.Id==hit.TargetId;});
-            score+=hit.Chance*std::min(hit.Damage,victim->Hp);
-        }
-        if (score > bestScore || (score == bestScore && target.Id < bestId)) {
-            bestScore = score; bestId = target.Id;
-            best = candidate;
-        }
-    }
-    if (best.Kind == BasicActionKind::Attack || best.Kind==BasicActionKind::UseSkill) return best;
+    const auto attack=ChooseRankedAttack(battle);
+    if(attack)return attack->Action;
     if (state.Acted) {
         if(actor->Side!=Faction::Enemy || actor->Role!=BattleRole::Ninja || state.Moved ||
             state.UsedSkill==static_cast<int>(Skill::FirstAid) || state.UsedSkill==static_cast<int>(Skill::Heal))return best;
@@ -67,6 +46,7 @@ BasicAction ChooseBasicAction(const Battle& battle)
         }
         return best;
     }
+    if(actor->Side==Faction::Enemy && state.EnemyAI==EnemyThinking::Tactical)return ChooseTacticalMove(battle);
     if(actor->Side==Faction::Enemy && (actor->Role==BattleRole::Archer || actor->Role==BattleRole::Gunner || actor->Role==BattleRole::CurseMonk || actor->Role==BattleRole::Fox || actor->Role==BattleRole::Spider || actor->Role==BattleRole::CastleLord)) {
         int firingScore=-1;
         for(const auto destination:battle.Reachable(actor->Id)) {

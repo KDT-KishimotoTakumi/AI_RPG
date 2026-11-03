@@ -44,6 +44,8 @@ GS-049: CompleteCharacters(4)/Run v16は正式技能・必殺に専用連携201�
 
 GS-067（検証済み）: BattleSnapshot.PersonalityAI（既定false）をRun v17に追加。新規正式戦闘だけtrue、旧v2～16はfalseのまま再保存する。CompleteCharacters以外とのtrueの混在は拒否。性格加点の計算結果は非永続、既存の作戦/信頼/確定結果/RNGと識別だけを保存する。Profile v4は不変。詳細save-rules.md。
 
+GS-068（検証済み）: EnemyThinking（Legacy/Basic/Disrupt/Tactical）とBattleSnapshot.EnemyAIを追加、Run v18へ保存する。旧v17以下はLegacy、新規正式戦闘は周回難易度に一致する1～3。既存PersonalityAIとは独立。未解決連携は既存Pending/ResolvedSequence、行動順は既存Orderから評価し、重複状態や先読み結果は保存しない。詳細save-rules.md。
+
 GS-050（新規戦闘への正式効果接続）: Encounter::CreateのProfile明示版は、従来生成と同じ盤面/編成/能力/手番/RNGにCompleteCharacters(4)と開始時Bonds[8]だけを付ける。不正Profileは生成前に拒否。通常のSRunScreenからこの版を使用し、固定戦場でも同じ開始時絆を保持する。Profileなしの旧APIはLegacyのまま。保存形式はRun v16/Profile v4を維持し、保存済み戦闘を新規生成で上書きしない。検証状態はVALIDATION.md/PLAN.md。
 
 GS-051: 設定payload v1/23 bytesを独立preferences.savへ保存。値/版は維持し、Run v16/Profile v4の状態/乱数に追加しない。PreferencesStoreは不在/読込失敗/破損を区別し、明示復旧時の原本保全と保存成功時だけの適用を扱う。詳細preferences-rules.md。

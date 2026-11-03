@@ -443,3 +443,13 @@ GS-066通常版の最終確認: MSVC表示29件277a9ec52abe450aae12dcca85c341b0�
 - 別UEプロセスの保存1736ef0d848f4d52b4b5c4b207aff821→検証a14bb3f233054c71afdc80deb02c63f6が成功。ProcessResume/b12fa07e57784afc9af5746e29e73469に50成功記録と世代復旧/設定記録。追加48/49で性格無効/有効の予告対象と実行後の全状態/RNG/恒久データの保存を確認。personality-process.log。
 - レビュー: 最終製品コードの隔離コピーで朧の弱体条件を反転し、173中6失敗を検出。Saved/DesignReview/personality-mutation.jsonに原本SHA-256不変を記録、personality-mutation-final.logを保持。
 - 固定原本Tests/Fixtures/personality-v16.binは3418 bytes、SHA-256=A815B7928B3F4653136EBCD263917D2AA78C49C90E2E2B235F58A4DD950C6481。旧全状態/順位識別と現行への往復を確認し再生成しない。既存v11～15原本も維持。Profile v4/技の効果/確率/抽選数/素材は不変。製品全体の完成検証ではない。
+
+## GS-068 / T015p 難易度別敵AI（2026-11-04）
+- TDD: enemy-thinking-red.logは39中29失敗、比較/移動接続後39中2失敗（保存/版）、Run v18接続後40成功、境界追加後57成功。攻撃位置に届かない接近を別配置にした独立Native57も成功（enemy-thinking-boundaries.log）、最終全Native成功。
+- 初回Coverage/dbed2bc6d72b4e46afadda5702538c1eはE2Eの変数nearがWindowsマクロと衝突しUEビルド失敗。preferNearへ変更しenemy-thinking-build-fix.logで成功、先行実UI16件はAutomation/65c3d7d5df0144f4b77616c3b81c6031。失敗原本/ログを保全。
+- 最終Coverage/1cd72d611964444d87b6bec618afd736: 行4811/4840（99.40%）、関数596/608（98.03%）、分岐4910/5384（91.20%）、Passed=true/Missing=[]。全UE343警告0はAutomation/c4be79997d7649cfb3a8db07b4ddc63a。通常起動5d52a7394fde40028c5a07d3c04c2926、音声起動/再開d3650e6c991645e397647df5cdb05229/a5f141f01d6f45c9bcb2f20ea4345083、専用音声も成功。enemy-thinking-coverage-final.log。
+- 通常MSVCビルド成功、対象UI19件はAutomation/0dd8c005a3fc4855a97bb9f4052a82d2。新AI9件（全方針×履歴2＋上級の致死罠回避→移動→攻撃保存）、FormalEncounter8、Personality2。実フルスクリーン/音声の実戦・保存・中断/別再開はcc645cc9f4b740fc8f12f563581bae22/fb2901ed4d074474b769e85f824c0520。enemy-thinking-msvc-build/ui/runtime.log。
+- 別UEプロセス保存82ec7a4c7fbf4de78f3f1d307b03c869→検証3dcaf66067ef4dedb1e278383135108eが成功。ProcessResume/bb6724b7afa547129d303690dcd395ccの54地点＋世代復旧/設定。追加50/51/52/53で初級/中級/上級/旧思考の保存→終了→再開→待機→敵選択→全状態/RNG/恒久データ保存を確認。enemy-thinking-process.log。
+- 独立照合: 74ec76cの旧ChooseBasicActionを隔離コンパイルし、3難易度×4主人公役割×20シードの240戦場（旧/正式解釈を含む）10249行動を比較、選択/予告時状態/RNGの不一致0。Saved/DesignReview/compare-enemy-legacy.ps1とenemy-thinking-legacy-comparison.log。元の製品コードは変更せず比較。
+- レビュー: 隔離コピーで未解決判定の>を>=へ変更し、57中2失敗を検出。対象製品原本SHA-256不変はSaved/DesignReview/enemy-thinking-mutation.json、ログenemy-thinking-mutation.log。
+- 固定原本Tests/Fixtures/enemy-v17.binは3419 bytes、SHA-256=7B64F82FFD76D2FAAA6CA57E45A0207426749E4E46ED134F6DC1424EBED51D9C。旧全状態（PersonalityAI=true/EnemyAI=Legacy）と現行への往復を確認、既存v11～16原本と合わせて再生成しない。Profile v4/HP補正/敵固有行動/技/素材は不変。全12日/製品全体の合格ではない。

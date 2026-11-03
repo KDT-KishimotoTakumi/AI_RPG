@@ -7,7 +7,7 @@
 #include <string_view>
 
 namespace GirlsSpire {
-inline constexpr std::uint32_t RunPayloadSchema=17,ProfilePayloadSchema=4;
+inline constexpr std::uint32_t RunPayloadSchema=18,ProfilePayloadSchema=4;
 SaveError InspectPayload(std::string_view bytes,SaveKind expected);
 struct SavedCombat {
     BattleCheckpoint Battle;

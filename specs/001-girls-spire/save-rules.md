@@ -64,6 +64,8 @@ GS-049（Run v16）: CompleteCharacters(4)だけで専用8連携を照合する�
 
 GS-067（Run v17、検証済み）: BattleSnapshot.PersonalityAIを1バイトの真偽値として保存する。新規正式戦闘だけtrue、旧v2～16はfalseを補完し、保存し直しても順位を変更しない。trueとCompleteCharacters以外の組合せは拒否する。開始時絆/作戦/信頼/抽選数は不変、Profile v4を維持する。旧v16原本personality-v16.binを保全し再生成しない。
 
+GS-068（Run v18、検証済み）: BattleSnapshot.EnemyAIをint32で保存する。0=Legacy/1=Basic/2=Disrupt/3=Tactical、旧v2～17はLegacyを補完し再保存しても思考を変更しない。新規正式戦闘だけ周回難易度から1～3を設定。未知値、CompleteCharacters以外との新思考の混在、保存時の周回難易度との不一致は拒否。PersonalityAI/Profile v4と旧戦闘のHP・効果・RNGは維持。比較スコア/先読みは非永続で乱数を消費しない。旧v17原本enemy-v17.binを保全し再生成しない。
+
 GS-050: 新規戦闘の開始時にProfileの絆をコピーして固定し、CombatControlのProfileDriven/Trustと一致させる。戦闘中にProfileから再計算しない。中断再開では保存済みのBattle/Controlを復元する従来経路を維持し、旧戦闘の識別・技能・構文・乱数を途中変換しない。新しい保存フィールド/版は追加しない（Run v16/Profile v4）。
 
 GS-051: preferences.savはrun.sav/profile.sav/transaction.savから独立。設定の読込だけでは書き込まず、保存前の再読込で検出した異常は上書きしない。既存の一時ファイル/flush/有限再試行/原子的置換を共有し、明示復旧はCorrupt/preferences-*へ原本保全が成功した場合だけ行う。Run v16/Profile v4と旧原本の意味は不変。

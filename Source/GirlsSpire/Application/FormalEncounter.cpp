@@ -9,6 +9,7 @@ Battle Encounter::Create(const RunSnapshot& run,std::uint64_t seed,const Profile
     checkpoint.State.AbilityRules=AbilityRuleSet::CompleteCharacters;
     checkpoint.State.StartingBonds=profile.Bonds;
     checkpoint.State.PersonalityAI=true;
+    checkpoint.State.EnemyAI=static_cast<EnemyThinking>(1+static_cast<int>(run.Level));
     auto battle=Battle::Restore(checkpoint);
     if(!battle)throw std::logic_error("生成した正式戦闘が無効です");
     return std::move(*battle);

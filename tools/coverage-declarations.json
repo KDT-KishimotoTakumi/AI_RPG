@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "6772684921311F7CE1E8B03F4027B14CA3DEF2D60180CDFB555B1ED0367FDF2D",
+    "sha256": "BBD58474299CDB48F5FCEA6039FF3B8983997B31D015733639FC23E6DCC65457",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -78,5 +78,10 @@
     "path": "Source/GirlsSpire/AI/Personality.h",
     "sha256": "A17D83C1CDE74DEA32A7753E1995174978E54BBF68CE9A6675C07E784A446FD9",
     "reason": "加点関数の宣言のみ。合法性・予測値の判定はPersonality.cppで計測。"
+  },
+  {
+    "path": "Source/GirlsSpire/AI/EnemyTactics.h",
+    "sha256": "5D8CC7EDAEA8F05C6BBD5E0C09E41F0FB0B5357E5E050656AE222B9599CDB8E0",
+    "reason": "比較結果の保持と関数宣言のみ。攻撃比較と移動先読みはEnemyTactics.cppで計測。"
   }
 ]

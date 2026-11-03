@@ -111,6 +111,7 @@ template<class T> bool Fields(Wire& a,T& v)
         if(a.Version>=5 && !a(v.ChargeReady))return false;
         if(a.Version>=12 && !a(v.AbilityRules,v.StartingBonds))return false;
         if(a.Version>=17 && !a(v.PersonalityAI))return false;
+        if(a.Version>=18 && !a(v.EnemyAI))return false;
         if(a.Version<14 && v.AbilityRules==AbilityRuleSet::CharacterSkills)return false;
         if(a.Version<15 && v.AbilityRules==AbilityRuleSet::CharacterAbilities)return false;
         return a.Version>=16 || v.AbilityRules!=AbilityRuleSet::CompleteCharacters;
@@ -142,6 +143,7 @@ bool ValidState(const RunSaveState& saved)
     const auto& checkpoint=saved.Combat->Battle;
     const auto battle=Battle::Restore(checkpoint);
     if(!battle || !CombatControl::Restore(saved.Combat->Control,*battle)) return false;
+    if(checkpoint.State.EnemyAI!=EnemyThinking::Legacy && static_cast<int>(checkpoint.State.EnemyAI)!=1+static_cast<int>(run.Level))return false;
     const auto expectedGoal=kind==NodeKind::Rescue?BattleGoal::Rescue:
         kind==NodeKind::FinalBoss && std::any_of(checkpoint.State.Units.begin(),checkpoint.State.Units.end(),[](const BattleUnit& unit){return unit.Role==BattleRole::CastleLord;})?BattleGoal::DefeatLord:BattleGoal::Eliminate;
     if(checkpoint.Goal!=expectedGoal ||
@@ -179,7 +181,7 @@ template<class T> std::optional<T> Decode(std::string_view input,std::uint32_t e
             return value;
         }
     }
-    const bool supported=version==(expected==1?RunPayloadSchema:ProfilePayloadSchema) || (expected==1 && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16));
+    const bool supported=version==(expected==1?RunPayloadSchema:ProfilePayloadSchema) || (expected==1 && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16 || version==17));
     if(!supported || !archive(value) || !archive.Complete()) return std::nullopt;
     return value;
 }
@@ -195,7 +197,7 @@ SaveError InspectPayload(std::string_view bytes,SaveKind expected)
     if(kind!=static_cast<std::uint32_t>(expected)) return SaveError::WrongKind;
     if(version!=(expected==SaveKind::Run?RunPayloadSchema:ProfilePayloadSchema) &&
         !(expected==SaveKind::Profile && (version==1 || version==2 || version==3)) &&
-        !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16))) return SaveError::UnsupportedVersion;
+        !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16 || version==17))) return SaveError::UnsupportedVersion;
     return SaveError::None;
 }
 std::optional<std::string> EncodeRunPayload(const RunSaveState& state)
