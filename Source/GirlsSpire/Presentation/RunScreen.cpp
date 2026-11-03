@@ -1,4 +1,9 @@
 #include "RunScreen.h"
+#include "SpireStyle.h"
+#include "Brushes/SlateDynamicImageBrush.h"
+#include "Misc/Paths.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/Images/SImage.h"
 #include "GameAudio.h"
 #include "ComboLabels.h"
 #include "CharacterPortraits.h"
@@ -9,6 +14,7 @@
 #include "Styling/CoreStyle.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
@@ -41,13 +47,21 @@ void SRunScreen::Construct(const FArguments& Args)
     if(PreferencesService){const auto loaded=PreferencesService->Load();PreferencesLoadIssue=loaded.Issue;if(loaded.Issue==GirlsSpire::PreferencesIssue::None)DisplayPreferences=loaded.Value;}
     Audio=Args._Audio;if(Audio){Audio->Apply(DisplayPreferences);Audio->Start();}
     DevelopmentTools=Args._DevelopmentTools;
+    TitleBackdrop=FSpireStyle::Backdrop(FPaths::ProjectContentDir()/TEXT("Art/Backgrounds/title-castle-v1.png"));
     ChildSlot [
+        SNew(SOverlay)
+        +SOverlay::Slot()
+        [SNew(SImage).Image(TitleBackdrop.Get()).AddMetaData(FDriverMetaData::Id("title.art"))
+            .ColorAndOpacity_Lambda([this]{return FLinearColor(1,1,1,CurrentRun?0.12f:1.f);})
+            .Visibility(TitleBackdrop?EVisibility::HitTestInvisible:EVisibility::Collapsed)]
+        +SOverlay::Slot()
+        [
         SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-        .BorderBackgroundColor(FLinearColor(0.035f, 0.025f, 0.055f)).Padding(36)
+        .BorderBackgroundColor(FLinearColor(0.012f,0.023f,0.045f,0.25f)).Padding(36)
         [ SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
-            [ SNew(STextBlock).Text(FText::FromString(TEXT("GIRLS SPIRE  /  死者の城")))
-                .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Bold",FontSize(30));}).ColorAndOpacity(FLinearColor(0.94f, 0.79f, 0.58f)) ]
+            [ SNew(STextBlock).Text(FText::FromString(TEXT("死者の城 — 十二日間の戦記")))
+                .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Bold",FontSize(18));}).ColorAndOpacity(FLinearColor(0.94f, 0.79f, 0.58f)) ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 24)
             [ SNew(STextBlock).Text(FText::FromString(DevelopmentTools?TEXT("開発版 — 戦闘・作戦予告・三択報酬 / 正式素材は開発中"):TEXT("十二日後、死者の城が歴史を書き換える。")))
                 .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16));}).ColorAndOpacity(FLinearColor(0.8f, 0.65f, 0.65f)) ]
@@ -58,7 +72,7 @@ void SRunScreen::Construct(const FArguments& Args)
                 .AutoWrapText(true).Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Regular",FontSize(14));})
                 .Visibility_Lambda([this]{return Audio && !Audio->Ready()?EVisibility::Visible:EVisibility::Collapsed;})
                 .AddMetaData(FDriverMetaData::Id("audio.unavailable")) ]
-        ]
+        ] ]
     ];
     if(Args._InitialRun) {CurrentRun=Args._InitialRun;RefreshRun();}
     else ShowTitle();
@@ -67,7 +81,7 @@ void SRunScreen::Construct(const FArguments& Args)
 void SRunScreen::AddText(const FString& Text, const FName& Id, int Size)
 {
     Body->AddSlot().AutoHeight().Padding(0, 0, 0, 16)
-    [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true)
+    [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true).WrapTextAt(CurrentRun?0.f:620.f)
         .Font(FCoreStyle::GetDefaultFontStyle("Regular", FontSize(Size)))
         .ColorAndOpacity(FLinearColor(0.92f, 0.89f, 0.83f)).AddMetaData(FDriverMetaData::Id(Id)) ];
 }
@@ -75,12 +89,14 @@ void SRunScreen::AddText(const FString& Text, const FName& Id, int Size)
 void SRunScreen::AddAction(const FString& Text, const FName& Id, TFunction<void()> Action, TSharedPtr<SHorizontalBox> Row)
 {
     const auto Button = SNew(SButton).ContentPadding(FMargin(20, 12)).HAlign(HAlign_Left)
-        .ButtonColorAndOpacity(FLinearColor(0.25f, 0.12f, 0.18f))
+        .ButtonStyle(&FSpireStyle::Command())
         .AddMetaData(FDriverMetaData::Id(Id))
         .OnClicked_Lambda([this,Action = MoveTemp(Action)] { if(Audio)Audio->Cue(EGameCue::Confirm);Action(); return FReply::Handled(); })
         [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular", FontSize(19)))
             .ColorAndOpacity(FLinearColor(0.98f, 0.94f, 0.85f)) ];
     if (Row.IsValid()) Row->AddSlot().FillWidth(1).Padding(0, 0, 8, 10) [ Button ];
+    else if(!CurrentRun) Body->AddSlot().AutoHeight().HAlign(HAlign_Left).Padding(0,0,0,10)
+        [SNew(SBox).WidthOverride(620)[Button]];
     else Body->AddSlot().AutoHeight().Padding(0, 0, 0, 10) [ Button ];
 }
 
@@ -95,7 +111,7 @@ void SRunScreen::ShowTitle()
     SocialActor=-1;SocialChoice=-1;SocialMessage.Empty();
     Body->ClearChildren();
     if(!LoadTitleState()) return;
-    AddText(TEXT("十二日を生き抜き、仲間と城へ。"), "title.heading", 28);
+    AddText(TEXT("GIRLS SPIRE"), "title.heading", 64);
     AddText(TEXT("主人公・黒鉄 蓮と、道中で救い出す四人の仲間。\n信頼と戦い方を組み合わせる、戦国怪異の戦術ローグライク。"), "title.description");
     AddText(DevelopmentTools?TEXT("経路を選び、盤面で移動・攻撃して仲間を救出します。進行確認用の結果入力も利用できます。"):
         TEXT("経路を選び、仲間へ作戦を伝え、死者の城へ挑む。進行は自動保存され、戦闘中も中断できます。"), "title.notice");

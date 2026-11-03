@@ -29,12 +29,12 @@ void FGirlsSpireAudioEngineSpec::Define()
         Async(EAsyncExecution::TaskGraphMainThread,[this]{
             if(!TestNotNull(TEXT("実音声デバイス"),GEngine->GetMainAudioDeviceRaw()))return;
             Audio=std::make_shared<FGameAudio>();if(!TestTrue(TEXT("3素材を読込"),Audio->Ready()))return;
-            const auto wave=Cast<USoundWave>(Audio->Music()->GetSound());TestTrue(TEXT("BGM原本長さ20秒とループ設定"),wave && wave->bLooping && FMath::IsNearlyEqual(wave->Duration,20.f));
+            const auto wave=Cast<USoundWave>(Audio->Music()->GetSound());TestTrue(TEXT("V2の40秒ステレオBGMとループ設定"),wave && wave->NumChannels==2 && wave->GetName()==TEXT("BGM_Castle_V2") && wave->bLooping && FMath::IsNearlyEqual(wave->Duration,40.f));
             Audio->Start();Audio->Start();TestTrue(TEXT("BGM再生要求を受理"),Audio->Music()->IsPlaying());TestTrue(TEXT("確認音を再生"),Audio->Cue(EGameCue::Confirm));
         }).Wait();if(!Audio || !Audio->Ready())return;
         auto done=MakeShared<TPromise<void>,ESPMode::ThreadSafe>();auto ready=done->GetFuture();Async(EAsyncExecution::TaskGraphMainThread,[done]{FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([done](float){done->SetValue();return false;}),.5f);}).Wait();ready.Wait();
         Async(EAsyncExecution::TaskGraphMainThread,[this]{
-            TestTrue(TEXT("BGMは継続"),Audio->Music()->IsPlaying());TestFalse(TEXT("0.16秒の確認音は終了"),Audio->Effects()->IsPlaying());
+            TestTrue(TEXT("BGMは継続"),Audio->Music()->IsPlaying());TestFalse(TEXT("0.18秒の確認音は終了"),Audio->Effects()->IsPlaying());
             GirlsSpire::Preferences prefs;prefs.BgmVolume=37;prefs.SfxVolume=50;Audio->Apply(prefs);TestTrue(TEXT("実コンポーネントの独立音量"),FMath::IsNearlyEqual(Audio->Music()->VolumeMultiplier,.37f) && FMath::IsNearlyEqual(Audio->Effects()->VolumeMultiplier,.5f));
             TestTrue(TEXT("打撃音を再生"),Audio->Cue(EGameCue::Impact));CollectGarbage(RF_NoFlags);TestTrue(TEXT("GC後も所有する音声コンポーネントを保持"),IsValid(Audio->Music()) && IsValid(Audio->Effects()));
             prefs.BgmVolume=0;Audio->Apply(prefs);TestFalse(TEXT("BGMだけ消音停止"),Audio->Music()->IsPlaying());prefs.SfxVolume=0;Audio->Apply(prefs);TestFalse(TEXT("効果音も即時消音停止"),Audio->Effects()->IsPlaying());TestFalse(TEXT("消音中は再発音しない"),Audio->Cue(EGameCue::Impact));

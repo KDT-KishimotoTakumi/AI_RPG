@@ -1,6 +1,6 @@
 # 素材台帳
 
-最終更新: 2026-11-02。主人公と女性8人の初期画像9枚を戦闘表示へ接続。正式な状態差分・敵・背景・音素材、配布検証は未完了。
+最終更新: 2026-11-04。主人公と女性8人の初期画像9枚を戦闘表示へ接続。正式な状態差分・敵・背景・音素材、配布検証は未完了。
 
 ## 方針
 
@@ -28,3 +28,7 @@ UE素材はContent/Audio/BGM_Castle_V1.uasset、SFX_Confirm_V1.uasset、SFX_Impa
 初期素材として使用し、最終音楽/ミックスの聴感・長時間ループ・配布同梱/権利一覧の最終確認は未完了。Config/DefaultGame.iniに/Game/Audioの常時cookを追加したが、配布パッケージを実測するまで配布完了としない。
 2026-11-03: 救出後の人物別台詞と3返答は本会話でプロジェクト向けに作成し、利用者が8人分を一括承認。本文正本specs/001-girls-spire/rescue-dialogue-proposal.md、実装Source/GirlsSpire/Domain/RescueDialogue.cpp。外部文章の引用なし。画像・音素材を置換せず、会話の数値/加入/時間を維持する。
 2026-11-03: 通常交流/専用交流の8人別本文は本会話でプロジェクト向けに作成し、利用者が一括承認。後日談9編は既存試作をそのまま転記して正式承認。正本social-ending-dialogue-proposal.md、共有カタログSource/GirlsSpire/Domain/RelationshipText.cpp。外部文章の引用なし。画像・音素材は変更せず、条件・数値・保存形式を維持する。
+
+GS-064素材（2026-11-04）: Content/Art/Backgrounds/title-castle-v1.png は組込みimagegenで新規生成した独自の戦国風城背景。原画像のコピーと全文プロンプトを同フォルダに保持。既存作品の画像・紋章・人物を取得/転載していない。生成サービスの適用条件に従う。固定人物9枚は変更せず盤面にも参照する。
+音素材V2は tools/generate-audio-v2.py の標準ライブラリ合成による独自旋律/和音/弦・金管風音/太鼓/残響。既存曲・録音・サウンドフォントの利用なし。Content/Audio/Source/manifest-v2.json に3原本のSHA256と方式を記録し、V1も保持。BGM40秒・96BPM・32000Hzステレオ16bit、確認0.18秒/打撃0.24秒。UEへPCMで非置換取込しBGMのみループ。波形の形式/署名/ピーク/DC/ループ境界/左右差は test-audio-v2.py で検証。聴感の最終評価とWindows配布での同梱確認は未完了。
+配布設定は/Game/AudioのCookを維持し、動的読込みPNGのArt/BackgroundsとArt/CharactersをNonUFS対象へ指定した。これは同梱指定の追加であり、Windowsパッケージの実生成・オフライン表示検証はまだ行っていない。

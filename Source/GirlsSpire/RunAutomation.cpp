@@ -44,4 +44,5 @@
 #include "../../Tests/E2E/ResumeProcessSpec.cpp"
 #include "../../Tests/E2E/RuntimeSpec.cpp"
 #include "../../Tests/E2E/ExitSpec.cpp"
+#include "../../Tests/E2E/PresentationSpec.cpp"
 #endif

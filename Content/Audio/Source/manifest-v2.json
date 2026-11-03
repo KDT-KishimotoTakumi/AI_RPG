@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "method": "独自の64拍。弦/金管風旋律/琴風分散和音/低音/和太鼓風打楽器/ステレオ残響を数式合成。外部曲・音源なし。",
+  "clips": [
+    {
+      "file": "bgm-castle-v2.wav",
+      "sha256": "0c02fdd571f07eccc390c8c3957192b4557a946706d2180f89453dfab4f13d64",
+      "seconds": 40.0,
+      "sample_rate": 32000,
+      "channels": 2,
+      "loop": true,
+      "rms": 0.11460019915280617
+    },
+    {
+      "file": "sfx-confirm-v2.wav",
+      "sha256": "f7d8c6e94788f0c46c715946e6af1075d80d172b74556af3b7c5cc5b8f671c1d",
+      "seconds": 0.18,
+      "sample_rate": 32000,
+      "channels": 2,
+      "loop": false,
+      "rms": 0.1208551791853052
+    },
+    {
+      "file": "sfx-impact-v2.wav",
+      "sha256": "a4ee3216764abd34a7494ee1129e586eab0598496bac82756b15eb6c9e7dbf44",
+      "seconds": 0.24,
+      "sample_rate": 32000,
+      "channels": 2,
+      "loop": false,
+      "rms": 0.08058864973405579
+    }
+  ]
+}

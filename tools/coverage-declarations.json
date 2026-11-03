@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "2A067460FD9F0316CA78A2D661ED41CBB50F6CC1F91F02E8C42A3B6949187F99",
+    "sha256": "B55507314F9C1ED54E274929D9FE76548FAF449E15C54AE9666F86F1BEC54565",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -58,5 +58,10 @@
     "path": "Source/GirlsSpire/Infrastructure/RecoverySelection.h",
     "reason": "構造体メンバーと関数宣言のみ。共通世代の選択処理はRecoverySelection.cppで計測。",
     "sha256": "82116DBD3E87B20E51169A1A2A1E6D46F1FDD0E784EC5B2A7B56544135614418"
+  },
+  {
+    "path": "Source/GirlsSpire/Presentation/SpireStyle.h",
+    "sha256": "DD24A4D05304FEE814891E9306C607C1A1FECD6EF137D4F7C8806859906ADFE3",
+    "reason": "関数宣言のみ。実装はSpireStyle.cppで計測する。"
   }
 ]

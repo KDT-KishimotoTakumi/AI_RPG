@@ -42,8 +42,8 @@ BEGIN_DEFINE_SPEC(FGirlsSpireRuntimeSpec,"GirlsSpire.Runtime.GameEntry",EAutomat
             UAudioComponent* music=nullptr;UAudioComponent* effect=nullptr;int musicCount=0;
             for(TObjectIterator<UAudioComponent> it;it;++it){
                 if(!it->GetSound())continue;const auto path=it->GetSound()->GetPathName();
-                if(path==TEXT("/Game/Audio/BGM_Castle_V1.BGM_Castle_V1")){music=*it;++musicCount;}
-                if(path==TEXT("/Game/Audio/SFX_Confirm_V1.SFX_Confirm_V1"))effect=*it;
+                if(path==TEXT("/Game/Audio/BGM_Castle_V2.BGM_Castle_V2")){music=*it;++musicCount;}
+                if(path==TEXT("/Game/Audio/SFX_Confirm_V2.SFX_Confirm_V2"))effect=*it;
             }
             if(!TestTrue(TEXT("通常ゲームにBGM所有者が1つ"),musicCount==1 && music))return;
             valid=TestTrue(TEXT("BGM独立音量と再生/消音"),FMath::IsNearlyEqual(music->VolumeMultiplier,bgm) && music->IsPlaying()==(bgm>0));

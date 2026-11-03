@@ -21,9 +21,9 @@ FGameAudio::FGameAudio(bool loadAssets)
 {
     MusicComponent=Component();EffectComponent=Component();
     if(loadAssets && GEngine && GEngine->UseSound() && GEngine->GetMainAudioDeviceRaw()){
-        MusicClip=Clip(TEXT("/Game/Audio/BGM_Castle_V1.BGM_Castle_V1"));
-        ConfirmClip=Clip(TEXT("/Game/Audio/SFX_Confirm_V1.SFX_Confirm_V1"));
-        ImpactClip=Clip(TEXT("/Game/Audio/SFX_Impact_V1.SFX_Impact_V1"));
+        MusicClip=Clip(TEXT("/Game/Audio/BGM_Castle_V2.BGM_Castle_V2"));
+        ConfirmClip=Clip(TEXT("/Game/Audio/SFX_Confirm_V2.SFX_Confirm_V2"));
+        ImpactClip=Clip(TEXT("/Game/Audio/SFX_Impact_V2.SFX_Impact_V2"));
     }
     MusicComponent->SetSound(MusicClip);
 }

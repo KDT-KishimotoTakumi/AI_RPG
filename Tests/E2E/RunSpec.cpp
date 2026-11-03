@@ -86,7 +86,12 @@ void FGirlsSpireRunUiSpec::Define()
         TestTrue(TEXT("再び開始"), ClickAndDrain(Driver->FindElement(By::Id("title.start"))));
         TestTrue(TEXT("初期設定で出発"), ClickAndDrain(Driver->FindElement(By::Id("role.confirm"))));
         TestTrue(TEXT("別の救出経路"), ClickAndDrain(Driver->FindElement(By::Id("route.node.1"))));
-        TestTrue(TEXT("全滅の検証入力"), ClickAndDrain(Driver->FindElement(By::Id("preview.defeat"))));
+        const auto defeat=Driver->FindElement(By::Id("preview.defeat"));
+        if(!defeat->IsVisible()) {
+            Driver->FindElement(By::Id("run.scroll"))->ScrollToEndUntil(By::Id("preview.defeat"));
+            DrainSlateLayout();
+        }
+        TestTrue(TEXT("全滅の検証入力"), ClickAndDrain(defeat));
         TestTrue(TEXT("敗北画面"), Driver->FindElement(By::Id("result.lost"))->Exists());
         TestTrue(TEXT("敗北後は経路選択不可"), !Driver->FindElement(By::Id("route.node.0"))->Exists());
         TestTrue(TEXT("タイトルに復帰"), ClickAndDrain(Driver->FindElement(By::Id("result.continue"))));

@@ -1,4 +1,9 @@
 #include "CombatScreen.h"
+#include "SpireStyle.h"
+#include "Brushes/SlateDynamicImageBrush.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Notifications/SProgressBar.h"
 #include "GameAudio.h"
 #include "Application/BoardCues.h"
 #include "CharacterPortraits.h"
@@ -64,7 +69,7 @@ void SCombatScreen::Text(const FString& label,const FName& id,int size)
 
 void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()> callback,bool enabled,TSharedPtr<SHorizontalBox> row)
 {
-    const auto button=SNew(SButton).ContentPadding(FMargin(10,6)).IsEnabled(enabled).AddMetaData(FDriverMetaData::Id(id))
+    const auto button=SNew(SButton).ButtonStyle(&FSpireStyle::Command()).ContentPadding(FMargin(10,6)).IsEnabled(enabled).AddMetaData(FDriverMetaData::Id(id))
         .OnClicked_Lambda([this,callback=MoveTemp(callback)] { if(Audio)Audio->Cue(EGameCue::Confirm);callback(); return FReply::Handled(); })
         [ SNew(STextBlock).Text(FText::FromString(label)).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16))) ];
     if(row) row->AddSlot().AutoWidth().Padding(0,0,6,0) [button];
@@ -92,7 +97,7 @@ void SCombatScreen::Refresh(bool persist)
         if(tile.Elevation>0) label=FString::Printf(TEXT("高%d"),tile.Elevation);
         else if(tile.Cover>0) label=FString::Printf(TEXT("遮%d"),tile.Cover);
         if(tile.Trap) label=TEXT("罠10");
-        FLinearColor color(0.12f,0.11f,0.15f);
+        FLinearColor color=(x+y)%2?FLinearColor(0.075f,0.13f,0.12f):FLinearColor(0.095f,0.155f,0.14f);
         if(tile.Wall) { label=TEXT("壁"); color=FLinearColor(0.035f,0.035f,0.035f); }
         else if(tile.ObstacleHp>0) { label=FString::Printf(TEXT("障%d"),tile.ObstacleHp); color=FLinearColor(0.3f,0.2f,0.08f); }
         else if(unit!=state.Units.end()) {
@@ -123,15 +128,24 @@ void SCombatScreen::Refresh(bool persist)
         detail+=FString::Printf(TEXT("\n経路の罠被害：%d"),cue.RouteTrapDamage);
         if(ShowThreats)detail+=FString::Printf(TEXT("\n現在地/合法移動先の敵被害上限：%d（実際の敵行動を確約しません）"),cue.EnemyDamage);
         if(MonochromeBoard)color=FLinearColor(0.12f,0.12f,0.12f);
+        const auto art=unit!=state.Units.end() && !MonochromeBoard?PortraitResources->Get(unit->Id):nullptr;
+        const int unitId=unit!=state.Units.end()?unit->Id:-1;
+        const float hp=unit!=state.Units.end()?static_cast<float>(unit->Hp)/FMath::Max(1,unit->MaxHp):0.f;
         Grid->AddSlot(x,y)
         [ SNew(SBox).WidthOverride(FontSize(large?36:48)).HeightOverride(FontSize(large?48:60))
-            [ SNew(SButton).ContentPadding(0).NormalPaddingOverride(FMargin(0)).PressedPaddingOverride(FMargin(0))
+            [ SNew(SButton).ButtonStyle(&FSpireStyle::Tile()).ContentPadding(0).NormalPaddingOverride(FMargin(0)).PressedPaddingOverride(FMargin(0))
                 .ToolTipText(FText::FromString(detail))
                 .HAlign(HAlign_Fill).ButtonColorAndOpacity(color)
                 .IsEnabled(state.Outcome==BattleOutcome::Ongoing)
                 .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.cell.%d.%d"),x,y)))
                 .OnClicked_Lambda([this,at,revision=state.Revision] { SelectCell(at,revision); return FReply::Handled(); })
-                [ SNew(SVerticalBox)
+                [ SNew(SOverlay)
+                  +SOverlay::Slot()
+                  [SNew(SImage).Image(art.Get()).ColorAndOpacity(FLinearColor(1,1,1,0.42f))
+                    .Visibility(art?EVisibility::HitTestInvisible:EVisibility::Collapsed)
+                    .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.unit.art.%d"),unitId)))]
+                  +SOverlay::Slot()
+                  [ SNew(SVerticalBox)
                   +SVerticalBox::Slot().AutoHeight()
                   [ SNew(STextBlock).Text(FText::FromString(label)).Justification(ETextJustify::Center)
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.celllabel.%d.%d"),x,y)))
@@ -139,7 +153,11 @@ void SCombatScreen::Refresh(bool persist)
                   +SVerticalBox::Slot().AutoHeight()
                   [ SNew(STextBlock).Text(FText::FromString(UTF8_TO_TCHAR(cue.Symbols().c_str()))).Justification(ETextJustify::Center)
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.cues.%d.%d"),x,y)))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White) ] ] ] ];
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White) ] ]
+                  +SOverlay::Slot().VAlign(VAlign_Bottom).Padding(2)
+                  [SNew(SBox).HeightOverride(3).Visibility(unitId>=0?EVisibility::HitTestInvisible:EVisibility::Collapsed)
+                    [SNew(SProgressBar).Percent(hp).FillColorAndOpacity(MonochromeBoard?FLinearColor::White:FLinearColor(0.55f,0.9f,0.55f))
+                      .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.unit.hpbar.%d"),unitId)))]] ] ] ];
     }
     Text(FString::Printf(TEXT("第%dラウンド"),state.Round),"battle.round",23);
     Text(GenerationSummary,"battle.generation",13);

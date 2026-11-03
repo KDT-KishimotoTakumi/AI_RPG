@@ -8,6 +8,7 @@
 class SVerticalBox;
 class SHorizontalBox;
 class IGameAudio;
+struct FSlateDynamicImageBrush;
 class SRunScreen : public SCompoundWidget
 {
 public:
@@ -21,6 +22,7 @@ public:
     SLATE_END_ARGS()
     void Construct(const FArguments& Args);
 private:
+    TSharedPtr<FSlateDynamicImageBrush> TitleBackdrop;
     FSimpleDelegate ExitGame;
     void AddExitAction();
     std::shared_ptr<IGameAudio> Audio;
