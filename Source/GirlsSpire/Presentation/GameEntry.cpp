@@ -8,6 +8,13 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
+#include "HAL/PlatformMisc.h"
+
+FSimpleDelegate GirlsSpire::GameExitAction(bool gameWorld,bool inEditor)
+{
+    if(!gameWorld || inEditor)return {};
+    return FSimpleDelegate::CreateLambda([]{FPlatformMisc::RequestExit(false);});
+}
 
 AGirlsSpireGameMode::AGirlsSpireGameMode()
 {
@@ -34,7 +41,8 @@ void AGirlsSpireController::BeginPlay()
 #endif
     Files=std::make_shared<GirlsSpire::DiskSlotFiles>(std::filesystem::path(*root));
     Service=std::make_shared<GirlsSpire::SaveTransaction>(*Files,*Files);
-    Screen=SNew(SRunScreen).SaveService(Service).PreferencesService(std::make_shared<GirlsSpire::PreferencesStore>(*Files)).Audio(std::make_shared<FGameAudio>()).DevelopmentTools(false);
+    Screen=SNew(SRunScreen).SaveService(Service).PreferencesService(std::make_shared<GirlsSpire::PreferencesStore>(*Files)).Audio(std::make_shared<FGameAudio>()).DevelopmentTools(false)
+        .OnExitGame(GirlsSpire::GameExitAction(GetWorld()->WorldType==EWorldType::Game,GIsEditor));
     viewport->AddViewportWidgetContent(Screen.ToSharedRef(),100);
     viewport->SetMouseCaptureMode(EMouseCaptureMode::NoCapture);
     viewport->SetMouseLockMode(EMouseLockMode::DoNotLock);

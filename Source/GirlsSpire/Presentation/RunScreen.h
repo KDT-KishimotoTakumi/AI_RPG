@@ -17,9 +17,12 @@ public:
         SLATE_ARGUMENT(bool, DevelopmentTools)
         SLATE_ARGUMENT(std::shared_ptr<GirlsSpire::PreferencesStore>, PreferencesService)
         SLATE_ARGUMENT(std::shared_ptr<IGameAudio>, Audio)
+        SLATE_EVENT(FSimpleDelegate, OnExitGame)
     SLATE_END_ARGS()
     void Construct(const FArguments& Args);
 private:
+    FSimpleDelegate ExitGame;
+    void AddExitAction();
     std::shared_ptr<IGameAudio> Audio;
     void ShowPreferences(bool resetDraft=true);
     void RefreshPreferences();

@@ -13,6 +13,8 @@
 #include "Components/AudioComponent.h"
 #include "Sound/SoundBase.h"
 #include "UObject/UObjectIterator.h"
+#include "Widgets/SWindow.h"
+#include "GenericPlatform/GenericApplication.h"
 #include <algorithm>
 #if defined(GIRLS_SPIRE_COVERAGE)
 extern "C" int __llvm_profile_write_file();
@@ -20,6 +22,19 @@ extern "C" int __llvm_profile_write_file();
 
 BEGIN_DEFINE_SPEC(FGirlsSpireRuntimeSpec,"GirlsSpire.Runtime.GameEntry",EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter)
     FAutomationDriverPtr Driver;
+    bool CheckFullscreen(){
+        if(!FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeFullscreenTest")))return true;
+        bool valid=false;
+        Async(EAsyncExecution::TaskGraphMainThread,[this,&valid]{
+            const auto window=GEngine && GEngine->GameViewport?GEngine->GameViewport->GetWindow():nullptr;
+            if(!TestTrue(TEXT("実ゲームのウィンドウ"),window.IsValid()))return;
+            const auto mode=window->GetWindowMode();const auto size=window->GetClientSizeInScreen();
+            FDisplayMetrics display;FSlateApplication::Get().GetInitialDisplayMetrics(display);
+            valid=TestTrue(TEXT("実フルスクリーンモード"),mode==EWindowMode::Fullscreen || mode==EWindowMode::WindowedFullscreen) &&
+                TestTrue(TEXT("デスクトップを満たす実クライアント寸法"),display.PrimaryDisplayWidth>0 && display.PrimaryDisplayHeight>0 && size.X>=display.PrimaryDisplayWidth && size.Y>=display.PrimaryDisplayHeight);
+            AddInfo(FString::Printf(TEXT("フルスクリーン実寸 %.0fx%.0f / デスクトップ %dx%d / モード%d"),double(size.X),double(size.Y),display.PrimaryDisplayWidth,display.PrimaryDisplayHeight,int(mode)));
+        }).Wait();return valid;
+    }
     bool CheckAudio(float bgm,float sfx,bool effects){
         bool valid=false;
         Async(EAsyncExecution::TaskGraphMainThread,[this,bgm,sfx,effects,&valid]{
@@ -39,12 +54,37 @@ END_DEFINE_SPEC(FGirlsSpireRuntimeSpec)
 void FGirlsSpireRuntimeSpec::Define()
 {
     if(!FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeTest"))) return;
-    BeforeEach([this]{FSlateApplication::Get().CloseToolTip();IAutomationDriverModule::Get().Enable();Driver=IAutomationDriverModule::Get().CreateDriver();});
+    BeforeEach([this]{
+        FSlateApplication::Get().CloseToolTip();
+        if(FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeFullscreenTest")) && GEngine && GEngine->GameViewport){
+            const auto window=GEngine->GameViewport->GetWindow();
+            if(window){
+                AddInfo(FString::Printf(TEXT("試験前ウィンドウ Visible=%d Minimized=%d Active=%d"),int(window->IsVisible()),int(window->IsWindowMinimized()),int(FSlateApplication::Get().GetActiveTopLevelWindow()==window)));
+                if(window->IsWindowMinimized())window->Restore();
+                window->ShowWindow();window->BringToFront(true);
+            }
+        }
+        IAutomationDriverModule::Get().Enable();Driver=IAutomationDriverModule::Get().CreateDriver();
+    });
     LatentBeforeEach(WaitForSlateLayout);
     if(!FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeAudioResume")))It(TEXT("通常ゲームの画面から出発・実戦・保存・中断できる"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("ゲーム用ビューポート"),GEngine && GEngine->GameViewport)) return;
-        if(!TestTrue(TEXT("通常起動でタイトルを表示"),Driver->FindElement(By::Id("title.start"))->Exists())) return;
+        if(!TestTrue(TEXT("通常起動でタイトルを表示"),Driver->FindElement(By::Id("title.start"))->Exists())) {
+            for(const char* id:{"save.load.error","save.version.error","save.error","title.settings.error"})
+                AddInfo(FString::Printf(TEXT("起動診断 %hs=%d"),id,int(Driver->FindElement(By::Id(id))->Exists())));
+            Async(EAsyncExecution::TaskGraphMainThread,[this]{
+                const auto window=GEngine->GameViewport->GetWindow();int screens=0;
+                TFunction<void(TSharedRef<SWidget>)> inspect=[&](TSharedRef<SWidget> widget){
+                    if(widget->GetTypeAsString()==TEXT("SRunScreen"))++screens;
+                    const auto children=widget->GetChildren();for(int i=0;i<children->Num();++i)inspect(children->GetChildAt(i));
+                };
+                if(window)inspect(window->GetContent());
+                AddInfo(FString::Printf(TEXT("起動診断 RunScreen=%d WorldType=%d"),screens,int(GEngine->GameViewport->GetWorld()->WorldType)));
+            }).Wait();return;
+        }
+        if(!CheckFullscreen())return;
+        TestTrue(TEXT("実ゲームのマウス終了操作"),Driver->FindElement(By::Id("title.quit"))->Exists());
         const bool audio=FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeAudioTest"));
         if(audio && !CheckAudio(1.f,1.f,false))return;
         if(!audio){
@@ -103,6 +143,7 @@ void FGirlsSpireRuntimeSpec::Define()
     });
     if(FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireRuntimeAudioResume")))It(TEXT("音声有効の別プロセスで音量と中断実戦を再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this]{
         using namespace GirlsSpire;FString root;FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireRuntimeRoot="),root);root=FPaths::ConvertRelativePathToFull(root);
+        if(!CheckFullscreen())return;
         const auto prefix=FPaths::ConvertRelativePathToFull(FPaths::ProjectDir()/TEXT("Saved/Tests/Runtime"));
         if(!TestTrue(TEXT("既存の専用保存先"),root!=prefix && FPaths::IsUnderDirectory(root,prefix)))return;
         DiskSlotFiles files{std::filesystem::path(*root)};SaveTransaction saves(files,files);PreferencesStore prefs(files);

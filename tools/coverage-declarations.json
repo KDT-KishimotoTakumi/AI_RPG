@@ -11,12 +11,12 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "b0ea5ffdf00fddefa8c2bfadf38bfcc221ea115dc5bbe3bc0662c3802ea535bc",
+    "sha256": "2A067460FD9F0316CA78A2D661ED41CBB50F6CC1F91F02E8C42A3B6949187F99",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
     "path": "Source/GirlsSpire/Presentation/GameEntry.h",
-    "sha256": "DA49820F1913CFF9D0A4E1618F5920F844F8A127C90284E15FBAE7CE9B2EC70D",
+    "sha256": "2F98AC26651CB4FA5BF6852B31133CB15FE5BB4E78CAD85356B3C5F93D94609A",
     "reason": "UCLASS・自作関数宣言・ポインターメンバーのみ。実装はGameEntry.cppで計測し、UE生成コードはIntermediateに置く。"
   },
   {

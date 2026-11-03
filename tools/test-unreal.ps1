@@ -1,5 +1,5 @@
 #requires -Version 7.0
-param([string] $Filter = 'GirlsSpire.Foundation', [switch] $UI, [switch] $Audio, [string[]] $ExtraArgs = @())
+param([string] $Filter = 'GirlsSpire.Foundation', [switch] $UI, [switch] $Audio, [switch] $Fullscreen, [string[]] $ExtraArgs = @())
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'automation-result.ps1')
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -18,7 +18,8 @@ if ($projectRoot -match '[^\x00-\x7F]') {
     $launchRoot = $alias
 }
 $report = Join-Path $launchRoot ('Saved/Automation/' + [Guid]::NewGuid().ToString('N'))
-[string[]]$render = if ($UI) { @('-RenderOffscreen', '-ResX=1280', '-ResY=900') } else { @('-NullRHI') }
+if($Fullscreen -and -not $UI){throw 'フルスクリーン試験はUI指定が必要です。'}
+[string[]]$render = if($Fullscreen){@('-fullscreen','-ResX=0','-ResY=0')}elseif ($UI) { @('-RenderOffscreen', '-ResX=1280', '-ResY=900') } else { @('-NullRHI') }
 [string[]]$sound = if($Audio){@("-AudioMixer")}else{@("-nosound")}
 $oldProfile = $env:LLVM_PROFILE_FILE
 try {

@@ -36,6 +36,7 @@ FString NodeLabel(const GirlsSpire::RouteNode& Node)
 
 void SRunScreen::Construct(const FArguments& Args)
 {
+    ExitGame=Args._OnExitGame;
     SaveService=Args._SaveService;PreferencesService=Args._PreferencesService;
     if(PreferencesService){const auto loaded=PreferencesService->Load();PreferencesLoadIssue=loaded.Issue;if(loaded.Issue==GirlsSpire::PreferencesIssue::None)DisplayPreferences=loaded.Value;}
     Audio=Args._Audio;if(Audio){Audio->Apply(DisplayPreferences);Audio->Start();}
@@ -107,11 +108,16 @@ void SRunScreen::ShowTitle()
     if(PreferencesLoadIssue==GirlsSpire::PreferencesIssue::Corrupt || PreferencesLoadIssue==GirlsSpire::PreferencesIssue::ReadFailed) AddText(TEXT("設定を読み込めません。設定画面から確認できます。"),"title.settings.error",16);
     if(std::any_of(RetainedProfile.Epilogues.begin(),RetainedProfile.Epilogues.end(),[](bool read){return read;}))
         AddAction(TEXT("後日談の本を開く"),"title.epilogues",[this]{ShowEpilogueLibrary();});
+    AddExitAction();
     AddText(ProfileLabel(),"title.bonds",14);
     FString discoveries=TEXT("発見済み連携: ");
     if(RetainedProfile.DiscoveredCombos.empty())discoveries+=TEXT("なし");
     for(int id:RetainedProfile.DiscoveredCombos)discoveries+=ComboDisplayName(id)+TEXT(" / ");
     AddText(discoveries,"title.combos",14);
+}
+void SRunScreen::AddExitAction()
+{
+    if(ExitGame.IsBound())AddAction(TEXT("ゲームを終了する"),"title.quit",[this]{ExitGame.ExecuteIfBound();});
 }
 
 void SRunScreen::ShowSetup()

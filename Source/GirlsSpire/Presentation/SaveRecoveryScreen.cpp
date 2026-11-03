@@ -7,7 +7,7 @@ void SRunScreen::ShowLoadError(const GirlsSpire::TransactionLoad& loaded)
     const bool unsupported=loaded.Issue==SlotIssue::UnsupportedVersion || loaded.RunIssue==SlotIssue::UnsupportedVersion || loaded.ProfileIssue==SlotIssue::UnsupportedVersion;
     if(unsupported) {
         AddText(TEXT("この保存形式は読み込めません。対応するゲームのバージョンで開いてください。既存の記録は保持しています。"),"save.version.error");
-        AddAction(TEXT("保存データを再読み込み"),"save.reload",[this]{ShowTitle();});return;
+        AddAction(TEXT("保存データを再読み込み"),"save.reload",[this]{ShowTitle();});AddExitAction();return;
     }
     if(SaveService->HasPending()) {
         ShowSaveError([this]{SaveService->Retry();ShowTitle();});return;
@@ -32,6 +32,7 @@ void SRunScreen::ShowLoadError(const GirlsSpire::TransactionLoad& loaded)
             AddAction(TEXT("破損した恒久データの初期化を確認"),"save.reset.profile",[this]{ConfirmReset(SaveKind::Profile);});
     }
     AddAction(TEXT("保存データを再読み込み"),"save.reload",[this]{ShowTitle();});
+    AddExitAction();
 }
 void SRunScreen::ConfirmGenerationRecovery(std::shared_ptr<const GirlsSpire::GenerationRecovery> confirmed)
 {

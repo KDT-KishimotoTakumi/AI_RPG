@@ -1,6 +1,6 @@
 #requires -Version 7.0
 [CmdletBinding()]
-param([switch] $SkipBuild,[switch] $Audio)
+param([switch] $SkipBuild,[switch] $Audio,[switch] $Fullscreen)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 if (-not $SkipBuild) {
@@ -20,10 +20,11 @@ $relative = "Saved/Tests/Runtime/$taskId"
 $testRoot = Join-Path $launchRoot $relative
 $runtimeArgs=@('-game','/Engine/Maps/Entry','-GirlsSpireRuntimeTest',"-GirlsSpireRuntimeRoot=$testRoot")
 if($Audio){$runtimeArgs+=@('-GirlsSpireRuntimeAudioTest','-AllowCommandletAudio')}
-& (Join-Path $PSScriptRoot 'test-unreal.ps1') -UI -Audio:$Audio -Filter 'GirlsSpire.Runtime.GameEntry' -ExtraArgs $runtimeArgs
+if($Fullscreen){$runtimeArgs+=@('-GirlsSpireRuntimeFullscreenTest')}
+& (Join-Path $PSScriptRoot 'test-unreal.ps1') -UI -Audio:$Audio -Fullscreen:$Fullscreen -Filter 'GirlsSpire.Runtime.GameEntry' -ExtraArgs $runtimeArgs
 if ($LASTEXITCODE) { throw '通常ゲーム起動のUI試験が失敗しました。' }
 if($Audio){
-    & (Join-Path $PSScriptRoot 'test-unreal.ps1') -UI -Audio -Filter 'GirlsSpire.Runtime.GameEntry' -ExtraArgs ($runtimeArgs+@('-GirlsSpireRuntimeAudioResume'))
+    & (Join-Path $PSScriptRoot 'test-unreal.ps1') -UI -Audio -Fullscreen:$Fullscreen -Filter 'GirlsSpire.Runtime.GameEntry' -ExtraArgs ($runtimeArgs+@('-GirlsSpireRuntimeAudioResume'))
     if($LASTEXITCODE){throw '音声有効の別プロセス再開試験が失敗しました。'}
     "音声有効の通常ゲーム・独立音量保存・別プロセス再開: 成功。"
 }

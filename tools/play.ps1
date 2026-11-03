@@ -17,4 +17,4 @@ if ($projectRoot -match '[^\x00-\x7F]') {
     if ($link.LinkType -ne 'Junction' -or $link.Target -ne $projectRoot) { throw '起動用の別名がプロジェクトを指していません。' }
     $launchRoot = $taskAlias
 }
-& (Join-Path $engine.InstallLocation 'Engine/Binaries/Win64/UnrealEditor.exe') "$launchRoot/GirlsSpire.uproject" -game /Engine/Maps/Entry -windowed -ResX=1920 -ResY=1080
+& (Join-Path $engine.InstallLocation 'Engine/Binaries/Win64/UnrealEditor.exe') "$launchRoot/GirlsSpire.uproject" -game /Engine/Maps/Entry -fullscreen -ResX=0 -ResY=0

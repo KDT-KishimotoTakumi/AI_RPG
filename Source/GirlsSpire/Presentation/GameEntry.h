@@ -8,6 +8,7 @@
 class SRunScreen;
 class UGameViewportClient;
 namespace GirlsSpire {class DiskSlotFiles;class SaveTransaction;}
+namespace GirlsSpire {FSimpleDelegate GameExitAction(bool gameWorld,bool inEditor);}
 
 UCLASS()
 class GIRLSSPIRE_API AGirlsSpireController : public APlayerController

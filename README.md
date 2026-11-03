@@ -46,7 +46,7 @@ UE5.7.4で動く開発版です。12日間の経路・救出・戦闘・成長�
 
 ## 通常ゲームの起動
 
-PowerShell 7で `./tools/play.ps1` を実行します。通常構成へビルドしてからゲームを開きます。
+PowerShell 7で `./tools/play.ps1` を実行します。通常構成へビルドしてから、画面サイズを自動解決してフルスクリーンでゲームを開きます。タイトルの「ゲームを終了する」からマウスで終了できます。戦闘中は「保存して中断する」でタイトルへ戻ってから終了します。エディタ/PIE/プレビューにプロセス終了先は渡しません。
 導入済みのUE5.7と起動先は環境から検出します。保存先はUEのProjectSavedDir配下のSaveGamesです。
 この開発環境の通常起動では `Saved/SaveGames`、PIEでは `Saved/DevelopmentSaves` を使います。
 
@@ -85,6 +85,8 @@ PowerShell 7とVisual Studio 2022のC++ビルドツールを使用します。
 ./tools/test-runtime.ps1
 # 音声有効の通常操作と別プロセス再開
 ./tools/test-runtime.ps1 -Audio
+# 実フルスクリーンで通常操作・音声付き再開を確認
+./tools/test-runtime.ps1 -Audio -Fullscreen
 ```
 
 テストの失敗・ビルドエラーは終了コード非0になります。[検証記録](docs/VALIDATION.md)。
