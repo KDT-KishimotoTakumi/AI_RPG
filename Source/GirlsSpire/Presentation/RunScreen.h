@@ -51,6 +51,8 @@ private:
     void ResetSavedSlot(GirlsSpire::SaveKind kind);
     void ConfirmJournalRepair();
     void RepairSavedJournal();
+    void ConfirmGenerationRecovery(std::shared_ptr<const GirlsSpire::GenerationRecovery> confirmed);
+    void RepairGenerationRecovery(std::shared_ptr<const GirlsSpire::GenerationRecovery> confirmed);
     void RefreshRun();
     void RefreshRewards();
     void ShowGrowth();

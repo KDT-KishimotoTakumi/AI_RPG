@@ -390,6 +390,55 @@ void FGirlsSpireResumeSpec::Define()
         TestTrue(TEXT("報酬へ進める"),Driver->FindElement(By::Id("reward.recipient.0"))->Exists());
         TestFalse(TEXT("同じ救出で返答を再表示しない"),Driver->FindElement(By::Id("rescue.help"))->Exists());
     });
+    It(TEXT("確定世代の共通候補を取消・確認し全保全後に固定再試行する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this]{
+        using namespace GirlsSpire;Profile profile;profile.Bonds.fill(55);Run run(42,Difficulty::Beginner,HeroRole::Sword,profile);const RunSaveState saved{run.Checkpoint(),{}};
+        const auto rp=*EncodeRunPayload(saved),pp=*EncodeProfilePayload(profile);
+        const std::array<std::string,5> originals={*EncodeSave({SaveKind::Run,3,rp}),*EncodeSave({SaveKind::Run,2,rp}),*EncodeSave({SaveKind::Profile,2,pp}),*EncodeSave({SaveKind::Profile,1,pp}),*EncodeSave({SaveKind::Run,3,{}})};
+        for(int i=0;i<4;++i)if(!TestTrue(TEXT("実ディスクに世代不一致を準備"),Files->Replace(i<2?SaveKind::Run:SaveKind::Profile,(i%2)!=0,originals[i])))return;
+        if(!TestTrue(TEXT("取引世代を準備"),Files->ReplaceJournal(originals[4])))return;Reopen();
+        if(!TestTrue(TEXT("共通世代の確認操作"),Driver->FindElement(By::Id("save.generation.repair"))->Exists()))return;
+        if(!Click("save.generation.repair"))return;
+        const auto warning=Driver->FindElement(By::Id("save.generation.warning"))->GetText().ToString();
+        TestTrue(TEXT("候補と最新観測世代・失われる変更を説明"),warning.Contains(TEXT("2")) && warning.Contains(TEXT("3")) && warning.Contains(TEXT("絆")) && warning.Contains(TEXT("戻")));
+        if(!Click("save.generation.cancel"))return;
+        for(int i=0;i<4;++i)TestTrue(TEXT("取消は原本不変"),Files->Read(i<2?SaveKind::Run:SaveKind::Profile,(i%2)!=0).Bytes==originals[i]);
+        TestTrue(TEXT("取消で取引も不変"),Files->ReadJournal().Bytes==originals[4]);
+        if(!Click("save.generation.repair"))return;Files->Fail=true;
+        if(!Click("save.generation.confirm"))return;
+        TestTrue(TEXT("書込失敗で候補固定と進行停止"),Service->HasPending() && Driver->FindElement(By::Id("save.error"))->Exists() && !Driver->FindElement(By::Id("title.start"))->Exists());
+        Files->Fail=false;if(!Click("save.retry"))return;
+        const auto loaded=Service->Load();TestTrue(TEXT("世代4に共通世代2の両側だけ復旧"),loaded.Issue==SlotIssue::None && loaded.Generation==4 && loaded.Run==saved && loaded.Permanent==profile);
+        std::vector<std::string> archived;const auto folder=std::filesystem::path(*TestRoot)/"Corrupt";
+        if(std::filesystem::exists(folder))for(const auto& entry:std::filesystem::recursive_directory_iterator(folder))if(entry.is_regular_file()){
+            std::ifstream input(entry.path(),std::ios::binary);archived.emplace_back(std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>());
+        }
+        for(const auto& bytes:originals)TestTrue(TEXT("全4原本と元取引の内容を実保全"),std::find(archived.begin(),archived.end(),bytes)!=archived.end());
+        if(!Click("title.resume"))return;TestTrue(TEXT("復旧後の実画面再開"),Driver->FindElement(By::Id("route.node.0"))->Exists());
+    });
+    It(TEXT("確定世代の確認後に原本が変われば再確認を要求する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+        using namespace GirlsSpire;Profile profile;Run run(42,Difficulty::Beginner,HeroRole::Sword,profile);const RunSaveState saved{run.Checkpoint(),{}};
+        const auto rp=*EncodeRunPayload(saved),pp=*EncodeProfilePayload(profile);
+        Files->Replace(SaveKind::Run,false,*EncodeSave({SaveKind::Run,3,rp}));Files->Replace(SaveKind::Run,true,*EncodeSave({SaveKind::Run,2,rp}));
+        Files->Replace(SaveKind::Profile,false,*EncodeSave({SaveKind::Profile,2,pp}));Files->Replace(SaveKind::Profile,true,*EncodeSave({SaveKind::Profile,1,pp}));Files->ReplaceJournal(*EncodeSave({SaveKind::Run,3,{}}));Reopen();
+        if(!TestTrue(TEXT("共通候補の操作がある"),Driver->FindElement(By::Id("save.generation.repair"))->Exists()) || !Click("save.generation.repair"))return;
+        const auto external=*EncodeSave({SaveKind::Run,4,rp});Files->Replace(SaveKind::Run,false,external);
+        if(!Click("save.generation.confirm"))return;
+        TestTrue(TEXT("変更を通知して保存しない"),Driver->FindElement(By::Id("save.generation.changed"))->Exists() && !Service->HasPending() && Files->Read(SaveKind::Run,false).Bytes==external);
+        if(!Click("save.generation.reload") || !Click("save.generation.repair"))return;
+        TestTrue(TEXT("新しい観測世代で再確認"),Driver->FindElement(By::Id("save.generation.warning"))->GetText().ToString().Contains(TEXT("4")));
+    });
+    It(TEXT("確定世代の共通ペアが無ければ原本を保持して停止する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+        using namespace GirlsSpire;Profile profile;Run run(42,Difficulty::Beginner,HeroRole::Sword,profile);const RunSaveState saved{run.Checkpoint(),{}};
+        const auto rp=*EncodeRunPayload(saved),pp=*EncodeProfilePayload(profile);
+        const std::array<std::string,4> originals={*EncodeSave({SaveKind::Run,3,rp}),*EncodeSave({SaveKind::Run,3,rp}),*EncodeSave({SaveKind::Profile,2,pp}),*EncodeSave({SaveKind::Profile,1,pp})};
+        for(int i=0;i<4;++i)if(!TestTrue(TEXT("共通世代なしを実ディスクに準備"),Files->Replace(i<2?SaveKind::Run:SaveKind::Profile,(i%2)!=0,originals[i])))return;
+        const auto journal=*EncodeSave({SaveKind::Run,3,{}});Files->ReplaceJournal(journal);Reopen();
+        TestTrue(TEXT("共通ペアなしの停止を通知"),Driver->FindElement(By::Id("save.generation.unavailable"))->Exists());
+        for(const char* id:{"save.generation.repair","save.reset.run","save.reset.profile","title.start","title.resume"})TestFalse(TEXT("初期化・復旧・進行を許可しない"),Driver->FindElement(By::Id(id))->Exists());
+        if(!Click("save.reload"))return;
+        for(int i=0;i<4;++i)TestTrue(TEXT("再読込後も全原本が不変"),Files->Read(i<2?SaveKind::Run:SaveKind::Profile,(i%2)!=0).Bytes==originals[i]);
+        TestTrue(TEXT("取引も不変・固定保存なし"),Files->ReadJournal().Bytes==journal && !Service->HasPending());
+    });
     AfterEach([this] {
         if(HasAnyErrors() && !PreserveFailure)Diagnose();
         Driver.Reset();

@@ -53,5 +53,10 @@
     "path": "Source/GirlsSpire/Domain/RelationshipText.h",
     "reason": "集約構造体と検索関数の宣言のみ。本文と検索関数の定義はRelationshipText.cppで計測。",
     "sha256": "E517F6902ABEEDAB710A820F178F7591B8D758F9B009D86B59BB3B2B8DEFD612"
+  },
+  {
+    "path": "Source/GirlsSpire/Infrastructure/RecoverySelection.h",
+    "reason": "構造体メンバーと関数宣言のみ。共通世代の選択処理はRecoverySelection.cppで計測。",
+    "sha256": "82116DBD3E87B20E51169A1A2A1E6D46F1FDD0E784EC5B2A7B56544135614418"
   }
 ]

@@ -318,6 +318,37 @@ void FGirlsSpireResumeProcessSpec::Define()
             Async(EAsyncExecution::TaskGraphMainThread,[this]{Window->SetContent(SNullWidget::NullWidget);}).Wait();
         }
     });
+    It(stage==TEXT("Save")?TEXT("世代不一致原本を別プロセス用に保存する"):TEXT("別プロセスで共通世代から確認復旧し消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this,stage,root,validRoot]{
+        using namespace GirlsSpire;
+        if(!TestTrue(TEXT("復旧用の専用試験保存先"),validRoot))return;
+        const auto fixture=ProcessFixture(0);if(!TestTrue(TEXT("復旧前の全状態"),fixture.has_value()))return;
+        auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*(root/TEXT("generation-recovery"))));
+        auto service=std::make_shared<SaveTransaction>(*files,*files);
+        if(stage==TEXT("Save")){
+            Run unilateral(987654321,Difficulty::Beginner,HeroRole::Sword,fixture->Permanent);
+            const auto newer=*EncodeRunPayload(RunSaveState{unilateral.Checkpoint(),{}}),rp=*EncodeRunPayload(fixture->State),pp=*EncodeProfilePayload(fixture->Permanent);
+            const std::array<std::string,4> originals={*EncodeSave({SaveKind::Run,3,newer}),*EncodeSave({SaveKind::Run,2,rp}),*EncodeSave({SaveKind::Profile,2,pp}),*EncodeSave({SaveKind::Profile,1,pp})};
+            for(int i=0;i<4;++i)if(!TestTrue(TEXT("次プロセス用の世代不一致原本"),files->Replace(i<2?SaveKind::Run:SaveKind::Profile,(i%2)!=0,originals[i])))return;
+            TestTrue(TEXT("元取引の確定世代"),files->ReplaceJournal(*EncodeSave({SaveKind::Run,3,{}})));return;
+        }
+        if(!TestTrue(TEXT("有効な復旧試験段階"),stage==TEXT("Verify")))return;
+        Async(EAsyncExecution::TaskGraphMainThread,[this,service]{Window->SetContent(SNew(SRunScreen).SaveService(service));}).Wait();DrainSlateLayout();
+        const auto click=[this](const char* id){
+            const auto target=Driver->FindElement(By::Id(id));
+            if(!target->IsVisible()){
+                const auto scroll=Driver->FindElement(By::Id("run.scroll"));scroll->ScrollToBeginning();DrainSlateLayout();
+                if(!target->IsVisible()){scroll->ScrollToEndUntil(By::Id(id));DrainSlateLayout();}
+            }
+            return TestTrue(*FString::Printf(TEXT("別プロセス復旧操作 %hs"),id),ClickAndDrain(target));
+        };
+        if(!click("save.generation.repair") || !click("save.generation.confirm"))return;
+        const auto restored=service->Load();
+        if(!TestTrue(TEXT("別プロセスでも共通世代の状態・乱数・恒久記録だけを使用"),restored.Generation==4 && restored.Run==fixture->State && restored.Permanent==fixture->Permanent))return;
+        if(!click("title.resume"))return;
+        auto expected=fixture->State;expected.ResumeAvailable=false;const auto resumed=service->Load();
+        if(!TestTrue(TEXT("確認復旧後の消費再開も全状態一致"),resumed.Run==expected && resumed.Permanent==fixture->Permanent && service->PrepareResume()==SlotIssue::Invalid))return;
+        TestTrue(TEXT("別プロセス復旧の成功記録"),FFileHelper::SaveStringToFile(TEXT("pass"),*(root/TEXT("generation-recovery.done"))));
+    });
     AfterEach([this] {
         Driver.Reset();if(Window.IsValid()) {Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());}
         Window.Reset();IAutomationDriverModule::Get().Disable();

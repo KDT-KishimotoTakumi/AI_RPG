@@ -195,5 +195,9 @@ int main()
     failed += TestRescueDialogue();
     extern int TestRelationshipText();
     failed += TestRelationshipText();
+    extern int TestRecoverySelection();
+    failed += TestRecoverySelection();
+    extern int TestGenerationRecovery();
+    failed += TestGenerationRecovery();
     return failed == 0 ? 0 : 1;
 }

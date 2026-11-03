@@ -1,8 +1,18 @@
 #pragma once
 #include "SaveSlot.h"
 #include "SavePayload.h"
+#include "RecoverySelection.h"
 
 namespace GirlsSpire {
+struct GenerationRecovery {
+    RecoveryPair Candidate;
+    std::array<std::optional<std::string>,4> Originals;
+    std::optional<std::string> Journal;
+};
+struct GenerationRecoveryPreview {
+    SlotIssue Issue=SlotIssue::Invalid;
+    std::optional<GenerationRecovery> Value;
+};
 class JournalFiles {
 public:
     virtual ~JournalFiles()=default;
@@ -28,6 +38,8 @@ public:
     SlotIssue PrepareResume();
     SlotIssue PrepareReset(SaveKind kind);
     SlotIssue PrepareJournalRepair();
+    GenerationRecoveryPreview PreviewGenerationRecovery();
+    SlotIssue PrepareGenerationRecovery(const GenerationRecovery& confirmed);
     SlotIssue Retry();
     bool HasPending() const;
 private:
