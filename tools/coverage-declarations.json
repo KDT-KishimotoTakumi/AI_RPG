@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "8562BF58F2613B9B39F9D18FC927EDBC47925B9ACE35B35D37F18D3A60394300",
+    "sha256": "6772684921311F7CE1E8B03F4027B14CA3DEF2D60180CDFB555B1ED0367FDF2D",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -73,5 +73,10 @@
     "path": "Source/GirlsSpire/Presentation/BoardSprites.h",
     "sha256": "0240CC1A73786D02E9CB7BFAF741F038F7A3C41EE544FF3331EE95E19F9E9FF1",
     "reason": "関数宣言と保持メンバーのみ。素材読込み/UV/種別対応はBoardSprites.cppで計測する。"
+  },
+  {
+    "path": "Source/GirlsSpire/AI/Personality.h",
+    "sha256": "A17D83C1CDE74DEA32A7753E1995174978E54BBF68CE9A6675C07E784A446FD9",
+    "reason": "加点関数の宣言のみ。合法性・予測値の判定はPersonality.cppで計測。"
   }
 ]

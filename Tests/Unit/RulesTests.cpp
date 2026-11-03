@@ -70,6 +70,8 @@ int main()
     failed += TestBasicTurn();
     failed += TestEncounter();
     failed += TestIntent();
+    extern int TestPersonality();
+    failed += TestPersonality();
     failed += TestGeneration();
     failed += TestTerrain();
     failed += TestTraps();

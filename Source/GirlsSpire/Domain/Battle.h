@@ -68,6 +68,7 @@ struct BattleSnapshot {
     std::optional<ComboResolution> LastCombo;
     AbilityRuleSet AbilityRules=AbilityRuleSet::Legacy;
     std::array<int,8> StartingBonds{};
+    bool PersonalityAI=false;
     bool operator==(const BattleSnapshot&) const = default;
 };
 struct PredictedHit {

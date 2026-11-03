@@ -16,6 +16,7 @@
 #include "AI/BasicTurn.h"
 #include "Domain/ComboCatalog.h"
 #include "../Fixtures/ComboCatalogCases.h"
+#include "../Fixtures/PersonalityCase.h"
 #include <algorithm>
 #include <atomic>
 
@@ -40,6 +41,7 @@ struct ProcessResumeFixture {
 };
 std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
+    if(point>=48){GirlsSpire::Profile profile;profile.Bonds.fill(75);return ProcessResumeFixture{GirlsSpire::TestData::PersonalityCase(point==49),profile};}
     using namespace GirlsSpire;
     if(point>=46){
         Profile profile;profile.Bonds={0,24,49,50,74,75,99,100};
@@ -271,10 +273,10 @@ void FGirlsSpireResumeProcessSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(stage==TEXT("Save")?TEXT("48地点を別プロセス用に保存する"):TEXT("別プロセスで48地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
+    It(stage==TEXT("Save")?TEXT("50地点を別プロセス用に保存する"):TEXT("別プロセスで50地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<48;++point) {
+        for(int point=0;point<50;++point) {
             const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));
@@ -313,6 +315,15 @@ void FGirlsSpireResumeProcessSpec::Define()
                 AddInfo(FString::Printf(TEXT("再開地点%d不一致: Issue=%d Pending=%d Writes=%d OS=%u / %s"),point,static_cast<int>(resumed.Issue),service->HasPending(),files->UnexpectedWrites.load(),files->LastWriteError.load(),*directory));
             if(!TestTrue(TEXT("非中断時の継続結果と一致"),resumed.Run==expected && resumed.Permanent==fixture->Permanent)) return;
             if(!TestTrue(TEXT("二度目の中断ロード拒否"),service->PrepareResume()==SlotIssue::Invalid)) return;
+            if(point>=48){
+                const Position target=point==49?Position{3,1}:Position{1,3};
+                const auto label=Driver->FindElement(By::Id("intent.forecast"))->GetText().ToString();
+                if(!TestTrue(TEXT("別プロセスでも新旧の性格順位を維持"),label.StartsWith(FString::Printf(TEXT("確定予定\n通常攻撃(%d,%d)"),target.X,target.Y))))return;
+                auto battle=*Battle::Restore(expected.Combat->Battle);battle.Attack(battle.Snapshot().Revision,3,target);expected.Combat->Battle=battle.Checkpoint();
+                const auto execute=Driver->FindElement(By::Id("intent.execute"));
+                if(!execute->IsVisible()){Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("intent.execute"));DrainSlateLayout();}
+                if(!TestTrue(TEXT("再開後の予告を画面から実行"),ClickAndDrain(execute)) || !TestTrue(TEXT("再開後も効果/乱数/識別/恒久データを保存"),service->Load().Run==expected && service->Load().Permanent==fixture->Permanent))return;
+            }
             const auto marker=root/FString::Printf(TEXT("point-%02d.done"),point);
             if(!TestTrue(TEXT("成功記録"),FFileHelper::SaveStringToFile(TEXT("pass"),*marker))) return;
             Async(EAsyncExecution::TaskGraphMainThread,[this]{Window->SetContent(SNullWidget::NullWidget);}).Wait();

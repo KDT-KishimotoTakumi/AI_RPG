@@ -434,3 +434,12 @@ GS-066全体回帰の診断: 最初の3d56224ada514219a12407088ea5faabは331成�
 
 GS-066全体合格: UE/33f341ae4cb44be0be2f6505632ad3a5は332成功/0失敗/警告0。通常起動・音声有効の起動/別プロセス再開・専用音声も成功。Coverage/3af39a35a10e4c22a2340377cb9a17aaは行4711/4738=99.43%、関数583/595=97.98%、分岐4746/5202=91.23%、Missing=[]。BoardPawn.hも計測対象とし、宣言専用BoardSprites.hだけ内容ハッシュ照合で扱う。合格6生原本はJSON/profdata/実行物を保持して整理済み。固定人物/乱数・保存の非干渉、画像/UVの所有権、非入力レイヤー、欠落/単色と技の幅対応をレビューし、BoardObjects.pngを目視確認。
 GS-066通常版の最終確認: MSVC表示29件277a9ec52abe450aae12dcca85c341b0成功。Fullscreen+Audio/5c7810da6f4d49869d3266ad050c1207・4452047e1d9a4c619aeabcdf03912abcは各1成功/警告0、実クライアント1920×1080/デスクトップ1920×1080/モード1と音声再開を確認。SaveProcess/a46a43008b204855ace5f3aa2eb50cd7・d9c5966cbbf641ec8768f0a672b5097cは各3成功/警告0、48地点・世代不一致復旧1件・独立設定1件を確認。全体計測後は製品コード不変。
+
+## GS-067 / T013n 性格AI（2026-11-04）
+- TDD: personality-red.logは110中19失敗、順位/保存接続前は152中3失敗。共通習得技能の追加回帰は173中5失敗→修正後173成功、最終全Native成功（personality-coverage-final.log）。中間の旧schema==16検査1件は現行17へ追随修正、旧原本の互換検査は維持。
+- 最初の計測7b5d9f62055649adabdfab66d4b77bbeは追加した別プロセステストのProfile型の名前空間不足でUEビルド失敗。修正後personality-coverage-build-fix.logで成功、先行UI10件はAutomation/1d5b2857dbae42e49c67b26a7d953a10。失敗ログ/原本を保全。
+- 最終Coverage/0531b174b71c4021bf8fa987b6da932d: 行4754/4782（99.41%）、関数587/599（98.00%）、分岐4837/5306（91.16%）、Passed=true/Missing=[]。全UE334警告0（Automation/ced2bed0e96c48828428d07493b1c27f）、通常起動9b19d66d75c44398bd41d2997260dc16、音声起動/別再開301a65f5a3c24199a19b49c94b0ac5d6/c1bda48932fb4166855bcbf628596c96、専用音声も成功。ログpersonality-coverage-final.log。
+- 通常MSVCビルド成功。対象実UI10件はAutomation/d42b0ff7f7a241a793ab1979a7d1dd18、実フルスクリーン/音声の実戦・保存・中断/別再開は4e153a484d534f2cb467d295ea603e6a/11ecdae677eb4c6d969f1a8f15dfa938。personality-msvc-build/ui/runtime.log。
+- 別UEプロセスの保存1736ef0d848f4d52b4b5c4b207aff821→検証a14bb3f233054c71afdc80deb02c63f6が成功。ProcessResume/b12fa07e57784afc9af5746e29e73469に50成功記録と世代復旧/設定記録。追加48/49で性格無効/有効の予告対象と実行後の全状態/RNG/恒久データの保存を確認。personality-process.log。
+- レビュー: 最終製品コードの隔離コピーで朧の弱体条件を反転し、173中6失敗を検出。Saved/DesignReview/personality-mutation.jsonに原本SHA-256不変を記録、personality-mutation-final.logを保持。
+- 固定原本Tests/Fixtures/personality-v16.binは3418 bytes、SHA-256=A815B7928B3F4653136EBCD263917D2AA78C49C90E2E2B235F58A4DD950C6481。旧全状態/順位識別と現行への往復を確認し再生成しない。既存v11～15原本も維持。Profile v4/技の効果/確率/抽選数/素材は不変。製品全体の完成検証ではない。

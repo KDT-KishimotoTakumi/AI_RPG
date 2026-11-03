@@ -1,4 +1,5 @@
 #include "Intent.h"
+#include "Personality.h"
 #include "Domain/Rules.h"
 #include "Domain/AbilityCatalog.h"
 #include <algorithm>
@@ -66,6 +67,7 @@ std::vector<BasicAction> RankIntentActions(const Battle& battle, const IntentOrd
         if (improvement>0) scored.push_back({improvement*100,{BasicActionKind::Move,at}});
     }
     scored.push_back({-1,{}});
+    if(state.PersonalityAI)for(auto& entry:scored)entry.first+=PersonalityBonus(battle,entry.second);
     std::sort(scored.begin(),scored.end(),[](const auto& left,const auto& right) {
         if (left.first!=right.first) return left.first>right.first;
         return std::tuple{left.second.Kind,left.second.Target.Y,left.second.Target.X,left.second.Ability}<

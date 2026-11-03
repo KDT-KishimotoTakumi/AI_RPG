@@ -16,7 +16,8 @@ int TestFormalEncounter()
             const auto old=Encounter::Create(run,seed).Checkpoint();
             const auto battle=Encounter::Create(run,seed,profile);auto expected=old;
             expected.State.AbilityRules=AbilityRuleSet::CompleteCharacters;expected.State.StartingBonds=profile.Bonds;
-            check(battle.Checkpoint()==expected,"正式識別と絆以外の編成/地形/能力/手番/RNGを維持");
+            expected.State.PersonalityAI=true;
+            check(battle.Checkpoint()==expected,"正式識別/絆/性格以外の編成/地形/能力/手番/RNGを維持");
             for(const auto& unit:battle.Snapshot().Units)if(unit.Side==Faction::Player)
                 check(battle.PotentialEnemyDamage(unit.Id)<unit.Hp,"正式技能を含めて初期即死を回避");
             check(old.State.AbilityRules==AbilityRuleSet::Legacy && old.State.StartingBonds==std::array<int,8>{},"旧APIは従来のまま");
