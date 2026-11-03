@@ -1,5 +1,6 @@
 #include "CombatScreen.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
+#include "Widgets/SCanvas.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -14,6 +15,7 @@ bool SCombatScreen::PersistCheckpoint()
 void SCombatScreen::ShowSaveFailure()
 {
     Grid->ClearChildren();Panel->ClearChildren();
+    MovingUnits->ClearChildren();Movements.Reset();
     ComboGauge->SetText(FText::GetEmpty());ComboResult->SetText(FText::GetEmpty());
     Text(TEXT("保存に失敗しました。進行を停止しています。同じ結果の保存を再試行してください。"),"save.error");
     Action(TEXT("同じ内容で保存を再試行"),"save.retry",[this] {

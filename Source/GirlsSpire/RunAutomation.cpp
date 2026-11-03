@@ -45,4 +45,6 @@
 #include "../../Tests/E2E/RuntimeSpec.cpp"
 #include "../../Tests/E2E/ExitSpec.cpp"
 #include "../../Tests/E2E/PresentationSpec.cpp"
+#include "../../Tests/E2E/UnitMotionSpec.cpp"
+#include "../../Tests/E2E/UnitMotionUiSpec.cpp"
 #endif

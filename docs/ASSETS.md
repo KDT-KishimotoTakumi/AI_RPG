@@ -32,3 +32,5 @@ UE素材はContent/Audio/BGM_Castle_V1.uasset、SFX_Confirm_V1.uasset、SFX_Impa
 GS-064素材（2026-11-04）: Content/Art/Backgrounds/title-castle-v1.png は組込みimagegenで新規生成した独自の戦国風城背景。原画像のコピーと全文プロンプトを同フォルダに保持。既存作品の画像・紋章・人物を取得/転載していない。生成サービスの適用条件に従う。固定人物9枚は変更せず盤面にも参照する。
 音素材V2は tools/generate-audio-v2.py の標準ライブラリ合成による独自旋律/和音/弦・金管風音/太鼓/残響。既存曲・録音・サウンドフォントの利用なし。Content/Audio/Source/manifest-v2.json に3原本のSHA256と方式を記録し、V1も保持。BGM40秒・96BPM・32000Hzステレオ16bit、確認0.18秒/打撃0.24秒。UEへPCMで非置換取込しBGMのみループ。波形の形式/署名/ピーク/DC/ループ境界/左右差は test-audio-v2.py で検証。聴感の最終評価とWindows配布での同梱確認は未完了。
 配布設定は/Game/AudioのCookを維持し、動的読込みPNGのArt/BackgroundsとArt/CharactersをNonUFS対象へ指定した。これは同梱指定の追加であり、Windowsパッケージの実生成・オフライン表示検証はまだ行っていない。
+
+GS-065（2026-11-04）: 固定人物PNG9枚を無加工で待機/移動表示に再利用。追加画像・外部アニメーション素材・歩行フレームはなし。CombatMotion.cpp/UnitMotion.cppが確定経路と表示時計だけで移動/揺れを計算する。画像欠落や単色時は文字情報と汎用の移動記号（◆）へ退避。原画像/プロンプト/V1/V2音源は変更しない。

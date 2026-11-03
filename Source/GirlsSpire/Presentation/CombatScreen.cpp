@@ -1,5 +1,8 @@
 #include "CombatScreen.h"
 #include "SpireStyle.h"
+#include "UnitMotion.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Widgets/SCanvas.h"
 #include "Brushes/SlateDynamicImageBrush.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/Images/SImage.h"
@@ -45,7 +48,10 @@ void SCombatScreen::Construct(const FArguments& Args)
             [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("battle.board.scroll"))
               + SScrollBox::Slot()
               [ SNew(SVerticalBox)
-                + SVerticalBox::Slot().AutoHeight() [ SAssignNew(Grid,SUniformGridPanel).SlotPadding(2) ]
+                + SVerticalBox::Slot().AutoHeight()
+                  [SNew(SOverlay)
+                    +SOverlay::Slot()[SAssignNew(Grid,SUniformGridPanel).SlotPadding(2)]
+                    +SOverlay::Slot()[SAssignNew(MovingUnits,SCanvas).Visibility(EVisibility::HitTestInvisible)]]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,10,0,6)[SAssignNew(PortraitPanel,SHorizontalBox)]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,12,0,6)
                     [ SAssignNew(ComboGauge,STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(18)))
@@ -58,6 +64,7 @@ void SCombatScreen::Construct(const FArguments& Args)
                 [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("battle.scroll")) + SScrollBox::Slot() [ SAssignNew(Panel,SVerticalBox) ] ] ] ];
     AdvanceEnemies();
     Refresh();
+    if(!DisplayPreferences.ReducedEffects)RegisterActiveTimer(1.f/30.f,FWidgetActiveTimerDelegate::CreateSP(this,&SCombatScreen::AnimateUnits));
 }
 
 void SCombatScreen::Text(const FString& label,const FName& id,int size)
@@ -141,8 +148,9 @@ void SCombatScreen::Refresh(bool persist)
                 .OnClicked_Lambda([this,at,revision=state.Revision] { SelectCell(at,revision); return FReply::Handled(); })
                 [ SNew(SOverlay)
                   +SOverlay::Slot()
-                  [SNew(SImage).Image(art.Get()).ColorAndOpacity(FLinearColor(1,1,1,0.42f))
-                    .Visibility(art?EVisibility::HitTestInvisible:EVisibility::Collapsed)
+                  [SNew(SImage).Image(art.Get()).ColorAndOpacity(FLinearColor(1,1,1,0.85f))
+                    .RenderTransform_Lambda([this,unitId]{return TOptional<FSlateRenderTransform>(FSlateRenderTransform(FVector2D(0,-FUnitMotion::IdleLift(FSlateApplication::Get().GetCurrentTime()+unitId*.11,DisplayPreferences.ReducedEffects))));})
+                    .Visibility_Lambda([this,art,unitId]{return art && !MotionActive(unitId)?EVisibility::HitTestInvisible:EVisibility::Collapsed;})
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.unit.art.%d"),unitId)))]
                   +SOverlay::Slot()
                   [ SNew(SVerticalBox)
@@ -159,6 +167,7 @@ void SCombatScreen::Refresh(bool persist)
                     [SNew(SProgressBar).Percent(hp).FillColorAndOpacity(MonochromeBoard?FLinearColor::White:FLinearColor(0.55f,0.9f,0.55f))
                       .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.unit.hpbar.%d"),unitId)))]] ] ] ];
     }
+    RefreshMovingUnits();
     Text(FString::Printf(TEXT("第%dラウンド"),state.Round),"battle.round",23);
     Text(GenerationSummary,"battle.generation",13);
     for(const auto& unit:state.Units)if(unit.Hp>0 && unit.Role==BattleRole::CastleLord) {
@@ -291,8 +300,11 @@ void SCombatScreen::ConfirmMove(std::uint64_t revision)
     if(!MoveTarget) return;
     const auto actor=Combat->Snapshot().ActiveId;
     const auto preview=Combat->PreviewMove(actor,*MoveTarget);
-    if(Combat->Move(revision,actor,*MoveTarget))
+    const auto before=*Combat;
+    if(Combat->Move(revision,actor,*MoveTarget)) {
+        RecordMovement(before);
         Message=FString::Printf(TEXT("%s / 罠被害%d"),preview.KnockedOut?TEXT("罠で戦闘不能・移動を中断しました"):TEXT("移動しました"),preview.Damage);
+    }
     MoveTarget.reset();
     AdvanceEnemies();
     Refresh();
@@ -338,7 +350,9 @@ void SCombatScreen::AdvanceEnemies()
         if(actor->Side==Faction::Player) return;
         const auto action=ChooseBasicAction(*Combat);
         const auto recovery=action.Kind==BasicActionKind::UseSkill?Combat->PreviewSkill(state.ActiveId,action.Ability,action.Target):SkillPreview{};
+        const auto before=*Combat;
         if(!ApplyBasicAction(*Combat,action)) return;
+        RecordMovement(before);
         if(!PersistCheckpoint()) return;
         if(recovery.Healing>0)Message=FString::Printf(TEXT("応急手当で人物%dを%d回復しました。"),recovery.TargetId,recovery.Healing);
         else if(action.Kind==BasicActionKind::Attack || action.Kind==BasicActionKind::UseSkill) DescribeHits();

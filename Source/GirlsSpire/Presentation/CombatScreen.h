@@ -14,6 +14,7 @@ class SVerticalBox;
 class SHorizontalBox;
 class SUniformGridPanel;
 class STextBlock;
+class SCanvas;
 class FCharacterPortraits;
 class IGameAudio;
 class SCombatScreen : public SCompoundWidget
@@ -34,6 +35,13 @@ public:
     void Construct(const FArguments& Args);
     GirlsSpire::CombatControlCheckpoint ControlCheckpoint() const {return Control.Checkpoint();}
 private:
+    struct FMovementVisual {std::vector<GirlsSpire::Position> Path;double Started=0;};
+    TMap<int,FMovementVisual> Movements;
+    TSharedPtr<SCanvas> MovingUnits;
+    bool MotionActive(int id) const;
+    void RecordMovement(const GirlsSpire::Battle& before);
+    void RefreshMovingUnits();
+    EActiveTimerReturnType AnimateUnits(double now,float delta);
     std::shared_ptr<IGameAudio> Audio;
     int FontSize(int base) const {return GirlsSpire::ScaledFontSize(DisplayPreferences.Text,base);}
     GirlsSpire::Preferences DisplayPreferences;

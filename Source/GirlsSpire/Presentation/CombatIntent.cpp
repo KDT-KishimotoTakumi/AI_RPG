@@ -89,7 +89,9 @@ void SCombatScreen::SelectIntentCell(GirlsSpire::Position cell)
 
 void SCombatScreen::ExecuteIntent(const GirlsSpire::IntentForecast& forecast)
 {
+    const auto before=*Combat;
     if(!forecast.Execute(*Combat,Control.ChoiceRandom)) { Message=TEXT("盤面が変わったため作戦を再確認してください"); Refresh(); return; }
+    RecordMovement(before);
     Message=TEXT("作戦の予告候補から行動しました");
     AdvanceEnemies();
     Refresh();
