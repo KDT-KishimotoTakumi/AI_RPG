@@ -22,7 +22,8 @@ class IGameAudio;
 class SCombatScreen : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SCombatScreen) {}
+    SLATE_BEGIN_ARGS(SCombatScreen):_FullField(false) {}
+        SLATE_ARGUMENT(bool,FullField)
         SLATE_ARGUMENT(TSharedPtr<GirlsSpire::Battle>, Combat)
         SLATE_ARGUMENT(FString, GenerationSummary)
         SLATE_ARGUMENT(std::optional<GirlsSpire::Profile>, BondProfile)
@@ -38,6 +39,14 @@ public:
     void Construct(const FArguments& Args);
     GirlsSpire::CombatControlCheckpoint ControlCheckpoint() const {return Control.Checkpoint();}
 private:
+    void BuildField();
+    bool SelectFieldCell(GirlsSpire::Position cell);
+    enum class EFieldAction { None, Move, Attack, Intent };
+    void BeginFieldAction(EFieldAction action);
+    FString FieldSelectionLabel() const;
+    bool FullField=false,FieldMenuOpen=true;
+    int FieldFocus=-1,FieldActor=-2;
+    EFieldAction FieldAim=EFieldAction::None;
     struct FMovementVisual {std::vector<GirlsSpire::Position> Path;double Started=0;};
     TMap<int,FMovementVisual> Movements;
     TSharedPtr<SCanvas> MovingUnits;

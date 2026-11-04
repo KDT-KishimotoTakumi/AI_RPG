@@ -14,6 +14,9 @@
 #include "Sound/SoundBase.h"
 #include "UObject/UObjectIterator.h"
 #include "Widgets/SWindow.h"
+#include "ImageUtils.h"
+#include "Misc/FileHelper.h"
+#include "HAL/FileManager.h"
 #include "GenericPlatform/GenericApplication.h"
 #include <algorithm>
 #if defined(GIRLS_SPIRE_COVERAGE)
@@ -102,7 +105,9 @@ void FGirlsSpireRuntimeSpec::Define()
                     if(!target->IsVisible()){(panel->Exists()?panel:outer)->ScrollToEndUntil(By::Id(id));DrainSlateLayout();}
                 }
             }
-            if(!TestTrue(*FString::Printf(TEXT("ゲーム操作 %hs"),id),ClickAndDrain(target)))return false;
+            const bool clicked=ClickAndDrain(target);
+            if(!clicked)Async(EAsyncExecution::TaskGraphMainThread,[this]{const auto window=GEngine->GameViewport->GetWindow();TArray<FColor> pixels;FIntVector extent;if(!window || !FSlateApplication::Get().TakeScreenshot(window.ToSharedRef(),pixels,extent))return;TArray64<uint8> png;FImageUtils::PNGCompressImageArray(extent.X,extent.Y,pixels,png);const auto directory=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*directory,true);const auto path=directory/FString::Printf(TEXT("RuntimeClickFailure-%s.png"),*FGuid::NewGuid().ToString(EGuidFormats::Digits));if(FFileHelper::SaveArrayToFile(png,*path))AddInfo(path);}).Wait();
+            if(!TestTrue(*FString::Printf(TEXT("ゲーム操作 %hs"),id),clicked))return false;
             // 実IOが失敗した場合も、結果を作り直さず製品の再試行操作を検証する。
             if(Driver->FindElement(By::Id("save.error"))->Exists()) {
                 AddWarning(FString::Printf(TEXT("%hs 後に保存エラーを表示。同じ内容の再試行を1回検証する。"),id));

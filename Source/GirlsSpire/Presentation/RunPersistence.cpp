@@ -1,4 +1,5 @@
 #include "RunScreen.h"
+#include "Widgets/Layout/SBox.h"
 #include "CombatScreen.h"
 #include "Widgets/SBoxPanel.h"
 
@@ -110,11 +111,13 @@ void SRunScreen::ShowCombat(TSharedPtr<GirlsSpire::Battle> combat,const FString&
             RetainedProfile=CurrentRun->ProfileState();CurrentRun.reset();ShowTitle();return true;
         };
     }
-    Body->ClearChildren();Body->AddSlot().AutoHeight()
-    [ SNew(SCombatScreen).Combat(combat).GenerationSummary(summary).BondProfile(CurrentRun->ProfileState()).SavedControl(control).DisplayPreferences(DisplayPreferences).Audio(Audio)
+    Body->ClearChildren();
+    const auto screen=SNew(SCombatScreen).Combat(combat).FullField(FullField).GenerationSummary(summary).BondProfile(CurrentRun->ProfileState()).SavedControl(control).DisplayPreferences(DisplayPreferences).Audio(Audio)
         .OnCheckpoint(MoveTemp(checkpoint)).OnSuspend(MoveTemp(suspend))
         .OnFinished(FSimpleDelegate::CreateLambda([this,combat,revision] {
             if(!CurrentRun || !CurrentRun->CompleteBattle(revision,combat->Snapshot())) return;
             SelectedReward=-1;RefreshRun();
-        })) ];
+        }));
+    if(FullField){FullFieldActive=true;FieldHost->SetContent(screen);}
+    else Body->AddSlot().AutoHeight()[screen];
 }

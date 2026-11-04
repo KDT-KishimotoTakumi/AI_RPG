@@ -1,4 +1,5 @@
 #include "CombatScreen.h"
+#include "Misc/App.h"
 #include "SpireStyle.h"
 #include "BoardSprites.h"
 #include "UnitMotion.h"
@@ -26,6 +27,7 @@
 void SCombatScreen::Construct(const FArguments& Args)
 {
     Audio=Args._Audio;DisplayPreferences=Args._DisplayPreferences;Combat=Args._Combat; OnFinished=Args._OnFinished;
+    FullField=Args._FullField || FApp::IsGame();
     OnCheckpoint=Args._OnCheckpoint;OnSuspend=Args._OnSuspend;
     GenerationSummary=Args._GenerationSummary;
     if(Args._BondProfile)KnownCombos=Args._BondProfile->DiscoveredCombos;
@@ -46,7 +48,8 @@ void SCombatScreen::Construct(const FArguments& Args)
     MedicineVisible=Combat->Snapshot().Medicines>0;
     PortraitResources=Args._Portraits?Args._Portraits:MakeShared<FCharacterPortraits>();
     Sprites=Args._Sprites?Args._Sprites:MakeShared<FBoardSprites>();
-    ChildSlot [ SNew(SHorizontalBox)
+    if(FullField)BuildField();
+    else ChildSlot [ SNew(SHorizontalBox)
         + SHorizontalBox::Slot().AutoWidth().Padding(0,0,20,0)
             [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("battle.board.scroll"))
               + SScrollBox::Slot()
@@ -93,6 +96,7 @@ void SCombatScreen::Refresh(bool persist)
     if(persist && !PersistCheckpoint()) {ShowSaveFailure();return;}
     using namespace GirlsSpire;
     const auto& state=Combat->Snapshot();
+    if(FullField && FieldActor!=state.ActiveId){FieldActor=state.ActiveId;FieldFocus=state.ActiveId;FieldAim=EFieldAction::None;FieldMenuOpen=true;}
     RefreshPortraits();
     RefreshCombos();
     Grid->ClearChildren(); Panel->ClearChildren();
@@ -277,6 +281,7 @@ void SCombatScreen::SelectCell(GirlsSpire::Position cell,std::uint64_t revision)
 {
     const auto& state=Combat->Snapshot();
     if(revision!=state.Revision) return;
+    if(FullField && SelectFieldCell(cell))return;
     if(SelectingUltimate) { Selected=cell; Refresh(); return; }
     if(SelectingMedicine) {Selected=cell;Refresh();return;}
     if(state.ActiveId>0 && state.ActiveId<9) { SelectIntentCell(cell); Refresh(); return; }

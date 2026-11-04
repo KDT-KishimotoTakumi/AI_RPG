@@ -1,4 +1,6 @@
 #include "RunScreen.h"
+#include "Misc/App.h"
+#include "Widgets/SNullWidget.h"
 #include "SpireStyle.h"
 #include "Brushes/SlateDynamicImageBrush.h"
 #include "Misc/Paths.h"
@@ -43,6 +45,7 @@ FString NodeLabel(const GirlsSpire::RouteNode& Node)
 void SRunScreen::Construct(const FArguments& Args)
 {
     ExitGame=Args._OnExitGame;
+    FullField=Args._FullField || FApp::IsGame();
     SaveService=Args._SaveService;PreferencesService=Args._PreferencesService;
     if(PreferencesService){const auto loaded=PreferencesService->Load();PreferencesLoadIssue=loaded.Issue;if(loaded.Issue==GirlsSpire::PreferencesIssue::None)DisplayPreferences=loaded.Value;}
     Audio=Args._Audio;if(Audio){Audio->Apply(DisplayPreferences);Audio->Start();}
@@ -57,6 +60,8 @@ void SRunScreen::Construct(const FArguments& Args)
         +SOverlay::Slot()
         [
         SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+        .Visibility_Lambda([this]{return FullFieldActive?EVisibility::Collapsed:EVisibility::Visible;})
+        .AddMetaData(FDriverMetaData::Id("run.frame"))
         .BorderBackgroundColor(FLinearColor(0.012f,0.023f,0.045f,0.25f)).Padding(36)
         [ SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
@@ -73,6 +78,7 @@ void SRunScreen::Construct(const FArguments& Args)
                 .Visibility_Lambda([this]{return Audio && !Audio->Ready()?EVisibility::Visible:EVisibility::Collapsed;})
                 .AddMetaData(FDriverMetaData::Id("audio.unavailable")) ]
         ] ]
+        +SOverlay::Slot()[SAssignNew(FieldHost,SBox).Visibility_Lambda([this]{return FullFieldActive?EVisibility::Visible:EVisibility::Collapsed;})]
     ];
     if(Args._InitialRun) {CurrentRun=Args._InitialRun;RefreshRun();}
     else ShowTitle();
@@ -102,6 +108,7 @@ void SRunScreen::AddAction(const FString& Text, const FName& Id, TFunction<void(
 
 void SRunScreen::ShowTitle()
 {
+    HideFieldCombat();
     if(CurrentRun) {
         RetainedProfile=CurrentRun->ProfileState();
         CurrentRun.reset();
@@ -172,6 +179,7 @@ void SRunScreen::StartRun()
 
 void SRunScreen::RefreshRun()
 {
+    HideFieldCombat();
     if(!SaveCurrent()) {ShowSaveError([this]{RefreshRun();});return;}
     using namespace GirlsSpire;
     const auto State = CurrentRun->Snapshot();
@@ -232,4 +240,10 @@ void SRunScreen::StartBattle(bool forceGenerationFailure)
         generation.UsedFallback?TEXT("固定戦場へ切替"):TEXT("自動生成"),
         generation.Layout.Width,generation.Layout.Height,generation.Attempts);
     ShowCombat(combat,description);
+}
+
+void SRunScreen::HideFieldCombat()
+{
+    FullFieldActive=false;
+    if(FieldHost.IsValid())FieldHost->SetContent(SNullWidget::NullWidget);
 }

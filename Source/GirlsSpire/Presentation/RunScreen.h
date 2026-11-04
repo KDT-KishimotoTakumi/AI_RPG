@@ -7,12 +7,14 @@
 
 class SVerticalBox;
 class SHorizontalBox;
+class SBox;
 class IGameAudio;
 struct FSlateDynamicImageBrush;
 class SRunScreen : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SRunScreen) : _DevelopmentTools(true) {}
+    SLATE_BEGIN_ARGS(SRunScreen) : _FullField(false),_DevelopmentTools(true) {}
+        SLATE_ARGUMENT(bool,FullField)
         SLATE_ARGUMENT(std::shared_ptr<GirlsSpire::Run>, InitialRun)
         SLATE_ARGUMENT(std::shared_ptr<GirlsSpire::SaveTransaction>, SaveService)
         SLATE_ARGUMENT(bool, DevelopmentTools)
@@ -22,6 +24,9 @@ public:
     SLATE_END_ARGS()
     void Construct(const FArguments& Args);
 private:
+    TSharedPtr<SBox> FieldHost;
+    bool FullField=false,FullFieldActive=false;
+    void HideFieldCombat();
     TSharedPtr<FSlateDynamicImageBrush> TitleBackdrop;
     FSimpleDelegate ExitGame;
     void AddExitAction();

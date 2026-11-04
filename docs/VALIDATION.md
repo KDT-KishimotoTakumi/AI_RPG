@@ -2,6 +2,15 @@
 
 更新: 2026-11-04。製品全体は未完成、出荷条件未達。
 
+## GS-069 全画面フィールド（2026-11-04）
+
+- TDD: 全画面レイヤー未実装の6件失敗を確認後、移動/攻撃・自己対象・仲間作戦・保存停止・周回との中断/勝利復帰を追加し11件成功。8/12マス×文字3段階で全幅/全高と戦闘状態/RNGの一致を確認。最大文字のゲージ切れは折返しで修正し、最終画像を目視した。
+- 最終全体: Saved/fullfield-final-coverage.log、Coverage/a4914ae706004be4a88ab9ceb3e9ce16/gate.json。Native全回帰、全UE354成功/警告0（Automation/de1bb2fc9f84421f854284bfafa44b50）、通常起動/音声付き別プロセス再開/専用音声2件成功。行4919/4948=99.41%、関数620/632=98.10%、分岐5018/5506=91.14%、Missing=[]。成功計測のprofraw6件だけを集計後に整理、JSON/profdata/実行物を保持。
+- 検出力: Attack判定を一時反転すると移動確定が欠落し、8マス×文字3段階の全3件が失敗（Automation/a8abddf817ce4acfa6fa91ace97eb00e）。Saved/DesignReview/FullField-*に原本/復元SHA256、fullfield-mutation-*.logに結果を保持。初回レビュー補助はコンソールに詳細がないため停止したが、JSONで全3件のbattle.move.confirm失敗を確認して記録先を修正。原本はバイト一致で復元。
+- 通常MSVC復帰: fullfield-msvc-build.log成功。UI11成功/警告0（0b117c39b3334116b0b97284a473d030）。fullfield-msvc-runtime.logの実1920×1080/モード1で音声・保存・中断・別プロセス再開成功（86302b90a3da4864921d8ad439bc4a2e / 03a64daf3d5140d59a70d18f886b7253）。fullfield-msvc-resume.logは別UEプロセス54地点・世代復旧・設定成功（46299b5c2b464ef1a8e595ba00225ad4 / 5252d14d36784a4db93730eb22452bf7）。初期状態のAPI準備と実マウス操作を区別し、全12日の製品E2E合格とはしない。
+- 表示証跡: Saved/Screenshots/FullField-*.png。最終計測の12マス/最大文字はFullField-12-2-1FB5F97149152430AD76CEA2BD4A13A1.png。初期の下部重なり、ゲージ切れの画像も保持。
+- 先行失敗を保持: fullfield-integration-build.logのC3538は異なる座標型のauto同時宣言を分離して修正。fullfield-runtime-target.log（820c9ba169aa467e9347ffad93ade607）のtitle.settingsカーソル不一致は原因未特定、再試験は成功。RuntimeSpecへ失敗画像診断のみ追加し、判定を緩和していない。先行fullfield-coverage.log/31b9658e99f841d298d1827c8f118e20は中断した未完了計測であり、最終合格に使用しない。
+
 ## 実行済み
 
 - GS-027完了（2026-10-30）: 騎馬亡者の実経路が直線3マス以上なら通常攻撃力＋6。スキル対象外。実経路・罠・危険予測・出現・表示・Run v5への保存移行を検証。Cavalry6,049、SavePayload623,547チェック成功。全127件＋通常起動1件成功。全C++の行98.67%（3400/3446）・関数97.85%（409/418）・分岐90.54%（3109/3434）、未計測なし。別UEプロセス20地点（準備中18/消費済み19を含む）成功。通常MSVCビルド・専用UI5件・通常起動1件成功。証跡: Saved/cavalry-coverage.log、Coverage/5f818d878a5e4a82b20c713cfb0c161e/、cavalry-process.log、cavalry-msvc-build.log、cavalry-msvc-ui.log、cavalry-msvc-runtime.log。T014h/T015h/T017h完了。正式敵全体と製品完成の検証は未完了。

@@ -34,6 +34,7 @@
 #include "../../Tests/E2E/FormalEncounterSpec.cpp"
 #include "../../Tests/E2E/PersonalitySpec.cpp"
 #include "../../Tests/E2E/EnemyThinkingSpec.cpp"
+#include "../../Tests/E2E/FullFieldSpec.cpp"
 #include "../../Tests/E2E/PreferencesSpec.cpp"
 #include "../../Tests/E2E/AudioUISpec.cpp"
 #include "../../Tests/E2E/RescueDialogueSpec.cpp"
