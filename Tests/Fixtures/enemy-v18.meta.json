@@ -1,0 +1,22 @@
+{
+  "Bytes": 3423,
+  "Fnv1a64": "7282346423887295310",
+  "Actions": [
+    {
+      "Id": 2,
+      "Kind": 1,
+      "X": 7,
+      "Y": 2,
+      "Ability": 0
+    },
+    {
+      "Id": 100,
+      "Kind": 2,
+      "X": 8,
+      "Y": 2,
+      "Ability": 0
+    }
+  ],
+  "Schema": 18,
+  "Sha256": "465FE4FECCCFF16BC18D4459AB99D959D814413D27F555F07CD7618EF72E93CA"
+}

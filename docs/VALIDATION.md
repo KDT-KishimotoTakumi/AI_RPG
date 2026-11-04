@@ -18,6 +18,15 @@
 - 検出力: 詳細の表示条件を一時反転し、8マス×文字3段階の全3件が常時説明の省略違反を検出（concise-mutation-*.log、Saved/DesignReview/Concise-*/mutation.txt）。原本はバイト一致で復元。通常MSVCビルド、UI11件、通常-gameの音声/独立設定・別プロセス再開は成功（concise-title-runtime-offscreen.log、226d13456b2f435eaf473e030e58ffec / 2719bf7bb2ab4e7dbeaf5628c4daeec7）。先行concise-msvc-runtime.logはtitle.settingsのカーソル不一致で失敗（Automation/1fc79da4cbdd4520ad597d425b10b289）、RuntimeClickFailure-01FD5BD04DC0E9180AD8C29907C5A4BA.pngを保全。再試験concise-title-msvc-runtime.logはtitle.start認識失敗（bd257ffe6d184a6ea5938fcc5ed36bc0、RunScreen=1/Active=1）を記録。原因は未確定で修正済みとはしない。タイトルの静的な説明文2箇所のみを計測後に短縮し、通常ビルドと実画面で再確認した（制御構造/行数は不変）。
 - 表示はSaved/Screenshots/FullField-*.pngの標準/最大文字を目視確認。座標を省いても地形/罠/陣営・HP・予告・警告を維持する。操作・保存規則は不変。GS-069で成功した54地点の保存試験は変更が保存へ及ばないため再実行せず、今回の通常ゲーム再開を確認した。製品全体の完成判定ではない。
 
+## GS-071 移動後の正式技能を含む被害上限（2026-11-04）
+
+- 有効なRed: 正式敵忍の影縫い10が現在地で合法でも、接近後の霞斬り14を上限に含まなかった。CharacterSkills313件の1件が失敗（Saved/threat-move-red2.log）。最初のテストは変数名隠蔽C4456でビルド失敗、名前修正後に有効なRedを確認した。修正後は317件成功、致死移動除外/耐えられる候補残存まで追加した最終320件も全成功。
+- 全体: threat-move-coverage.log、Coverage/17d17c874d6e41aaa96caa2562f04d7b。Native全回帰と正式生成5419、全UE355警告0（Automation/f19f3b292ae84dd0b2acab03990ffc45）、通常-game/音声起動/別プロセス再開・専用音声2件成功。全C++行4926/4955=99.41%、関数623/635=98.11%、分岐5067/5556=91.20%、Missing=[]。
+- 境界: 近づけない移動力/CD中/移動中に罠で倒れる敵/旧強撃18、予測の状態・RNG不変、HP13と15による移動候補の除外/残存。FullFieldSpecの追加1件で、危険な接近先を指示しても確定候補に選ばないことを実UIで確認。初期戦場はAPI準備で、製品全12日E2Eではない。
+- 検出力: 隔離コピーのBattle.cppだけに旧maximum==0打切りを再導入。CharacterSkills320件の3件が上限/候補除外/被害表示の退行を検出（threat-move-mutation.log）。実ソースは変更せずSHA256不変を確認（Saved/DesignReview/ThreatMove-*/unchanged-sha256.txt）。
+- 通常MSVC: threat-move-msvc-build.log成功、UI12成功/警告0（b08ccbad6ced4d4e8c62288edb946636）、通常-gameの音声/設定/実戦/保存/中断・別プロセス再開成功（21c7a8db7ece488e85455774b774d727 / 66a1ded22dc04bdeafb3a63662deb0f4、threat-move-msvc-runtime.log）。保存形式は不変のため既存54地点の全再実行は行わず、今回の別プロセス再開とNative保存全回帰を確認した。実フルスクリーンの自動認識の不安定はGS-070の既知課題として残す。
+- 次のT015qは表を利用者承認済み。導入前のenemy-v18.bin（3423 bytes、FNV1a64=7282346423887295310、SHA256=465FE4FECCCFF16BC18D4459AB99D959D814413D27F555F07CD7618EF72E93CA）と当時の敵2/100の行動を新規固定記録した。現行v18のEncode/Decode一致、保存処理未変更、正しいBattleオブジェクト使用を確認。既存固定原本は不変。新しい技能AI/保存識別は未実装。
+
 ## 実行済み
 
 - GS-027完了（2026-10-30）: 騎馬亡者の実経路が直線3マス以上なら通常攻撃力＋6。スキル対象外。実経路・罠・危険予測・出現・表示・Run v5への保存移行を検証。Cavalry6,049、SavePayload623,547チェック成功。全127件＋通常起動1件成功。全C++の行98.67%（3400/3446）・関数97.85%（409/418）・分岐90.54%（3109/3434）、未計測なし。別UEプロセス20地点（準備中18/消費済み19を含む）成功。通常MSVCビルド・専用UI5件・通常起動1件成功。証跡: Saved/cavalry-coverage.log、Coverage/5f818d878a5e4a82b20c713cfb0c161e/、cavalry-process.log、cavalry-msvc-build.log、cavalry-msvc-ui.log、cavalry-msvc-runtime.log。T014h/T015h/T017h完了。正式敵全体と製品完成の検証は未完了。

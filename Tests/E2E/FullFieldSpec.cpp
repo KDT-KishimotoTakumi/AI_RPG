@@ -121,5 +121,18 @@ void FGirlsSpireFullFieldSpec::Define()
         if(!Click("save.retry") || !Click("battle.field.open") || !Click("battle.unit.select.0"))return;
         TestTrue(TEXT("保存後に元の盤面へ戻る"),!Driver->FindElement(By::Id("save.error"))->Exists() && combat->Checkpoint()==before);
     });
+    It(TEXT("敵忍の接近技能で倒れる作戦移動を選ばない"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+        using namespace GirlsSpire;BattleUnit ally;ally.Id=1;ally.At={1,1};ally.Speed=40;ally.Hp=13;
+        BattleUnit hero;hero.At={7,7};hero.Speed=10;
+        BattleUnit ninja;ninja.Id=3;ninja.Side=Faction::Enemy;ninja.Role=BattleRole::Ninja;ninja.At={4,1};ninja.Speed=30;ninja.Movement=4;ninja.Skills={true,true};
+        Battle original(8,8,std::vector<Tile>(64),{ally,hero,ninja},42);auto checkpoint=original.Checkpoint();checkpoint.State.AbilityRules=AbilityRuleSet::CompleteCharacters;checkpoint.State.StartingBonds[0]=100;
+        const auto restored=Battle::Restore(checkpoint);if(!TestTrue(TEXT("正式技能の戦場を復元"),restored.has_value()))return;
+        auto combat=MakeShared<Battle>(*restored);const auto before=combat->Checkpoint();CombatControlCheckpoint control;control.ProfileDriven=true;control.ChoiceRandomState=42;control.Trust[1]=100;
+        Async(EAsyncExecution::TaskGraphMainThread,[this,combat,control]{Window->SetContent(SNew(SCombatScreen).Combat(combat).SavedControl(control).FullField(true));}).Wait();DrainSlateLayout();
+        if(!Click("battle.field.intent") || !Click("battle.cell.2.1"))return;
+        const auto forecast=Driver->FindElement(By::Id("intent.forecast"))->GetText().ToString();
+        TestFalse(TEXT("射程3の弱い技だけで安全と判断しない"),forecast.Contains(TEXT("移動(2,1)")));
+        TestTrue(TEXT("指示と予告は戦闘状態と乱数を変更しない"),combat->Checkpoint()==before);
+    });
     AfterEach([this]{Driver.Reset();if(Window.IsValid()){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}IAutomationDriverModule::Get().Disable();});
 }

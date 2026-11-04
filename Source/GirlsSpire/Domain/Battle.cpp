@@ -84,12 +84,10 @@ int Battle::PotentialHostileDamage(int targetId) const
             return maximum;
         };
         int maximum=damage(projection);
-        if (maximum==0) {
-            const auto destinations = projection.Reachable(enemy.Id);
-            for (const auto at : destinations) {
-                auto candidate=projection;
-                if(candidate.Move(candidate.Snapshot().Revision,enemy.Id,at))maximum=std::max(maximum,damage(candidate));
-            }
+        // 現在地で弱い遠隔技が使えても、接近後の強い技を上限から除外しない。
+        for (const auto at : projection.Reachable(enemy.Id)) {
+            auto candidate=projection;
+            if(candidate.Move(candidate.Snapshot().Revision,enemy.Id,at))maximum=std::max(maximum,damage(candidate));
         }
         total+=maximum;
     }

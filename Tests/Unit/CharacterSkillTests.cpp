@@ -72,5 +72,44 @@ int TestCharacterSkills()
         check(battle && battle->UseSkill(battle->Snapshot().Revision,0,Skill::FirstAid,checkpoint.State.Units[0].At) && !battle->Snapshot().Combos.Pending.empty() && battle->Snapshot().Combos.Pending.back().Attributes==(Continuation|Twist),"旧v13の回復は旧構文の承/転を維持して実行");
     }
     check(RunPayloadSchema>=14,"旧エンジンが新識別を破損扱いしないよう周回版を更新");
+    {
+        BattleUnit defender;defender.Id=0;defender.At={1,1};defender.Hp=13;defender.MaxHp=30;
+        BattleUnit ninja;ninja.Id=3;ninja.Side=Faction::Enemy;ninja.Role=BattleRole::Ninja;ninja.At={4,1};ninja.Speed=30;ninja.Movement=4;ninja.Skills={true,true};
+        Battle original(8,8,std::vector<Tile>(64),{defender,ninja},42);auto checkpoint=original.Checkpoint();checkpoint.State.AbilityRules=AbilityRuleSet::CompleteCharacters;
+        auto battle=Battle::Restore(checkpoint);check(battle.has_value(),"正式技能の敵忍を含む予測戦場を復元");
+        if(battle){
+            const auto before=battle->Checkpoint();const auto distant=battle->PreviewSkill(3,Skill::FirstAid,defender.At);
+            check(distant.Legal && distant.Attack.Hits.front().Damage==10,"射程3の影縫いは現在地で命中予測可能");
+            auto moved=*battle;check(moved.Move(moved.Snapshot().Revision,3,{2,1}),"敵忍は合法な経路で接近できる");
+            const auto close=moved.PreviewSkill(3,Skill::PowerStrike,defender.At);
+            check(close.Legal && close.Attack.Hits.front().Damage==14,"接近後の霞斬りはより強い被害になる");
+            check(battle->PotentialHostileDamage(0)==14,"現在地で攻撃できても移動後の強い技能を被害上限に含む");
+            check(battle->Checkpoint()==before,"移動込み被害予測は戦闘状態と乱数を変更しない");
+            auto limited=before;limited.State.Units[1].Movement=1;
+            const auto shortMove=Battle::Restore(limited);
+            check(shortMove && shortMove->PotentialHostileDamage(0)==10,"強い技の射程へ届かない移動力では被害を増やさない");
+            auto waiting=before;waiting.State.Units[1].Cooldowns[0]=1;
+            const auto cooldown=Battle::Restore(waiting);
+            check(cooldown && cooldown->PotentialHostileDamage(0)==10,"再使用待ちの強い技は移動後も候補にしない");
+            auto trapped=before;trapped.State.Units[1].Hp=5;
+            for(const auto at:std::vector<Position>{{3,1},{5,1},{4,0},{4,2}})trapped.State.Tiles[at.Y*8+at.X].Trap=true;
+            const auto lethalPath=Battle::Restore(trapped);
+            check(lethalPath && lethalPath->PotentialHostileDamage(0)==10,"移動中に罠で倒れる敵の攻撃を加算しない");
+            auto legacy=before;legacy.State.AbilityRules=AbilityRuleSet::Legacy;
+            const auto oldRules=Battle::Restore(legacy);
+            check(oldRules && oldRules->PotentialHostileDamage(0)==18,"旧ルールの強撃と移動の予測値を維持");
+            auto allyTurn=before;allyTurn.State.Units[0].Speed=40;allyTurn.State.Order={0,3};allyTurn.State.ActiveId=0;
+            const auto forecastSource=Battle::Restore(allyTurn);
+            check(forecastSource.has_value(),"味方手番の安全検査用に復元");
+            if(forecastSource){
+                const std::vector<BasicAction> moveOnly{{BasicActionKind::Move,{2,1}}};
+                const auto unsafe=IntentForecast::Build(*forecastSource,moveOnly,100);
+                check(unsafe.Fallback()==IntentFallback::NoSafeCandidate,"移動後の強い技能で倒される候補を除外");
+                allyTurn.State.Units[0].Hp=15;const auto healthy=Battle::Restore(allyTurn);
+                const auto safe=healthy?IntentForecast::Build(*healthy,moveOnly,100):IntentForecast{};
+                check(healthy && safe.Fallback()==IntentFallback::None && safe.Candidates().front().PotentialDamage==14,"耐えられる同じ移動は正しい被害表示で残す");
+            }
+        }
+    }
     std::cout<<"CharacterSkills: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }
