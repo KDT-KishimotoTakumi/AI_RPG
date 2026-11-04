@@ -3,7 +3,8 @@
 namespace GirlsSpire {
 bool ValidProfile(const Profile& profile)
 {
-    return std::all_of(profile.Bonds.begin(),profile.Bonds.end(),[](int rank){return rank>=0 && rank<=100;}) &&
+    return profile.HighestDifficulty>=0 && profile.HighestDifficulty<=2 &&
+        std::all_of(profile.Bonds.begin(),profile.Bonds.end(),[](int rank){return rank>=0 && rank<=100;}) &&
         std::all_of(profile.DiscoveredCombos.begin(),profile.DiscoveredCombos.end(),[](int id){return id>0;}) &&
         std::adjacent_find(profile.DiscoveredCombos.begin(),profile.DiscoveredCombos.end(),[](int a,int b){return a>=b;})==profile.DiscoveredCombos.end();
 }
@@ -13,6 +14,10 @@ bool DiscoverCombo(Profile& profile,int recipeId)
     const auto at=std::lower_bound(profile.DiscoveredCombos.begin(),profile.DiscoveredCombos.end(),recipeId);
     if(at==profile.DiscoveredCombos.end() || *at!=recipeId)profile.DiscoveredCombos.insert(at,recipeId);
     return true;
+}
+bool CanStartDifficulty(const Profile& profile,int difficulty)
+{
+    return ValidProfile(profile) && difficulty>=0 && difficulty<=profile.HighestDifficulty;
 }
 bool ApplyConversation(Profile& profile,int actorId,ConversationChoice choice)
 {

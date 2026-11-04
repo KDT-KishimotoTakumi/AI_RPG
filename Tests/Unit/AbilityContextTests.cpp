@@ -6,7 +6,7 @@ int TestAbilityContext()
 {
     int checks=0,failed=0;
     const auto check=[&](bool ok,const char* why){++checks;if(!ok){++failed;std::cerr<<"FAIL AbilityContext: "<<why<<'\n';}};
-    check(RunPayloadSchema>=12 && ProfilePayloadSchema==4,"周回v12以降の開始時絆を維持し恒久v4は不変");
+    check(RunPayloadSchema>=12 && ProfilePayloadSchema>=4,"周回v12以降の開始時絆を維持し恒久v4以降の開始時絆を維持");
     auto saved=TestData::RosterCase(0);
     auto& context=saved.Combat->Battle.State;
     check(context.AbilityRules==AbilityRuleSet::Legacy && context.StartingBonds==std::array<int,8>{},"既存生成は旧ルールを維持");

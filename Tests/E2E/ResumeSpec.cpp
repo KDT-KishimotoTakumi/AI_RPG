@@ -116,8 +116,36 @@ void FGirlsSpireResumeSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
+    It(TEXT("新規の支度は初級だけ選べて解放条件を表示する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(90),[this]{
+        if(!Click("title.start"))return;
+        TestTrue(TEXT("初級の選択がある"),Driver->FindElement(By::Id("difficulty.0"))->Exists());
+        for(int d=1;d<3;++d){
+            TestFalse(TEXT("未解放は選択不可"),Driver->FindElement(By::Id(*FString::Printf(TEXT("difficulty.%d"),d)))->Exists());
+            TestTrue(TEXT("解放条件を文字表示"),Driver->FindElement(By::Id(*FString::Printf(TEXT("difficulty.locked.%d"),d)))->Exists());
+        }
+        if(!Click("role.confirm"))return;
+        TestTrue(TEXT("初級で出発"),Service->Load().Run && Service->Load().Run->Run.State.Level==GirlsSpire::Difficulty::Beginner);
+    });
+    for(int level=0;level<2;++level)It(*FString::Printf(TEXT("難易度%d勝利の解放は後日談前に保存し固定再試行する"),level),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this,level]{
+        using namespace GirlsSpire;
+        auto run=std::make_shared<Run>(42,static_cast<Difficulty>(level),HeroRole::Sword);
+        for(int step=0;step<24 && run->Snapshot().Phase==RunPhase::Route;++step){run->ChooseNode(run->Snapshot().Revision,0);run->CompleteEvent(run->Snapshot().Revision);}
+        Files->Fail=true;
+        Async(EAsyncExecution::TaskGraphMainThread,[this,run]{Window->SetContent(SNew(SRunScreen).InitialRun(run).SaveService(Service));}).Wait();DrainSlateLayout();
+        TestTrue(TEXT("勝利保存失敗は停止"),Driver->FindElement(By::Id("save.error"))->Exists());
+        TestTrue(TEXT("取引を固定"),Service->HasPending());
+        TestFalse(TEXT("後日談へ進めない"),Driver->FindElement(By::Id("result.continue"))->Exists());
+        Files->Fail=false;if(!Click("save.retry"))return;
+        auto saved=Service->Load();
+        TestTrue(TEXT("後日談を選ぶ前に勝利と解放を同時保存"),saved.Run && saved.Run->Run.State.Phase==RunPhase::Won && saved.Permanent.HighestDifficulty==level+1);
+        Reopen();if(!Click("title.resume"))return;
+        TestTrue(TEXT("勝利再開で解放を維持"),Service->Load().Permanent.HighestDifficulty==level+1);
+    });
     It(TEXT("選択確定を自動保存し中断・画面再生成・一度だけ再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(150),[this] {
         using namespace GirlsSpire;
+        Profile unlocked;unlocked.HighestDifficulty=2;
+        if(!TestTrue(TEXT("解放済みプロフィールを準備"),Service->Prepare({},unlocked)==SlotIssue::None && Service->Retry()==SlotIssue::None))return;
+        Reopen();
         if(!Click("title.start") || !Click("difficulty.1") || !Click("role.2") || !Click("role.confirm")) return;
         const auto started=Service->Load();
         if(!TestTrue(TEXT("出発直後に保存済み"),started.Run.has_value())) return;
@@ -300,7 +328,7 @@ void FGirlsSpireResumeSpec::Define()
     });
     It(TEXT("旧形式の絆を保ち専用交流の保存失敗を再試行して再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this] {
         using namespace GirlsSpire;
-        Profile profile;profile.Bonds.fill(80);std::shared_ptr<Run> run;
+        Profile profile;profile.HighestDifficulty=2;profile.Bonds.fill(80);std::shared_ptr<Run> run;
         for(int seed=0;seed<100 && !run;++seed) {
             auto candidate=std::make_shared<Run>(seed,Difficulty::Beginner,HeroRole::Sword,profile);
             for(int step=0;step<24 && candidate->Snapshot().Phase==RunPhase::Route;++step) {

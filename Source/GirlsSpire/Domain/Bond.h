@@ -10,9 +10,12 @@ struct Profile {
     // 0は単独、1～8は人物IDに対応する後日談。
     std::array<bool,9> Epilogues{};
     std::vector<int> DiscoveredCombos;
+    // 0=初級、1=中級、2=上級。解放は連続し、周回終了でも失わない。
+    int HighestDifficulty=0;
     bool operator==(const Profile&) const = default;
 };
 bool ValidProfile(const Profile& profile);
+bool CanStartDifficulty(const Profile& profile,int difficulty);
 bool ApplyConversation(Profile& profile,int actorId,ConversationChoice choice);
 bool DiscoverCombo(Profile& profile,int recipeId);
 }

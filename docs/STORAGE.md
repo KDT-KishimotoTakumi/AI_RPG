@@ -159,3 +159,5 @@ GS-071（2026-11-04）: Intermediate/DDC 2647797925 bytesと成功集計済みpr
 - 合格済みCoverage/4715f16542a04107a537361dcf8e0c65の生計測6件4,052,392,152 bytes（約3.77GiB）を整理。JSON/profdata/全試験結果は保持。
 - Intermediate/DerivedDataCacheを整理。保全照合中の意図したCONTEXT.md更新を検出したため初回監査は停止。削除前キャッシュ量の集計は未出力であり、その容量は計上しない。
 - StorageAudit-7714decc5c5c417f8b6bf204fa699800/protected-before.jsonから再照合し、14,712件中、意図したCONTEXT.md以外の14,711件が不変。ゲーム・素材・セーブ・検証結果を保持。verified-after.json参照。全体純減量とは区別する。
+
+GS-073容量整理: 合格Coverage/208403e4c4ab4b05a06bcc09a1d17e03の生計測6件4,055,162,456 bytesとIntermediate/DDC 2,648,967,020 bytesを整理。処理量合計6,704,129,476 bytes（約6.24GiB、再生成を含むのでプロジェクト全体の純減とは区別）。JSON/profdata/全結果/通常Binariesを保持。StorageAudit-b4c62f00f76345409add9c6d10837987/result.jsonで保全15,149件のSHA256と秘密設定メタデータ不変、失敗証跡保持を確認。

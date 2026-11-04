@@ -45,6 +45,12 @@ struct ProcessResumeFixture {
 };
 std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
+    if(point==56 || point==57){
+        using namespace GirlsSpire;Run run(42,static_cast<Difficulty>(point-56),HeroRole::Sword);
+        for(int step=0;step<24 && run.Snapshot().Phase==RunPhase::Route;++step){run.ChooseNode(run.Snapshot().Revision,0);run.CompleteEvent(run.Snapshot().Revision);}
+        if(run.Snapshot().Phase!=RunPhase::Won || run.ProfileState().HighestDifficulty!=point-55)return std::nullopt;
+        return ProcessResumeFixture{{run.Checkpoint(),{}},run.ProfileState()};
+    }
     if(point==55){
         using namespace GirlsSpire;
         const auto path=std::filesystem::path(u8"" __FILE__).parent_path().parent_path()/"Fixtures"/"enemy-v18.bin";
@@ -297,10 +303,10 @@ void FGirlsSpireResumeProcessSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(stage==TEXT("Save")?TEXT("54地点を別プロセス用に保存する"):TEXT("別プロセスで54地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
+    It(stage==TEXT("Save")?TEXT("58地点を別プロセス用に保存する"):TEXT("別プロセスで58地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<56;++point) {
+        for(int point=0;point<58;++point) {
             const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));

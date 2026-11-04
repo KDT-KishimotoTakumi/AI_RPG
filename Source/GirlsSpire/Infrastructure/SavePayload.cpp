@@ -129,7 +129,8 @@ template<class T> bool Fields(Wire& a,T& v)
     else if constexpr(std::is_same_v<T,RunSaveState>) return a(v.Run,v.Combat,v.ResumeAvailable);
     else if constexpr(std::is_same_v<T,Profile>) {
         if(!a(v.Bonds,v.SpecialConversations,v.Epilogues))return false;
-        return a.Version<4 || a(v.DiscoveredCombos);
+        if(a.Version>=4 && !a(v.DiscoveredCombos))return false;
+        return a.Version<5 || a(v.HighestDifficulty);
     }
 }
 
@@ -168,6 +169,8 @@ template<class T> std::optional<T> Decode(std::string_view input,std::uint32_t e
     if(!archive(kind,version) || kind!=expected) return std::nullopt;
     archive.Version=version;
     if constexpr(std::is_same_v<T,Profile>) {
+        // 旧版で選べていた難易度を移行後も維持する。
+        if(version>=1 && version<=4)value.HighestDifficulty=2;
         // v1には絆だけがある。未実装だった完了記録を初期値で補い、絆を維持する。
         if(version==1) {
             if(!archive(value.Bonds) || !archive.Complete())return std::nullopt;
@@ -179,6 +182,10 @@ template<class T> std::optional<T> Decode(std::string_view input,std::uint32_t e
         }
         if(version==3) {
             if(!archive(value.Bonds,value.SpecialConversations,value.Epilogues) || !archive.Complete())return std::nullopt;
+            return value;
+        }
+        if(version==4) {
+            if(!archive(value) || !archive.Complete())return std::nullopt;
             return value;
         }
     }
@@ -197,7 +204,7 @@ SaveError InspectPayload(std::string_view bytes,SaveKind expected)
     }
     if(kind!=static_cast<std::uint32_t>(expected)) return SaveError::WrongKind;
     if(version!=(expected==SaveKind::Run?RunPayloadSchema:ProfilePayloadSchema) &&
-        !(expected==SaveKind::Profile && (version==1 || version==2 || version==3)) &&
+        !(expected==SaveKind::Profile && (version==1 || version==2 || version==3 || version==4)) &&
         !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16 || version==17 || version==18))) return SaveError::UnsupportedVersion;
     return SaveError::None;
 }

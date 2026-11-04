@@ -38,7 +38,7 @@ int TestEpilogue()
     Profile all;all.Bonds.fill(100);all.SpecialConversations.fill(true);all.Epilogues.fill(true);
     const auto bytes=EncodeProfilePayload(all);
     check(bytes && DecodeProfilePayload(*bytes)==all,"全後日談の保存往復");
-    if(bytes)for(std::size_t offset=48;offset<bytes->size();++offset) {
+    if(bytes)for(std::size_t offset=48;offset<57;++offset) {
         auto broken=*bytes;broken[offset]=2;check(!DecodeProfilePayload(broken),"不正な後日談boolを拒否");
     }
     for(int mask=0;mask<512;++mask) {
@@ -48,7 +48,7 @@ int TestEpilogue()
     std::string v2;const auto append=[&](std::uint32_t value){for(int i=0;i<4;++i)v2.push_back(static_cast<char>((value>>(8*i))&255));};
     append(2);append(2);for(int i=0;i<8;++i)append(80);
     for(int i=0;i<8;++i)v2.push_back(i%2?1:0);
-    Profile expected;expected.Bonds.fill(80);for(int i=0;i<8;++i)expected.SpecialConversations[i]=i%2!=0;
+    Profile expected;expected.HighestDifficulty=2;expected.Bonds.fill(80);for(int i=0;i<8;++i)expected.SpecialConversations[i]=i%2!=0;
     check(InspectPayload(v2,SaveKind::Profile)==SaveError::None && DecodeProfilePayload(v2)==expected,"v2の絆/専用交流を保持し後日談を未読で移行");
     std::cout<<"Epilogue: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }

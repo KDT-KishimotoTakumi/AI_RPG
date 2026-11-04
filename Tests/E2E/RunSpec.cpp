@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include "Presentation/RunScreen.h"
 #include "SlateTestSync.h"
 #include "AutomationDriverCommon.h"
 #include "Framework/Application/SlateApplication.h"
@@ -34,7 +35,7 @@ void FGirlsSpireRunUiSpec::Define()
     It(TEXT("マウスで12日を進め、結果からタイトルへ戻る"), EAsyncExecution::ThreadPool,
         FTimespan::FromSeconds(180), [this] {
         if (!TestTrue(TEXT("開始ボタンをクリック"), ClickAndDrain(Driver->FindElement(By::Id("title.start"))))) return;
-        TestTrue(TEXT("上級を選択"), ClickAndDrain(Driver->FindElement(By::Id("difficulty.2"))));
+        TestTrue(TEXT("新規は初級を選択"), ClickAndDrain(Driver->FindElement(By::Id("difficulty.0"))));
         TestTrue(TEXT("軍配を選択"), ClickAndDrain(Driver->FindElement(By::Id("role.2"))));
         TestTrue(TEXT("周回を開始"), ClickAndDrain(Driver->FindElement(By::Id("role.confirm"))));
         int MidBosses = 0, FinalBosses = 0;
@@ -97,6 +98,11 @@ void FGirlsSpireRunUiSpec::Define()
         TestTrue(TEXT("タイトルに復帰"), ClickAndDrain(Driver->FindElement(By::Id("result.continue"))));
     });
     It(TEXT("全難易度と四武器を選び経路画面を表示する"), EAsyncExecution::ThreadPool, [this] {
+        GirlsSpire::Profile unlocked;unlocked.HighestDifficulty=2;
+        auto prior=std::make_shared<GirlsSpire::Run>(42,GirlsSpire::Difficulty::Beginner,GirlsSpire::HeroRole::Sword,unlocked);
+        prior->ChooseNode(prior->Snapshot().Revision,0);prior->CompleteEvent(prior->Snapshot().Revision,true);
+        Async(EAsyncExecution::TaskGraphMainThread,[this,prior]{Window->SetContent(SNew(SRunScreen).InitialRun(prior));}).Wait();DrainSlateLayout();
+        if(!TestTrue(TEXT("解放済みデータでタイトルへ"),ClickAndDrain(Driver->FindElement(By::Id("result.continue")))))return;
         if (!TestTrue(TEXT("開始"), ClickAndDrain(Driver->FindElement(By::Id("title.start"))))) return;
         for (int Index = 0; Index < 3; ++Index)
             TestTrue(TEXT("難易度切替"), ClickAndDrain(Driver->FindElement(By::Id(*FString::Printf(TEXT("difficulty.%d"), Index)))));

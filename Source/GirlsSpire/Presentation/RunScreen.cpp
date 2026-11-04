@@ -145,6 +145,7 @@ void SRunScreen::AddExitAction()
 
 void SRunScreen::ShowSetup()
 {
+    if(!GirlsSpire::CanStartDifficulty(RetainedProfile,static_cast<int>(Difficulty)))Difficulty=GirlsSpire::Difficulty::Beginner;
     SaveNotice.Empty();
     Body->ClearChildren();
     AddText(TEXT("出陣の支度"), "setup.heading", 28);
@@ -152,6 +153,10 @@ void SRunScreen::ShowSetup()
     TSharedPtr<SHorizontalBox> LevelRow;
     Body->AddSlot().AutoHeight() [ SAssignNew(LevelRow, SHorizontalBox) ];
     for (int Index = 0; Index < 3; ++Index) {
+        if(!GirlsSpire::CanStartDifficulty(RetainedProfile,Index)) {
+            AddText(FString(Levels[Index])+(Index==1?TEXT("：初級クリアで解放"):TEXT("：中級クリアで解放")),*FString::Printf(TEXT("difficulty.locked.%d"),Index));
+            continue;
+        }
         const FString Mark = static_cast<int>(Difficulty) == Index ? TEXT("● ") : TEXT("○ ");
         AddAction(Mark + Levels[Index], *FString::Printf(TEXT("difficulty.%d"), Index), [this, Index] {
             Difficulty = static_cast<GirlsSpire::Difficulty>(Index); ShowSetup();
@@ -172,6 +177,7 @@ void SRunScreen::ShowSetup()
 
 void SRunScreen::StartRun()
 {
+    if(!GirlsSpire::CanStartDifficulty(RetainedProfile,static_cast<int>(Difficulty))){ShowSetup();return;}
     const auto seed=DevelopmentTools?UINT64_C(42):static_cast<std::uint64_t>(FDateTime::UtcNow().GetTicks())^FPlatformTime::Cycles64();
     CurrentRun = std::make_shared<GirlsSpire::Run>(seed, Difficulty, Role,RetainedProfile);
     RefreshRun();

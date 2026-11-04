@@ -49,7 +49,7 @@ int TestSpecialConversation()
         check(bytes && DecodeProfilePayload(*bytes)==profile,"全完了パターンを保存往復");
     }
     std::string legacy;const auto append=[&](std::uint32_t value){for(int i=0;i<4;++i)legacy.push_back(static_cast<char>((value>>(8*i))&255));};
-    append(2);append(1);Profile expected;
+    append(2);append(1);Profile expected;expected.HighestDifficulty=2;
     for(int i=0;i<8;++i){expected.Bonds[i]=i*13;append(expected.Bonds[i]);}
     check(InspectPayload(legacy,SaveKind::Profile)==SaveError::None && DecodeProfilePayload(legacy)==expected,"v1の絆を維持し完了は未完として移行");
     check(!DecodeProfilePayload(legacy+"x"),"v1の余剰を受理しない");
