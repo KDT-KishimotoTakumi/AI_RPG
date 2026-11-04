@@ -11,5 +11,8 @@ public:
         GenerationResult* details = nullptr, bool forceGenerationFailure = false);
     static Battle Create(const RunSnapshot& run, std::uint64_t seed, const Profile& profile,
         GenerationResult* details = nullptr, bool forceGenerationFailure = false);
+private:
+    static Battle CreateConfigured(const RunSnapshot& run,std::uint64_t seed,const Profile* profile,
+        GenerationResult* details,bool forceGenerationFailure);
 };
 }

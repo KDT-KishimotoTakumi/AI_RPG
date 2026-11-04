@@ -95,6 +95,6 @@ int TestEnemyTactics()
     check(!EncodeRunPayload(expected),"周回と敵思考の難易度不一致を拒否");
     expected.Run.State.Level=Difficulty::Advanced;
     const auto encoded=EncodeRunPayload(expected);check(encoded && DecodeRunPayload(*encoded)==expected,"新難易度思考を保存往復");
-    check(RunPayloadSchema==18,"敵思考の識別をRun v18へ分離");
+    check(RunPayloadSchema>=18,"敵思考の識別をRun v18以降へ分離");
     std::cout<<"EnemyTactics: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }

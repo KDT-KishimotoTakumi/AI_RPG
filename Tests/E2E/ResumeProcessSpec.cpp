@@ -15,11 +15,14 @@
 #include "Application/Encounter.h"
 #include "AI/BasicTurn.h"
 #include "Domain/ComboCatalog.h"
+#include "Domain/CharacterCatalog.h"
 #include "../Fixtures/ComboCatalogCases.h"
 #include "../Fixtures/PersonalityCase.h"
 #include "../Fixtures/EnemyThinkingCase.h"
 #include <algorithm>
 #include <atomic>
+#include <fstream>
+#include <iterator>
 
 namespace {
 class ProcessResumeFiles : public GirlsSpire::DiskSlotFiles {
@@ -42,6 +45,25 @@ struct ProcessResumeFixture {
 };
 std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
+    if(point==55){
+        using namespace GirlsSpire;
+        const auto path=std::filesystem::path(u8"" __FILE__).parent_path().parent_path()/"Fixtures"/"enemy-v18.bin";
+        std::ifstream input(path,std::ios::binary);const std::string bytes{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto state=DecodeRunPayload(bytes);if(!state || !state->Combat)return std::nullopt;
+        Profile profile;profile.Bonds=state->Combat->Battle.State.StartingBonds;
+        return ProcessResumeFixture{*state,profile};
+    }
+    if(point==54){
+        using namespace GirlsSpire;Profile profile;profile.Bonds.fill(55);
+        Run run(42,Difficulty::Beginner,HeroRole::Sword,profile);auto progress=run.Checkpoint();progress.State.Day=5;progress.State.Phase=RunPhase::Event;progress.State.Active={NodeKind::Battle};progress.State.Choices.clear();
+        BattleUnit hero;hero.At={2,1};hero.Speed=50;hero.Hp=hero.MaxHp=100;
+        auto caster=CreateCharacter(2,{1,1});caster.Side=Faction::Enemy;caster.Speed=40;
+        BattleUnit ally;ally.Id=100;ally.Side=Faction::Enemy;ally.At={1,2};ally.Speed=10;ally.Hp=40;ally.MaxHp=100;ally.Attack=0;ally.Movement=0;
+        Battle arena(8,8,std::vector<Tile>(64),{hero,caster,ally},42);auto checkpoint=arena.Checkpoint();checkpoint.State.AbilityRules=AbilityRuleSet::CompleteCharacters;
+        checkpoint.State.StartingBonds=profile.Bonds;checkpoint.State.EnemyAI=EnemyThinking::Basic;checkpoint.State.EnemyCharacterSkills=true;
+        CombatControl control;control.ProfileDriven=true;control.ChoiceRandom=Random(42);for(int id=1;id<=8;++id)control.Trust[id]=55;
+        return ProcessResumeFixture{RunSaveState{progress,SavedCombat{checkpoint,control.Checkpoint()}},profile};
+    }
     if(point>=50){GirlsSpire::Profile profile;profile.Bonds.fill(75);return ProcessResumeFixture{GirlsSpire::TestData::EnemyThinkingCase(static_cast<GirlsSpire::EnemyThinking>(point==53?0:point-49)),profile};}
     if(point>=48){GirlsSpire::Profile profile;profile.Bonds.fill(75);return ProcessResumeFixture{GirlsSpire::TestData::PersonalityCase(point==49),profile};}
     using namespace GirlsSpire;
@@ -278,7 +300,7 @@ void FGirlsSpireResumeProcessSpec::Define()
     It(stage==TEXT("Save")?TEXT("54地点を別プロセス用に保存する"):TEXT("別プロセスで54地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<54;++point) {
+        for(int point=0;point<56;++point) {
             const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));
@@ -326,7 +348,7 @@ void FGirlsSpireResumeProcessSpec::Define()
                 if(!execute->IsVisible()){Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("intent.execute"));DrainSlateLayout();}
                 if(!TestTrue(TEXT("再開後の予告を画面から実行"),ClickAndDrain(execute)) || !TestTrue(TEXT("再開後も効果/乱数/識別/恒久データを保存"),service->Load().Run==expected && service->Load().Permanent==fixture->Permanent))return;
             }
-            if(point>=50){
+            if(point>=50 && point<54){
                 auto battle=*Battle::Restore(expected.Combat->Battle);battle.EndTurn(battle.Snapshot().Revision,0,Facing::South);
                 const auto next=ChooseBasicAction(battle);const bool preferNear=point==50 || point==52;
                 if(!TestTrue(TEXT("別プロセスでも敵思考の標的を維持"),next.Kind==BasicActionKind::Attack && next.Target==(preferNear?Position{3,1}:Position{1,4})))return;
@@ -334,6 +356,21 @@ void FGirlsSpireResumeProcessSpec::Define()
                 expected.Combat->Battle=battle.Checkpoint();const auto wait=Driver->FindElement(By::Id("battle.wait.south"));
                 if(!wait->IsVisible()){Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("battle.wait.south"));DrainSlateLayout();}
                 if(!TestTrue(TEXT("再開後に敵手番へ進める"),ClickAndDrain(wait)) || !TestTrue(TEXT("難易度思考の継続結果と全状態/RNGを保存"),service->Load().Run==expected && service->Load().Permanent==fixture->Permanent))return;
+            }
+            if(point==54){
+                auto battle=*Battle::Restore(expected.Combat->Battle);battle.EndTurn(battle.Snapshot().Revision,0,Facing::South);
+                const auto heal=ChooseBasicAction(battle);
+                if(!TestTrue(TEXT("別プロセスでも敵の正式回復技能を選ぶ"),heal.Kind==BasicActionKind::UseSkill && heal.Ability==Skill::PowerStrike && heal.Target==Position{1,2}))return;
+                for(int step=0;step<16 && battle.Snapshot().ActiveId!=0;++step)if(!ApplyBasicAction(battle,ChooseBasicAction(battle)))break;
+                expected.Combat->Battle=battle.Checkpoint();const auto wait=Driver->FindElement(By::Id("battle.wait.south"));
+                if(!wait->IsVisible()){Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("battle.wait.south"));DrainSlateLayout();}
+                if(!TestTrue(TEXT("再開後に敵技能を画面から進行"),ClickAndDrain(wait)) || !TestTrue(TEXT("敵技能の実結果と識別/RNGを保存"),service->Load().Run==expected && service->Load().Permanent==fixture->Permanent))return;
+            }
+            if(point==55){
+                auto checkpoint=expected.Combat->Battle;checkpoint.State.ActiveId=2;checkpoint.State.Moved=false;checkpoint.State.Acted=false;checkpoint.State.UsedSkill=-1;checkpoint.State.ChargeReady=false;
+                checkpoint.TurnIndex=static_cast<std::size_t>(std::find(checkpoint.State.Order.begin(),checkpoint.State.Order.end(),2)-checkpoint.State.Order.begin());
+                const auto battle=Battle::Restore(checkpoint);const auto action=ChooseBasicAction(*battle);
+                if(!TestTrue(TEXT("v18由来の戦闘を別プロセスでも旧敵技能AIで維持"),!checkpoint.State.EnemyCharacterSkills && action.Kind==BasicActionKind::Move && action.Target==Position{7,2}))return;
             }
             const auto marker=root/FString::Printf(TEXT("point-%02d.done"),point);
             if(!TestTrue(TEXT("成功記録"),FFileHelper::SaveStringToFile(TEXT("pass"),*marker))) return;

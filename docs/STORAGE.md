@@ -154,3 +154,8 @@ GS-040: 全体ゲート合格後、ec94552cbf35472c815c8103d904e9fcの生計測3
 GS-069（2026-11-04）: Intermediate/DDC 2,647,779,351 bytesと、合格集計済み生計測6件4,046,666,864 bytesを整理（処理量合計6,694,446,215 bytes、約6.23GiB）。再生成を含む処理量でありフォルダ全体の純減ではない。StorageAudit-7eb9506007f846c787a17c6abce8b51aで保全対象14126件のSHA256・秘密設定のサイズ/更新時刻不変、失敗証跡/素材/セーブ/集計を保持。先行中断計測の原本は整理対象外。
 GS-070（2026-11-04）: 合格集計済みprofraw6件 4047763040 bytes（約3.77GiB）のみを整理。Coverage/4ab0554f2aca43b3b9e69cc051778b91/raw-cleanup.jsonを保持。ゲーム起動中のためIntermediate/DDCは今回整理せず、素材・セーブ・全結果/失敗画像を保全。
 GS-071（2026-11-04）: Intermediate/DDC 2647797925 bytesと成功集計済みprofraw6件 4049157848 bytesを整理（処理量合計約6.24GiB、再生成を含むためフォルダ全体の純減ではない）。保全14280件のSHA256・秘密設定メタデータ不変、素材/セーブ/全検証結果を保持。監査StorageAudit-7e63a37253f24147b24b809ab03d02b5。
+
+## 2026-11-04 GS-072整理
+- 合格済みCoverage/4715f16542a04107a537361dcf8e0c65の生計測6件4,052,392,152 bytes（約3.77GiB）を整理。JSON/profdata/全試験結果は保持。
+- Intermediate/DerivedDataCacheを整理。保全照合中の意図したCONTEXT.md更新を検出したため初回監査は停止。削除前キャッシュ量の集計は未出力であり、その容量は計上しない。
+- StorageAudit-7714decc5c5c417f8b6bf204fa699800/protected-before.jsonから再照合し、14,712件中、意図したCONTEXT.md以外の14,711件が不変。ゲーム・素材・セーブ・検証結果を保持。verified-after.json参照。全体純減量とは区別する。

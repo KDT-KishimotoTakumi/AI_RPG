@@ -33,10 +33,16 @@ TerrainLayout MakeDraft(Random& random,const std::vector<BattleUnit>& units)
 }
 }
 
-FieldFailure Battlefield::Validate(const TerrainLayout& layout,const std::vector<BattleUnit>& units,BattleGoal goal)
+FieldFailure Battlefield::Validate(const TerrainLayout& layout,const std::vector<BattleUnit>& units,BattleGoal goal,bool enemyCharacterSkills)
 {
     try {
-        const Battle battle(layout.Width,layout.Height,layout.Tiles,units,0,goal);
+        Battle battle(layout.Width,layout.Height,layout.Tiles,units,0,goal);
+        if(enemyCharacterSkills){
+            auto checkpoint=battle.Checkpoint();checkpoint.State.AbilityRules=AbilityRuleSet::CompleteCharacters;
+            checkpoint.State.EnemyAI=EnemyThinking::Basic;checkpoint.State.EnemyCharacterSkills=true;
+            const auto formal=Battle::Restore(checkpoint);if(!formal)return FieldFailure::Invalid;
+            battle=*formal;
+        }
         if (battle.Snapshot().Outcome!=BattleOutcome::Ongoing) return FieldFailure::Invalid;
         const auto connected=battle.ConnectedTerrain(units.front().At,true);
         const auto walkable=std::count_if(layout.Tiles.begin(),layout.Tiles.end(),[](const Tile& tile) { return !tile.Wall && tile.ObstacleHp==0 && !tile.Trap; });
@@ -49,7 +55,7 @@ FieldFailure Battlefield::Validate(const TerrainLayout& layout,const std::vector
 }
 
 GenerationResult Battlefield::Generate(std::uint64_t seed,const std::vector<BattleUnit>& units,
-    BattleGoal goal,int maxAttempts,const DraftFactory& draft)
+    BattleGoal goal,int maxAttempts,const DraftFactory& draft,bool enemyCharacterSkills)
 {
     if (maxAttempts<0 || maxAttempts>8) throw std::invalid_argument("生成試行数は0～8で指定してください");
     // 座標・人数・能力値を乱数処理より先に共有ルールで検査する。
@@ -60,11 +66,11 @@ GenerationResult Battlefield::Generate(std::uint64_t seed,const std::vector<Batt
         Random child(random.Next());
         result.Layout=draft?draft(child):MakeDraft(child,units);
         result.Attempts=attempt+1; result.RandomState=random.State();
-        if (Validate(result.Layout,units,goal)==FieldFailure::None) return result;
+        if (Validate(result.Layout,units,goal,enemyCharacterSkills)==FieldFailure::None) return result;
     }
     result.Layout={12,12,std::vector<Tile>(144)};
     result.UsedFallback=true; result.RandomState=random.State();
-    if (Validate(result.Layout,units,goal)!=FieldFailure::None)
+    if (Validate(result.Layout,units,goal,enemyCharacterSkills)!=FieldFailure::None)
         throw std::invalid_argument("固定戦場でも安全な戦闘を構成できません");
     return result;
 }

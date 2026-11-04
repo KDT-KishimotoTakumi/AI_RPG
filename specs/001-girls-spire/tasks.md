@@ -91,7 +91,7 @@ GS-024（2026-10-30、絡繰鎧の2回答で生成条件と行動非消費を確
 - [ ] T013 [US2] Source/GirlsSpire/Domain/Battle.cpp に戦闘と役割別移動を実装（FR-015～024）
 - [x] T014 [US2] Tests/Unit/IntentTests.cpp に予告一致、候補なし、安全性を記述
 - [ ] T015 [US2] Source/GirlsSpire/AI/Intent.cpp と Enemy.cpp に仲間解釈・3難易度AIを実装（FR-031～036、050～054）
-- [ ] T015q 承認済みenemy-character-skills-proposal.mdの未救出者8人の敵技能AIを、新旧保存の判断分離と支援込み安全予測を検証して接続する
+- [x] T015q 承認済みenemy-character-skills-proposal.mdの未救出者8人の敵技能AIを、新旧保存の判断分離と支援込み安全予測を検証して接続する
 - [x] T016 [US2] Tests/Unit/GenerationTests.cpp に100シードと固定戦場退避のテストを記述
 - [ ] T017 [US2] Source/GirlsSpire/Generation/Battlefield.cpp に戦場生成と検証を実装
 - [x] T017i 移動後の正式技能を含む被害上限を検証し、仲間の致死移動除外・状態/RNG不変を実UIまで確認する

@@ -1,5 +1,7 @@
 #include "BasicTurn.h"
 #include "EnemyTactics.h"
+#include "EnemyCharacterSkills.h"
+#include "Domain/AbilityCatalog.h"
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
@@ -11,6 +13,7 @@ BasicAction ChooseBasicAction(const Battle& battle)
     const auto actor = std::find_if(state.Units.begin(),state.Units.end(),
         [&](const BattleUnit& unit) { return unit.Id == state.ActiveId; });
     BasicAction best;
+    if(const auto recovery=ChooseCharacterRecovery(battle))return *recovery;
     if(!state.Acted && actor->Side==Faction::Enemy && actor->Role==BattleRole::Fox) {
         const BattleUnit* recipient=nullptr;
         for(const auto& target:state.Units) {
@@ -24,8 +27,11 @@ BasicAction ChooseBasicAction(const Battle& battle)
     const auto attack=ChooseRankedAttack(battle);
     if(attack)return attack->Action;
     if (state.Acted) {
+        bool usedSupport=state.UsedSkill==static_cast<int>(Skill::FirstAid) || state.UsedSkill==static_cast<int>(Skill::Heal);
+        if(UsesCharacterEnemyAI(battle) && state.UsedSkill>=0 && state.UsedSkill<2)
+            usedSupport=FormalSkill(actor->Id,static_cast<Skill>(state.UsedSkill))->Target!=AbilityTarget::Enemy;
         if(actor->Side!=Faction::Enemy || actor->Role!=BattleRole::Ninja || state.Moved ||
-            state.UsedSkill==static_cast<int>(Skill::FirstAid) || state.UsedSkill==static_cast<int>(Skill::Heal))return best;
+            usedSupport)return best;
         const auto distance=[&](Position at) {
             int nearest=std::numeric_limits<int>::max();
             for(const auto& unit:state.Units)if(unit.Side==Faction::Player && unit.Hp>0)
@@ -46,6 +52,7 @@ BasicAction ChooseBasicAction(const Battle& battle)
         }
         return best;
     }
+    if(const auto preparation=ChooseCharacterPreparation(battle))return *preparation;
     if(actor->Side==Faction::Enemy && state.EnemyAI==EnemyThinking::Tactical)return ChooseTacticalMove(battle);
     if(actor->Side==Faction::Enemy && (actor->Role==BattleRole::Archer || actor->Role==BattleRole::Gunner || actor->Role==BattleRole::CurseMonk || actor->Role==BattleRole::Fox || actor->Role==BattleRole::Spider || actor->Role==BattleRole::CastleLord)) {
         int firingScore=-1;

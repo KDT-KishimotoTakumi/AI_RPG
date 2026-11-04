@@ -1,4 +1,5 @@
 #include "EnemyTactics.h"
+#include "EnemyCharacterSkills.h"
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
@@ -44,8 +45,13 @@ std::optional<RankedAttack> ChooseRankedAttack(const Battle& battle)
     const auto& actor=ActiveUnit(state);std::optional<RankedAttack> best;
     for(const auto& target:state.Units){
         if(target.Hp<=0 || target.Side==actor.Side || (actor.Side==Faction::Player && target.Side==Faction::Neutral))continue;
-        auto preview=battle.PreviewAttack(actor.Id,target.At);if(!preview.Legal)continue;
+        auto preview=battle.PreviewAttack(actor.Id,target.At);
         BasicAction action{BasicActionKind::Attack,target.At};
+        if(UsesCharacterEnemyAI(battle)){
+            const auto selected=ChooseCharacterAttack(battle,target.At);if(!selected)continue;
+            preview=selected->Preview;action=selected->Action;
+        }
+        if(!preview.Legal)continue;
         if(actor.Side==Faction::Enemy && actor.Role==BattleRole::Oni){
             const auto skill=battle.PreviewSkill(actor.Id,Skill::PowerStrike,target.At);
             if(skill.Legal && skill.Attack.Hits.front().Damage>preview.Hits.front().Damage){preview=skill.Attack;action={BasicActionKind::UseSkill,target.At,Skill::PowerStrike};}

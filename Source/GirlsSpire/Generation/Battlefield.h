@@ -20,8 +20,8 @@ struct GenerationResult {
 class Battlefield {
 public:
     using DraftFactory = std::function<TerrainLayout(Random&)>;
-    static FieldFailure Validate(const TerrainLayout& layout, const std::vector<BattleUnit>& units, BattleGoal goal);
+    static FieldFailure Validate(const TerrainLayout& layout, const std::vector<BattleUnit>& units, BattleGoal goal,bool enemyCharacterSkills=false);
     static GenerationResult Generate(std::uint64_t seed, const std::vector<BattleUnit>& units,
-        BattleGoal goal = BattleGoal::Eliminate, int maxAttempts = 8, const DraftFactory& draft = {});
+        BattleGoal goal = BattleGoal::Eliminate, int maxAttempts = 8, const DraftFactory& draft = {},bool enemyCharacterSkills=false);
 };
 }

@@ -83,11 +83,20 @@ int Battle::PotentialHostileDamage(int targetId) const
             }
             return maximum;
         };
-        int maximum=damage(projection);
-        // 現在地で弱い遠隔技が使えても、接近後の強い技を上限から除外しない。
-        for (const auto at : projection.Reachable(enemy.Id)) {
-            auto candidate=projection;
-            if(candidate.Move(candidate.Snapshot().Revision,enemy.Id,at))maximum=std::max(maximum,damage(candidate));
+        const auto afterMoves=[&](const Battle& initial){
+            int maximum=damage(initial);
+            // 現在地で弱い遠隔技が使えても、接近後の強い技を上限から除外しない。
+            for(const auto at:initial.Reachable(enemy.Id)){
+                auto candidate=initial;
+                if(candidate.Move(candidate.Snapshot().Revision,enemy.Id,at))maximum=std::max(maximum,damage(candidate));
+            }
+            return maximum;
+        };
+        int maximum=afterMoves(projection);
+        if(state_.EnemyCharacterSkills){
+            auto supported=projection;
+            // 回復でボスの範囲化が解除される場合にも、支援しない場合の上限を失わない。
+            if(supported.ProjectEnemySupport(enemy.Id,*this))maximum=std::max(maximum,afterMoves(supported));
         }
         total+=maximum;
     }

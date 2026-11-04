@@ -71,6 +71,7 @@ struct BattleSnapshot {
     std::array<int,8> StartingBonds{};
     bool PersonalityAI=false;
     EnemyThinking EnemyAI=EnemyThinking::Legacy;
+    bool EnemyCharacterSkills=false;
     bool operator==(const BattleSnapshot&) const = default;
 };
 struct PredictedHit {
@@ -156,6 +157,7 @@ public:
     int PotentialHostileDamage(int targetId) const;
     std::vector<Position> ConnectedTerrain(Position from, bool avoidTraps=false) const;
 private:
+    bool ProjectEnemySupport(int actorId,const Battle& timeline);
     AttackPreview PreviewCharacterUltimate(int actorId,Position target) const;
     bool UseCharacterUltimate(int actorId,const AttackPreview& preview);
     SkillPreview PreviewCharacterSkill(int actorId,Skill skill,Position target) const;

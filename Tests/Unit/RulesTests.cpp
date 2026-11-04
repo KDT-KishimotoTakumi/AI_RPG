@@ -74,6 +74,8 @@ int main()
     failed += TestPersonality();
     extern int TestEnemyTactics();
     failed += TestEnemyTactics();
+    extern int TestEnemyCharacterSkills();
+    failed += TestEnemyCharacterSkills();
     failed += TestGeneration();
     failed += TestTerrain();
     failed += TestTraps();

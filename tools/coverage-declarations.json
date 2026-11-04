@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "2C2DC8D3CEA796C39D58503E6BEE12D4D5CB3B39422E708450B3EB17FC493395",
+    "sha256": "639A52410CD1AFD69CE912DACC9A854E3E8928CC3FA3142BBB44DBCB19F2C6ED",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -21,7 +21,7 @@
   },
   {
     "path": "Source/GirlsSpire/Application/Encounter.h",
-    "sha256": "F118B2A18616BFD9A74A4BF92ED77F1160BBF16E44006F3F1B75275D61C82175",
+    "sha256": "B51F89C61ACCD9DE52FB5AD33E8C0FBA3CD7E0B46E5B1AB53B108196972A4C76",
     "reason": "生成関数の宣言のみ。関数定義はEncounter.cpp/FormalEncounter.cppで計測。"
   },
   {
@@ -83,5 +83,9 @@
     "path": "Source/GirlsSpire/AI/EnemyTactics.h",
     "sha256": "5D8CC7EDAEA8F05C6BBD5E0C09E41F0FB0B5357E5E050656AE222B9599CDB8E0",
     "reason": "比較結果の保持と関数宣言のみ。攻撃比較と移動先読みはEnemyTactics.cppで計測。"
+  },
+  {
+    "path": "Source/GirlsSpire/AI/EnemyCharacterSkills.h",
+    "sha256": "6A9D29AF78B1DD7E73BD47298611340754C42E122DE0E5790466D5B22CD2D97F"
   }
 ]

@@ -1,6 +1,7 @@
 #include "Application/Encounter.h"
 #include "Application/CombatControl.h"
 #include "Infrastructure/SavePayload.h"
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 int TestFormalEncounter()
@@ -9,7 +10,7 @@ int TestFormalEncounter()
     int checks=0,failed=0;
     const auto check=[&](bool pass,const char* message){++checks;if(!pass){++failed;std::cerr<<"FAIL FormalEncounter: "<<message<<'\n';}};
     Profile profile;profile.Bonds={0,24,49,50,74,75,99,100};
-    for(int difficulty=0;difficulty<3;++difficulty)for(int role=0;role<4;++role)for(int seed=0;seed<10;++seed){
+    for(int difficulty=0;difficulty<3;++difficulty)for(int role=0;role<4;++role)for(int seed=0;seed<100;++seed){
         RunSnapshot run;run.Phase=RunPhase::Event;run.Level=static_cast<Difficulty>(difficulty);run.Role=static_cast<HeroRole>(role);run.Recruited={0,2,4,6};
         for(auto kind:{NodeKind::Battle,NodeKind::Elite,NodeKind::Rescue,NodeKind::MidBoss,NodeKind::FinalBoss}){
             run.Active={kind,1};run.Day=kind==NodeKind::MidBoss?6:kind==NodeKind::FinalBoss?12:5;
@@ -18,7 +19,10 @@ int TestFormalEncounter()
             expected.State.AbilityRules=AbilityRuleSet::CompleteCharacters;expected.State.StartingBonds=profile.Bonds;
             expected.State.PersonalityAI=true;
             expected.State.EnemyAI=static_cast<EnemyThinking>(difficulty+1);
-            check(battle.Checkpoint()==expected,"正式識別/絆/性格以外の編成/地形/能力/手番/RNGを維持");
+            expected.State.EnemyCharacterSkills=true;
+            expected.State.Width=battle.Snapshot().Width;expected.State.Height=battle.Snapshot().Height;expected.State.Tiles=battle.Snapshot().Tiles;
+            for(auto& unit:expected.State.Units){const auto found=std::find_if(battle.Snapshot().Units.begin(),battle.Snapshot().Units.end(),[&](const auto& item){return item.Id==unit.Id;});unit.At=found->At;}
+            check(battle.Checkpoint()==expected,"正式識別/絆/初期安全の配置と地形以外の能力/編成/手番/RNGを維持");
             for(const auto& unit:battle.Snapshot().Units)if(unit.Side==Faction::Player)
                 check(battle.PotentialEnemyDamage(unit.Id)<unit.Hp,"正式技能を含めて初期即死を回避");
             check(old.State.AbilityRules==AbilityRuleSet::Legacy && old.State.StartingBonds==std::array<int,8>{},"旧APIは従来のまま");

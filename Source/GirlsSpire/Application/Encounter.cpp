@@ -1,10 +1,15 @@
 #include "Encounter.h"
 #include "Domain/CharacterCatalog.h"
+#include "Domain/AbilityCatalog.h"
 #include <algorithm>
 #include <set>
 #include <stdexcept>
 namespace GirlsSpire {
 Battle Encounter::Create(const RunSnapshot& run, std::uint64_t seed, GenerationResult* details, bool forceGenerationFailure)
+{
+    return CreateConfigured(run,seed,nullptr,details,forceGenerationFailure);
+}
+Battle Encounter::CreateConfigured(const RunSnapshot& run,std::uint64_t seed,const Profile* profile,GenerationResult* details,bool forceGenerationFailure)
 {
     const auto kind=run.Active.Kind;
     const bool boss=kind==NodeKind::MidBoss || kind==NodeKind::FinalBoss;
@@ -79,19 +84,40 @@ Battle Encounter::Create(const RunSnapshot& run, std::uint64_t seed, GenerationR
     }
     // HPを補充せず、瀕死の参加者がいる戦場では敵を初手の攻撃圏外へ離す。
     int initialThreat=0;
-    for(const auto& unit:units)if(unit.Side==Faction::Enemy)
-        initialThreat+=unit.Attack+std::max(unit.Role==BattleRole::Cavalry?6:0,unit.Skills[0]?8:0);
+    int groupBuff=0;
+    if(profile)for(const auto& unit:units)if(unit.Side==Faction::Enemy)for(int index=0;index<2;++index){
+        const auto skill=FormalSkill(unit.Id,static_cast<Skill>(index));
+        if(skill && unit.Skills[index] && skill->Target==AbilityTarget::LivingAlly)groupBuff=std::max(groupBuff,skill->Effects.AttackBuff);
+    }
+    for(const auto& unit:units)if(unit.Side==Faction::Enemy){
+        int bonus=std::max(unit.Role==BattleRole::Cavalry?6:0,unit.Skills[0]?8:0);
+        if(profile && unit.Id>=1 && unit.Id<=8){
+            bonus=0;
+            for(int index=0;index<2;++index){const auto skill=FormalSkill(unit.Id,static_cast<Skill>(index));if(skill && unit.Skills[index] && skill->Target==AbilityTarget::Enemy)bonus=std::max(bonus,skill->Effects.AttackBonus);}
+        }
+        initialThreat+=unit.Attack+bonus+groupBuff;
+    }
     if(std::any_of(units.begin(),units.end(),[initialThreat](const BattleUnit& unit) {
         return unit.Side==Faction::Player && unit.Hp<=initialThreat;
     })) {
-        for(auto& unit:units) if(unit.Side==Faction::Enemy)
-            unit.At.X=std::min(11,std::max(7,unit.Range+unit.Movement+2));
+        for(auto& unit:units) if(unit.Side==Faction::Enemy){
+            int range=unit.Range;
+            if(profile)for(int index=0;index<2;++index){const auto skill=FormalSkill(unit.Id,static_cast<Skill>(index));if(skill && unit.Skills[index] && skill->Target==AbilityTarget::Enemy)range=std::max(range,skill->Range);}
+            unit.At.X=std::min(11,std::max(7,range+unit.Movement+2));
+        }
     }
     const auto goal=kind==NodeKind::Rescue?BattleGoal::Rescue:kind==NodeKind::FinalBoss?BattleGoal::DefeatLord:BattleGoal::Eliminate;
     const auto factory=forceGenerationFailure?
         Battlefield::DraftFactory{[](Random&) { return TerrainLayout{}; }}:Battlefield::DraftFactory{};
-    auto field=Battlefield::Generate(seed,units,goal,8,factory);
+    auto field=Battlefield::Generate(seed,units,goal,8,factory,profile!=nullptr);
     if(details) *details=field;
-    return Battle(field.Layout.Width,field.Layout.Height,std::move(field.Layout.Tiles),std::move(units),seed,goal,3,run.Wallet.Medicines,80+20*static_cast<int>(run.Level));
+    Battle battle(field.Layout.Width,field.Layout.Height,std::move(field.Layout.Tiles),std::move(units),seed,goal,3,run.Wallet.Medicines,80+20*static_cast<int>(run.Level));
+    if(!profile)return battle;
+    auto checkpoint=battle.Checkpoint();checkpoint.State.AbilityRules=AbilityRuleSet::CompleteCharacters;
+    checkpoint.State.StartingBonds=profile->Bonds;checkpoint.State.PersonalityAI=true;
+    checkpoint.State.EnemyAI=static_cast<EnemyThinking>(1+static_cast<int>(run.Level));checkpoint.State.EnemyCharacterSkills=true;
+    auto restored=Battle::Restore(checkpoint);
+    if(!restored)throw std::logic_error("生成した正式戦闘が無効です");
+    return std::move(*restored);
 }
 }
