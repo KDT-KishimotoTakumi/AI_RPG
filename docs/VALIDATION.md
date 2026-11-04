@@ -11,6 +11,13 @@
 - 表示証跡: Saved/Screenshots/FullField-*.png。最終計測の12マス/最大文字はFullField-12-2-1FB5F97149152430AD76CEA2BD4A13A1.png。初期の下部重なり、ゲージ切れの画像も保持。
 - 先行失敗を保持: fullfield-integration-build.logのC3538は異なる座標型のauto同時宣言を分離して修正。fullfield-runtime-target.log（820c9ba169aa467e9347ffad93ade607）のtitle.settingsカーソル不一致は原因未特定、再試験は成功。RuntimeSpecへ失敗画像診断のみ追加し、判定を緩和していない。先行fullfield-coverage.log/31b9658e99f841d298d1827c8f118e20は中断した未完了計測であり、最終合格に使用しない。
 
+## GS-070 文字量整理（2026-11-04）
+
+- 変更前: 8マス×文字3段階で座標・行動名・常時説明・詳細ボタンの要件が失敗（Automation/2c6ef50e61ec483795bdf90a9c2d3fbb、Saved/concise-red.log）。実装後は8/12マス×文字3段階＋既存の計11件成功（740e9aa3d4b9438097b9da44eec53b80）。先行C2664（concise-green-build.log）はPrintfの条件付き書式をリテラル別の呼出しへ分けて修正。
+- 最終全体: concise-coverage.log、Coverage/4ab0554f2aca43b3b9e69cc051778b91/gate.json。Native全回帰、全UE354成功/警告0、通常起動・音声付き別プロセス再開・専用音声2件成功。全C++は行99.42%・関数98.11%・分岐91.20%、Missing=[]。成功集計済みprofrawだけを整理しJSON/profdataを保持。
+- 検出力: 詳細の表示条件を一時反転し、8マス×文字3段階の全3件が常時説明の省略違反を検出（concise-mutation-*.log、Saved/DesignReview/Concise-*/mutation.txt）。原本はバイト一致で復元。通常MSVCビルド、UI11件、通常-gameの音声/独立設定・別プロセス再開は成功（concise-title-runtime-offscreen.log、226d13456b2f435eaf473e030e58ffec / 2719bf7bb2ab4e7dbeaf5628c4daeec7）。先行concise-msvc-runtime.logはtitle.settingsのカーソル不一致で失敗（Automation/1fc79da4cbdd4520ad597d425b10b289）、RuntimeClickFailure-01FD5BD04DC0E9180AD8C29907C5A4BA.pngを保全。再試験concise-title-msvc-runtime.logはtitle.start認識失敗（bd257ffe6d184a6ea5938fcc5ed36bc0、RunScreen=1/Active=1）を記録。原因は未確定で修正済みとはしない。タイトルの静的な説明文2箇所のみを計測後に短縮し、通常ビルドと実画面で再確認した（制御構造/行数は不変）。
+- 表示はSaved/Screenshots/FullField-*.pngの標準/最大文字を目視確認。座標を省いても地形/罠/陣営・HP・予告・警告を維持する。操作・保存規則は不変。GS-069で成功した54地点の保存試験は変更が保存へ及ばないため再実行せず、今回の通常ゲーム再開を確認した。製品全体の完成判定ではない。
+
 ## 実行済み
 
 - GS-027完了（2026-10-30）: 騎馬亡者の実経路が直線3マス以上なら通常攻撃力＋6。スキル対象外。実経路・罠・危険予測・出現・表示・Run v5への保存移行を検証。Cavalry6,049、SavePayload623,547チェック成功。全127件＋通常起動1件成功。全C++の行98.67%（3400/3446）・関数97.85%（409/418）・分岐90.54%（3109/3434）、未計測なし。別UEプロセス20地点（準備中18/消費済み19を含む）成功。通常MSVCビルド・専用UI5件・通常起動1件成功。証跡: Saved/cavalry-coverage.log、Coverage/5f818d878a5e4a82b20c713cfb0c161e/、cavalry-process.log、cavalry-msvc-build.log、cavalry-msvc-ui.log、cavalry-msvc-runtime.log。T014h/T015h/T017h完了。正式敵全体と製品完成の検証は未完了。
@@ -462,3 +469,4 @@ GS-066通常版の最終確認: MSVC表示29件277a9ec52abe450aae12dcca85c341b0�
 - 独立照合: 74ec76cの旧ChooseBasicActionを隔離コンパイルし、3難易度×4主人公役割×20シードの240戦場（旧/正式解釈を含む）10249行動を比較、選択/予告時状態/RNGの不一致0。Saved/DesignReview/compare-enemy-legacy.ps1とenemy-thinking-legacy-comparison.log。元の製品コードは変更せず比較。
 - レビュー: 隔離コピーで未解決判定の>を>=へ変更し、57中2失敗を検出。対象製品原本SHA-256不変はSaved/DesignReview/enemy-thinking-mutation.json、ログenemy-thinking-mutation.log。
 - 固定原本Tests/Fixtures/enemy-v17.binは3419 bytes、SHA-256=7B64F82FFD76D2FAAA6CA57E45A0207426749E4E46ED134F6DC1424EBED51D9C。旧全状態（PersonalityAI=true/EnemyAI=Legacy）と現行への往復を確認、既存v11～16原本と合わせて再生成しない。Profile v4/HP補正/敵固有行動/技/素材は不変。全12日/製品全体の合格ではない。
+GS-070実画面確認: 通常ゲームを起動して前面化し、1920×1080の短縮後タイトルを目視。設定ボタンの手動クリックは同時の利用者入力を検出したため中止し、成功扱いにしない。先行自動認識失敗の原因確定ではない。ユーザーの周回や設定を変更していない。

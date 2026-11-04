@@ -76,6 +76,7 @@ void SCombatScreen::Construct(const FArguments& Args)
 
 void SCombatScreen::Text(const FString& label,const FName& id,int size)
 {
+    if(FullField && !FieldDetails && (id=="battle.generation" || id=="battle.help" || id=="battle.cues.legend" || id=="battle.cues.scope" || id=="intent.help" || id=="intent.notice"))return;
     Panel->AddSlot().AutoHeight().Padding(0,0,0,10)
     [ SNew(STextBlock).Text(FText::FromString(label)).AutoWrapText(true)
         .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(size))).AddMetaData(FDriverMetaData::Id(id)) ];
@@ -147,6 +148,7 @@ void SCombatScreen::Refresh(bool persist)
         const int unitId=unit!=state.Units.end()?unit->Id:-1;
         const float hp=unit!=state.Units.end()?static_cast<float>(unit->Hp)/FMath::Max(1,unit->MaxHp):0.f;
         const auto ground=MonochromeBoard?nullptr:Sprites->Terrain(x==state.Width/2 || y==state.Height/2?EBoardSprite::Paving:EBoardSprite::Grass);
+        if(FullField && !FieldDetails && ground && unitId<0 && !tile.Wall && !tile.Trap && tile.ObstacleHp==0 && tile.Elevation==0 && tile.Cover==0)label.Empty();
         const auto cell=BoardCellSize();
         Grid->AddSlot(x,y)
         [ SNew(SBox).WidthOverride(cell.X).HeightOverride(cell.Y)
@@ -216,8 +218,8 @@ void SCombatScreen::Refresh(bool persist)
         }
         return;
     }
-    Text(FString::Printf(TEXT("味方%dの手番　移動:%s / 行動:%s"),state.ActiveId,
-        state.Moved?TEXT("済"):TEXT("未"),state.Acted?TEXT("済"):TEXT("未")),"battle.turn");
+    Text(FullField?FString::Printf(TEXT("移動%s・行動%s"),state.Moved?TEXT("済"):TEXT("未"),state.Acted?TEXT("済"):TEXT("未")):
+        FString::Printf(TEXT("味方%dの手番　移動:%s / 行動:%s"),state.ActiveId,state.Moved?TEXT("済"):TEXT("未"),state.Acted?TEXT("済"):TEXT("未")),"battle.turn",FullField?14:18);
     if(SelectingUltimate) { RefreshUltimate(); Text(Message,"battle.log",14); return; }
     RefreshMedicine();
     if(SelectingMedicine) {Text(Message,"battle.log",14);return;}

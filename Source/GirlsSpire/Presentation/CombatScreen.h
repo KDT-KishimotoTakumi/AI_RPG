@@ -44,7 +44,7 @@ private:
     enum class EFieldAction { None, Move, Attack, Intent };
     void BeginFieldAction(EFieldAction action);
     FString FieldSelectionLabel() const;
-    bool FullField=false,FieldMenuOpen=true;
+    bool FullField=false,FieldMenuOpen=true,FieldDetails=false;
     int FieldFocus=-1,FieldActor=-2;
     EFieldAction FieldAim=EFieldAction::None;
     struct FMovementVisual {std::vector<GirlsSpire::Position> Path;double Started=0;};

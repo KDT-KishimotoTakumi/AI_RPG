@@ -6,7 +6,7 @@
 void SCombatScreen::RefreshCombos()
 {
     const auto& state=Combat->Snapshot();
-    ComboGauge->SetText(FText::FromString(FString::Printf(TEXT("連携ゲージ: %d/100（戦闘内）"),state.Combos.Gauge)));
+    ComboGauge->SetText(FText::FromString(FullField?FString::Printf(TEXT("連携 %d/100"),state.Combos.Gauge):FString::Printf(TEXT("連携ゲージ: %d/100（戦闘内）"),state.Combos.Gauge)));
     FString label=TEXT("起:移動・待機 / 承:通常攻撃・応急手当\n転:強撃・応急手当 / 結:通常攻撃・強撃・個人必殺\n直近の連携: なし");
     if(state.LastCombo) {
         const auto& result=*state.LastCombo;

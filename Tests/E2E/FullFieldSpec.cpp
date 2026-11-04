@@ -43,6 +43,15 @@ void FGirlsSpireFullFieldSpec::Define()
         auto combat=MakeShared<Battle>(size,size,std::vector<Tile>(size*size),std::vector<BattleUnit>{hero,ally,enemy},42);auto expected=*combat;
         Async(EAsyncExecution::TaskGraphMainThread,[this,combat,prefs]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true).DisplayPreferences(prefs));}).Wait();DrainSlateLayout();
         if(!TestTrue(TEXT("戦場が全画面レイヤー"),Driver->FindElement(By::Id("battle.field.root"))->Exists()))return;
+        TestEqual(TEXT("通常表示では空きマスの座標を省く"),Driver->FindElement(By::Id("battle.celllabel.2.2"))->GetText().ToString(),FString());
+        TestEqual(TEXT("行動名は短くする"),Driver->FindElement(By::Id("battle.field.move"))->GetText().ToString(),FString(TEXT("移動")));
+        TestFalse(TEXT("常時の長い説明を省く"),Driver->FindElement(By::Id("battle.help"))->Exists());
+        const auto explanationState=combat->Checkpoint();
+        if(!Click("battle.field.details"))return;
+        TestEqual(TEXT("詳細で座標を確認できる"),Driver->FindElement(By::Id("battle.celllabel.2.2"))->GetText().ToString(),FString(TEXT("2,2")));
+        TestTrue(TEXT("詳細で操作説明を確認できる"),Driver->FindElement(By::Id("battle.help"))->Exists());
+        if(!Click("battle.field.details"))return;
+        TestTrue(TEXT("表示切替は戦闘状態と乱数不変"),combat->Checkpoint()==explanationState);
         Async(EAsyncExecution::TaskGraphMainThread,[this]{const auto actual=FieldExtent(Window.ToSharedRef());const auto client=Window->GetClientSizeInScreen();TestTrue(TEXT("戦場レイヤーはウィンドウ全幅・全高"),actual.X>=client.X*.97f && actual.Y>=client.Y*.97f);}).Wait();
         if((size==8 && text==0) || (size==12 && text==2))Async(EAsyncExecution::TaskGraphMainThread,[this,size,text]{TArray<FColor> pixels;FIntVector extent;if(!TestTrue(TEXT("全画面フィールドを撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,extent)))return;TArray64<uint8> png;FImageUtils::PNGCompressImageArray(extent.X,extent.Y,pixels,png);const auto directory=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*directory,true);const auto path=directory/FString::Printf(TEXT("FullField-%d-%d-%s.png"),size,text,*FGuid::NewGuid().ToString(EGuidFormats::Digits));TestTrue(TEXT("検証画像を保持"),FFileHelper::SaveArrayToFile(png,*path));AddInfo(path);}).Wait();
         const auto before=combat->Checkpoint();

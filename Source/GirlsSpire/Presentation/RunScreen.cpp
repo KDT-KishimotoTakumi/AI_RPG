@@ -119,9 +119,9 @@ void SRunScreen::ShowTitle()
     Body->ClearChildren();
     if(!LoadTitleState()) return;
     AddText(TEXT("GIRLS SPIRE"), "title.heading", 64);
-    AddText(TEXT("主人公・黒鉄 蓮と、道中で救い出す四人の仲間。\n信頼と戦い方を組み合わせる、戦国怪異の戦術ローグライク。"), "title.description");
+    AddText(TEXT("四人の仲間と挑む、戦国怪異RPG。"), "title.description");
     AddText(DevelopmentTools?TEXT("経路を選び、盤面で移動・攻撃して仲間を救出します。進行確認用の結果入力も利用できます。"):
-        TEXT("経路を選び、仲間へ作戦を伝え、死者の城へ挑む。進行は自動保存され、戦闘中も中断できます。"), "title.notice");
+        TEXT("自動保存対応・戦闘中も中断できます。"), "title.notice");
     if(StoredRun) AddAction(StoredRun->ResumeAvailable?TEXT("中断した周回を再開"):TEXT("直近の状態から復旧"),
         StoredRun->ResumeAvailable?"title.resume":"title.recover",[this]{ResumeSaved();});
     if(StorageRecovered) AddText(TEXT("保存記録を復旧しました。直近の有効な状態を使用しています。"),"save.recovered",16);

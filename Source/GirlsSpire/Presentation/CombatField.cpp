@@ -29,7 +29,7 @@ void SCombatScreen::BuildField()
                         +SOverlay::Slot()[SAssignNew(MovingUnits,SCanvas).Visibility(EVisibility::HitTestInvisible)]]]]
             +SOverlay::Slot().HAlign(HAlign_Right).VAlign(VAlign_Top).Padding(16)
             [SNew(SButton).AddMetaData(FDriverMetaData::Id("battle.field.open"))
-                .OnClicked_Lambda([this]{FieldFocus=Combat->Snapshot().ActiveId;FieldAim=EFieldAction::None;FieldMenuOpen=true;return FReply::Handled();})[label(TEXT("手番キャラの行動"))]]
+                .OnClicked_Lambda([this]{FieldFocus=Combat->Snapshot().ActiveId;FieldAim=EFieldAction::None;FieldMenuOpen=true;return FReply::Handled();})[label(TEXT("行動"))]]
             +SOverlay::Slot().HAlign(HAlign_Right).Padding(12,62,12,12)
             [SNew(SBox).WidthOverride(346).AddMetaData(FDriverMetaData::Id("battle.field.menu"))
                 .Visibility_Lambda([this]{return FieldMenuOpen || SavingBlocked || Combat->Snapshot().Outcome!=GirlsSpire::BattleOutcome::Ongoing?EVisibility::Visible:EVisibility::Collapsed;})
@@ -41,20 +41,24 @@ void SCombatScreen::BuildField()
                         +SVerticalBox::Slot().AutoHeight()[SNew(SButton).AddMetaData(FDriverMetaData::Id("battle.field.move"))
                             .Visibility_Lambda([this]{return Combat->Snapshot().ActiveId==0?EVisibility::Visible:EVisibility::Collapsed;})
                             .IsEnabled_Lambda([this]{return !SavingBlocked && !Combat->Reachable(0).empty();})
-                            .OnClicked_Lambda([this]{BeginFieldAction(EFieldAction::Move);return FReply::Handled();})[label(TEXT("移動先を選ぶ"))]]
+                            .OnClicked_Lambda([this]{BeginFieldAction(EFieldAction::Move);return FReply::Handled();})[label(TEXT("移動"))]]
                         +SVerticalBox::Slot().AutoHeight()[SNew(SButton).AddMetaData(FDriverMetaData::Id("battle.field.attack"))
                             .Visibility_Lambda([this]{return Combat->Snapshot().ActiveId==0?EVisibility::Visible:EVisibility::Collapsed;})
                             .IsEnabled_Lambda([this]{return !SavingBlocked && !Combat->Snapshot().Acted;})
-                            .OnClicked_Lambda([this]{BeginFieldAction(EFieldAction::Attack);return FReply::Handled();})[label(TEXT("通常攻撃の対象を選ぶ"))]]
+                            .OnClicked_Lambda([this]{BeginFieldAction(EFieldAction::Attack);return FReply::Handled();})[label(TEXT("攻撃"))]]
                         +SVerticalBox::Slot().AutoHeight()[SNew(SButton).AddMetaData(FDriverMetaData::Id("battle.field.intent"))
                             .Visibility_Lambda([this]{return Combat->Snapshot().ActiveId>0?EVisibility::Visible:EVisibility::Collapsed;})
-                            .OnClicked_Lambda([this]{BeginFieldAction(EFieldAction::Intent);return FReply::Handled();})[label(TEXT("作戦の対象・地点を選ぶ"))]]
+                            .OnClicked_Lambda([this]{BeginFieldAction(EFieldAction::Intent);return FReply::Handled();})[label(TEXT("作戦の対象"))]]
                         +SVerticalBox::Slot().AutoHeight().Padding(0,4)[SNew(SButton).AddMetaData(FDriverMetaData::Id("battle.field.close"))
-                            .OnClicked_Lambda([this]{FieldMenuOpen=false;return FReply::Handled();})[label(TEXT("フィールドを見る"))]]
+                            .OnClicked_Lambda([this]{FieldMenuOpen=false;return FReply::Handled();})[label(TEXT("閉じる"))]]
+                        +SVerticalBox::Slot().AutoHeight()[SNew(SButton).AddMetaData(FDriverMetaData::Id("battle.field.details"))
+                            .OnClicked_Lambda([this]{FieldDetails=!FieldDetails;Refresh(false);return FReply::Handled();})
+                            [SNew(STextBlock).Text_Lambda([this]{return FText::FromString(FieldDetails?TEXT("詳細を閉じる"):TEXT("詳細"));}).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(14)))]]
                         +SVerticalBox::Slot().FillHeight(1)[SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("battle.scroll"))+SScrollBox::Slot()
                             [SNew(SVerticalBox)
                                 +SVerticalBox::Slot().AutoHeight()[SAssignNew(Panel,SVerticalBox)]
-                                +SVerticalBox::Slot().AutoHeight()[SAssignNew(ComboResult,STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(12))).AddMetaData(FDriverMetaData::Id("battle.combo.result"))]
+                                +SVerticalBox::Slot().AutoHeight()[SAssignNew(ComboResult,STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(12))).AddMetaData(FDriverMetaData::Id("battle.combo.result"))
+                                    .Visibility_Lambda([this]{return FieldDetails || Combat->Snapshot().LastCombo?EVisibility::Visible:EVisibility::Collapsed;})]
                                 +SVerticalBox::Slot().AutoHeight()[SNew(SBox).HeightOverride(FontSize(156))[SNew(SScrollBox).Orientation(Orient_Horizontal)+SScrollBox::Slot()[SAssignNew(PortraitPanel,SHorizontalBox)]]]]]]]]
             +SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Top).Padding(16)
             [SNew(STextBlock).Text(FText::FromString(TEXT("音声を利用できません。音なしでも続けられます。"))).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(14)))
@@ -65,6 +69,7 @@ FString SCombatScreen::FieldSelectionLabel() const
     const auto& state=Combat->Snapshot();const auto selected=std::find_if(state.Units.begin(),state.Units.end(),[this](const auto& unit){return unit.Id==FieldFocus;});
     const FString owner=state.ActiveId>=0 && state.ActiveId<9?FCharacterPortraits::Name(state.ActiveId):TEXT("戦闘結果");
     if(selected==state.Units.end())return owner;
+    if(selected->Id==state.ActiveId)return FString::Printf(TEXT("%s　HP%d/%d"),*owner,selected->Hp,selected->MaxHp);
     const FString name=selected->Id>=0 && selected->Id<9?FCharacterPortraits::Name(selected->Id):FString::Printf(TEXT("敵%d"),selected->Id);
     return FString::Printf(TEXT("手番：%s\n選択：%s　HP%d/%d"),*owner,*name,selected->Hp,selected->MaxHp);
 }
