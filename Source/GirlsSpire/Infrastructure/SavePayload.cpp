@@ -130,7 +130,8 @@ template<class T> bool Fields(Wire& a,T& v)
     else if constexpr(std::is_same_v<T,Profile>) {
         if(!a(v.Bonds,v.SpecialConversations,v.Epilogues))return false;
         if(a.Version>=4 && !a(v.DiscoveredCombos))return false;
-        return a.Version<5 || a(v.HighestDifficulty);
+        if(a.Version>=5 && !a(v.HighestDifficulty))return false;
+        return a.Version<6 || a(v.DiscoveredEnemies);
     }
 }
 
@@ -184,7 +185,7 @@ template<class T> std::optional<T> Decode(std::string_view input,std::uint32_t e
             if(!archive(value.Bonds,value.SpecialConversations,value.Epilogues) || !archive.Complete())return std::nullopt;
             return value;
         }
-        if(version==4) {
+        if(version==4 || version==5) {
             if(!archive(value) || !archive.Complete())return std::nullopt;
             return value;
         }
@@ -204,7 +205,7 @@ SaveError InspectPayload(std::string_view bytes,SaveKind expected)
     }
     if(kind!=static_cast<std::uint32_t>(expected)) return SaveError::WrongKind;
     if(version!=(expected==SaveKind::Run?RunPayloadSchema:ProfilePayloadSchema) &&
-        !(expected==SaveKind::Profile && (version==1 || version==2 || version==3 || version==4)) &&
+        !(expected==SaveKind::Profile && (version==1 || version==2 || version==3 || version==4 || version==5)) &&
         !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16 || version==17 || version==18))) return SaveError::UnsupportedVersion;
     return SaveError::None;
 }

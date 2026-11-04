@@ -161,3 +161,8 @@ GS-071（2026-11-04）: Intermediate/DDC 2647797925 bytesと成功集計済みpr
 - StorageAudit-7714decc5c5c417f8b6bf204fa699800/protected-before.jsonから再照合し、14,712件中、意図したCONTEXT.md以外の14,711件が不変。ゲーム・素材・セーブ・検証結果を保持。verified-after.json参照。全体純減量とは区別する。
 
 GS-073容量整理: 合格Coverage/208403e4c4ab4b05a06bcc09a1d17e03の生計測6件4,055,162,456 bytesとIntermediate/DDC 2,648,967,020 bytesを整理。処理量合計6,704,129,476 bytes（約6.24GiB、再生成を含むのでプロジェクト全体の純減とは区別）。JSON/profdata/全結果/通常Binariesを保持。StorageAudit-b4c62f00f76345409add9c6d10837987/result.jsonで保全15,149件のSHA256と秘密設定メタデータ不変、失敗証跡保持を確認。
+
+### 2026-11-05 図鑑実装後の容量整理
+- 成功計測2回のprofraw 8,593,650,896 bytesと再生成可能なNative obj 65,275,098 bytesを整理。処理量合計8,658,925,994 bytes（再生成を含む累計で、プロジェクトの純減量ではない）。
+- ゲーム・素材・セーブ・集計・失敗証跡など16,622ファイルのSHA256不変、秘密設定は内容を読まずサイズ/更新日時不変。UE Intermediate/DDCは開発継続用に保持。
+- 監査: Saved/StorageAudit-f89be6fec66a4b6f8e91c05731f1df50/result.json。

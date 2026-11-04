@@ -1,4 +1,5 @@
 #include "Run.h"
+#include "Domain/EnemyCatalog.h"
 #include <algorithm>
 #include <stdexcept>
 
@@ -67,6 +68,10 @@ std::vector<int> Run::Unrecruited() const
 bool Run::DiscoverCombo(int recipeId)
 {
     return GirlsSpire::DiscoverCombo(profile_,recipeId);
+}
+bool Run::DiscoverEnemies(const std::vector<BattleUnit>& units)
+{
+    return GirlsSpire::DiscoverEnemies(profile_,units);
 }
 std::vector<int> Run::Unrecruited(const RunSnapshot& state)
 {

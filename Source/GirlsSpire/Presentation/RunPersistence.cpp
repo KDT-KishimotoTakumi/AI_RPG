@@ -36,6 +36,7 @@ bool SRunScreen::SaveCombat(const GirlsSpire::SavedCombat& combat,bool suspend,s
 {
     if(!CurrentRun || CurrentRun->Snapshot().Revision!=revision) return false;
     auto next=*CurrentRun;
+    if(!next.DiscoverEnemies(combat.Battle.State.Units))return false;
     if(combat.Battle.State.LastCombo && !next.DiscoverCombo(combat.Battle.State.LastCombo->RecipeId))return false;
     if(!PersistState(GirlsSpire::RunSaveState{next.Checkpoint(),combat,suspend},next.ProfileState()))return false;
     *CurrentRun=std::move(next);return true;

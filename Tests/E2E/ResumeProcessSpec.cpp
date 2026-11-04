@@ -15,6 +15,7 @@
 #include "Application/Encounter.h"
 #include "AI/BasicTurn.h"
 #include "Domain/ComboCatalog.h"
+#include "Domain/EnemyCatalog.h"
 #include "Domain/CharacterCatalog.h"
 #include "../Fixtures/ComboCatalogCases.h"
 #include "../Fixtures/PersonalityCase.h"
@@ -45,6 +46,11 @@ struct ProcessResumeFixture {
 };
 std::optional<ProcessResumeFixture> ProcessFixture(int point)
 {
+    if(point==58 || point==59){
+        auto fixture=ProcessFixture(0);if(!fixture)return std::nullopt;
+        fixture->Permanent.HighestDifficulty=point==58?0:2;fixture->Permanent.Bonds.fill(42);fixture->Permanent.DiscoveredCombos={2};
+        return fixture;
+    }
     if(point==56 || point==57){
         using namespace GirlsSpire;Run run(42,static_cast<Difficulty>(point-56),HeroRole::Sword);
         for(int step=0;step<24 && run.Snapshot().Phase==RunPhase::Route;++step){run.ChooseNode(run.Snapshot().Revision,0);run.CompleteEvent(run.Snapshot().Revision);}
@@ -303,21 +309,42 @@ void FGirlsSpireResumeProcessSpec::Define()
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(stage==TEXT("Save")?TEXT("58地点を別プロセス用に保存する"):TEXT("別プロセスで58地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
+    It(stage==TEXT("Save")?TEXT("60地点を別プロセス用に保存する"):TEXT("別プロセスで60地点を画面から消費再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(240),[this,stage,root,validRoot] {
         using namespace GirlsSpire;
         if(!TestTrue(TEXT("専用試験保存先"),validRoot) || !TestTrue(TEXT("有効な試験段階"),stage==TEXT("Save") || stage==TEXT("Verify"))) return;
-        for(int point=0;point<58;++point) {
-            const auto fixture=ProcessFixture(point);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
+        for(int point=0;point<60;++point) {
+            auto fixture=ProcessFixture(point);if(fixture && fixture->State.Combat)DiscoverEnemies(fixture->Permanent,fixture->State.Combat->Battle.State.Units);if(!TestTrue(TEXT("決定論的な再開地点"),fixture.has_value())) return;
             const auto directory=root/FString::Printf(TEXT("point-%02d"),point);
             auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));
             auto service=std::make_shared<SaveTransaction>(*files,*files);
             if(stage==TEXT("Save")) {
                 if(!TestTrue(TEXT("保存準備と確定"),service->Prepare(fixture->State,fixture->Permanent)==SlotIssue::None && service->Retry()==SlotIssue::None)) return;
+                if(point==58 || point==59){
+                    auto legacy=EncodeProfilePayload(fixture->Permanent);if(!legacy)return;
+                    legacy->resize(legacy->size()-4);(*legacy)[4]=5;
+                    const auto bytes=EncodeSave({SaveKind::Profile,service->Load().Generation,*legacy});
+                    if(!TestTrue(TEXT("前プロセスで旧v5プロフィール原本を保存"),bytes && files->Replace(SaveKind::Profile,false,*bytes) && files->Replace(SaveKind::Profile,true,*bytes)))return;
+                }
                 continue;
             }
             const auto saved=service->Load();
             if(!TestTrue(TEXT("前プロセスの全状態を復元"),saved.Run==fixture->State && saved.Permanent==fixture->Permanent)) return;
             Async(EAsyncExecution::TaskGraphMainThread,[this,service]{Window->SetContent(SNew(SRunScreen).SaveService(service));}).Wait();
+            if(point==45){
+                const auto read=[&](const char* key){const auto element=Driver->FindElement(By::Id(key));if(!element->IsVisible()){const auto scroll=Driver->FindElement(By::Id("run.scroll"));scroll->ScrollToBeginning();DrainSlateLayout();if(!element->IsVisible()){scroll->ScrollToEndUntil(By::Id(key));DrainSlateLayout();}}return TestTrue(UTF8_TO_TCHAR(key),ClickAndDrain(element));};
+                if(!read("title.combo.library") || !read("combo.library.entry.201"))return;
+                const auto recipe=FindComboRecipe(201);
+                if(!TestTrue(TEXT("前プロセスで発見した専用連携を同じ条件で再読"),recipe && Driver->FindElement(By::Id("combo.library.reason"))->GetText().ToString()==UTF8_TO_TCHAR(recipe->Reason.data())))return;
+                if(!read("combo.library.list") || !read("combo.library.back"))return;
+                if(!read("title.enemy.library"))return;
+                const int enemy=fixture->Permanent.DiscoveredEnemies.front();
+                const auto key=FString::Printf(TEXT("enemy.library.entry.%d"),enemy);if(!read(TCHAR_TO_UTF8(*key)))return;
+                const auto definition=FindEnemyDefinition(enemy);
+                if(!TestTrue(TEXT("別プロセスの発見敵を共有定義で再読"),definition && Driver->FindElement(By::Id("enemy.library.description"))->GetText().ToString()==UTF8_TO_TCHAR(definition->Description.data())))return;
+                if(!read("enemy.library.list") || !read("enemy.library.back"))return;
+                const auto after=service->Load();
+                if(!TestTrue(TEXT("閲覧では中断を消費せず保存世代も維持"),after.Run==saved.Run && after.Permanent==saved.Permanent && after.Generation==saved.Generation))return;
+            }
             if(!TestTrue(TEXT("画面の再開操作"),ClickAndDrain(Driver->FindElement(By::Id("title.resume"))))) return;
             if(Driver->FindElement(By::Id("save.error"))->Exists() && files->UnexpectedWrites.load()>0) {
                 const auto error=files->LastWriteError.load();
@@ -328,7 +355,7 @@ void FGirlsSpireResumeProcessSpec::Define()
                     if(!TestTrue(TEXT("再開結果を画面から明示再試行"),ClickAndDrain(Driver->FindElement(By::Id("save.retry")))))return;
                 if(!TestTrue(TEXT("再試行で固定取引を完了"),!service->HasPending() && !Driver->FindElement(By::Id("save.error"))->Exists()))return;
             }
-            auto expected=fixture->State;expected.ResumeAvailable=false;
+            auto expected=fixture->State;expected.ResumeAvailable=false;auto expectedPermanent=fixture->Permanent;
             // 敵手番で保存された地点は、復元後に通常の敵行動を継続する。
             if(expected.Combat) {
                 auto battle=Battle::Restore(expected.Combat->Battle);if(!TestTrue(TEXT("戦闘復元"),battle.has_value())) return;
@@ -337,13 +364,14 @@ void FGirlsSpireResumeProcessSpec::Define()
                     const auto actor=std::find_if(state.Units.begin(),state.Units.end(),[&](const BattleUnit& unit){return unit.Id==state.ActiveId;});
                     if(actor->Side==Faction::Player) break;
                     if(!ApplyBasicAction(*battle,ChooseBasicAction(*battle))) break;
+                    DiscoverEnemies(expectedPermanent,battle->Snapshot().Units);
                 }
                 expected.Combat->Battle=battle->Checkpoint();
             }
             const auto resumed=service->Load();
-            if(resumed.Run!=expected || resumed.Permanent!=fixture->Permanent)
-                AddInfo(FString::Printf(TEXT("再開地点%d不一致: Issue=%d Pending=%d Writes=%d OS=%u / %s"),point,static_cast<int>(resumed.Issue),service->HasPending(),files->UnexpectedWrites.load(),files->LastWriteError.load(),*directory));
-            if(!TestTrue(TEXT("非中断時の継続結果と一致"),resumed.Run==expected && resumed.Permanent==fixture->Permanent)) return;
+            if(resumed.Run!=expected || resumed.Permanent!=expectedPermanent)
+                AddInfo(FString::Printf(TEXT("再開地点%d不一致: Issue=%d Pending=%d Writes=%d OS=%u RunEqual=%d ProfileEqual=%d / %s"),point,static_cast<int>(resumed.Issue),service->HasPending(),files->UnexpectedWrites.load(),files->LastWriteError.load(),resumed.Run==expected,resumed.Permanent==expectedPermanent,*directory));
+            if(!TestTrue(TEXT("非中断時の継続結果と一致"),resumed.Run==expected && resumed.Permanent==expectedPermanent)) return;
             if(!TestTrue(TEXT("二度目の中断ロード拒否"),service->PrepareResume()==SlotIssue::Invalid)) return;
             if(point==48 || point==49){
                 const Position target=point==49?Position{3,1}:Position{1,3};

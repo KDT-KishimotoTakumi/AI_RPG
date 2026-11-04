@@ -39,6 +39,6 @@ int TestBondCombos()
     check(resolution && resolution->RecipeId==201 && resolution->GaugeGain==5 && ledger.Snapshot().Gauge==100,"専用を優先し上限100で実増分だけを記録");
     const auto path=std::filesystem::path(u8"" __FILE__).parent_path().parent_path()/"Fixtures"/"bond-v15.bin";std::ifstream input(path,std::ios::binary);const std::string bytes{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};auto expected=TestData::AbilityContextCase(true);expected.Combat->Battle.State.AbilityRules=AbilityRuleSet::CharacterAbilities;expected.Combat->Battle.State.Combos.Gauge=50;
     check(bytes.size()==3418 && static_cast<unsigned char>(bytes[4])==15 && TestData::RosterPayloadHash(bytes)==UINT64_C(110507814626026738) && DecodeRunPayload(bytes)==expected,"固定v15は旧20連携識別を維持");
-    check(RunPayloadSchema==19 && ProfilePayloadSchema==5,"周回v19/恒久v5");
+    check(RunPayloadSchema==19 && ProfilePayloadSchema==6,"周回v19/恒久v6");
     std::cout<<"BondCombos: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }

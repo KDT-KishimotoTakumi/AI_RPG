@@ -71,7 +71,7 @@ void SRunScreen::Construct(const FArguments& Args)
             [ SNew(STextBlock).Text(FText::FromString(DevelopmentTools?TEXT("開発版 — 戦闘・作戦予告・三択報酬 / 正式素材は開発中"):TEXT("十二日後、死者の城が歴史を書き換える。")))
                 .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16));}).ColorAndOpacity(FLinearColor(0.8f, 0.65f, 0.65f)) ]
             + SVerticalBox::Slot().FillHeight(1)
-            [ SNew(SScrollBox).AddMetaData(FDriverMetaData::Id("run.scroll")) + SScrollBox::Slot() [ SAssignNew(Body, SVerticalBox) ] ]
+            [ SAssignNew(RunScroll,SScrollBox).AddMetaData(FDriverMetaData::Id("run.scroll")) + SScrollBox::Slot() [ SAssignNew(Body, SVerticalBox) ] ]
             + SVerticalBox::Slot().AutoHeight().Padding(0,8,0,0)
             [ SNew(STextBlock).Text(FText::FromString(TEXT("音声の一部またはすべてを利用できません。音なしでもゲームを続けられます。")))
                 .AutoWrapText(true).Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Regular",FontSize(14));})
@@ -106,9 +106,16 @@ void SRunScreen::AddAction(const FString& Text, const FName& Id, TFunction<void(
     else Body->AddSlot().AutoHeight().Padding(0, 0, 0, 10) [ Button ];
 }
 
+void SRunScreen::ResetPageScroll()
+{
+    // 前画面の移動量と慣性を引き継ぐと、新しいページの名前や画像が隠れる。
+    RunScroll->EndInertialScrolling();
+    RunScroll->ScrollToStart();
+}
 void SRunScreen::ShowTitle()
 {
     HideFieldCombat();
+    ResetPageScroll();
     if(CurrentRun) {
         RetainedProfile=CurrentRun->ProfileState();
         CurrentRun.reset();
@@ -127,6 +134,8 @@ void SRunScreen::ShowTitle()
     if(StorageRecovered) AddText(TEXT("保存記録を復旧しました。直近の有効な状態を使用しています。"),"save.recovered",16);
     if(!SaveNotice.IsEmpty()) AddText(SaveNotice,"save.reset.result",16);
     AddAction(TEXT("新しい周回へ"), "title.start", [this] {if(StoredRun) ConfirmAbandon();else ShowSetup();});
+    AddAction(TEXT("連携図鑑"),"title.combo.library",[this]{ShowComboLibrary();});
+    AddAction(TEXT("敵図鑑"),"title.enemy.library",[this]{ShowEnemyLibrary();});
     if(PreferencesService) AddAction(TEXT("設定"),"title.settings",[this]{ShowPreferences();});
     if(PreferencesLoadIssue==GirlsSpire::PreferencesIssue::Corrupt || PreferencesLoadIssue==GirlsSpire::PreferencesIssue::ReadFailed) AddText(TEXT("設定を読み込めません。設定画面から確認できます。"),"title.settings.error",16);
     if(std::any_of(RetainedProfile.Epilogues.begin(),RetainedProfile.Epilogues.end(),[](bool read){return read;}))

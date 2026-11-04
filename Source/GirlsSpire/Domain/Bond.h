@@ -12,6 +12,7 @@ struct Profile {
     std::vector<int> DiscoveredCombos;
     // 0=初級、1=中級、2=上級。解放は連続し、周回終了でも失わない。
     int HighestDifficulty=0;
+    std::vector<int> DiscoveredEnemies;
     bool operator==(const Profile&) const = default;
 };
 bool ValidProfile(const Profile& profile);

@@ -6,9 +6,11 @@
 #include <memory>
 
 class SVerticalBox;
+class SScrollBox;
 class SHorizontalBox;
 class SBox;
 class IGameAudio;
+class FBoardSprites;
 struct FSlateDynamicImageBrush;
 class SRunScreen : public SCompoundWidget
 {
@@ -25,6 +27,8 @@ public:
     void Construct(const FArguments& Args);
 private:
     TSharedPtr<SBox> FieldHost;
+    TSharedPtr<SScrollBox> RunScroll;
+    void ResetPageScroll();
     bool FullField=false,FullFieldActive=false;
     void HideFieldCombat();
     TSharedPtr<FSlateDynamicImageBrush> TitleBackdrop;
@@ -72,6 +76,9 @@ private:
     void RefreshRescueConversation();
     void ShowEpilogueChoices();
     void ShowEpilogueLibrary();
+    void ShowComboLibrary(int recipeId=0);
+    void ShowEnemyLibrary(int enemyId=0);
+    TSharedPtr<FBoardSprites> EnemyLibrarySprites;
     void ShowEpiloguePage(int actorId,bool archived);
     void ConfirmEpilogue(int actorId);
     FString ProfileLabel() const;

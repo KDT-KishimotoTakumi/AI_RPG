@@ -8,6 +8,7 @@
 #include "ImageUtils.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Misc/Guid.h"
 #include "HAL/FileManager.h"
 #if defined(GIRLS_SPIRE_COVERAGE)
 extern "C" int __llvm_profile_write_file();
@@ -121,7 +122,7 @@ void FGirlsSpireRunUiSpec::Define()
             if (TestTrue(TEXT("画面キャプチャ"), FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(), Pixels, Size))) {
                 TArray64<uint8> Png;
                 FImageUtils::PNGCompressImageArray(Size.X, Size.Y, Pixels, Png);
-                const auto Folder = FPaths::ProjectSavedDir() / TEXT("Screenshots");
+                const auto Folder = FPaths::ProjectSavedDir() / TEXT("Screenshots/RunPreview") / FGuid::NewGuid().ToString(EGuidFormats::Digits);
                 IFileManager::Get().MakeDirectory(*Folder, true);
                 TestTrue(TEXT("検証画像の保存"), FFileHelper::SaveArrayToFile(Png,
                     *(Folder / FString::Printf(TEXT("RunPreview-%d.png"), ++ScreenshotIndex))));

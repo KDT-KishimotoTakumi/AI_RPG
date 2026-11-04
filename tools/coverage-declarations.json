@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "639A52410CD1AFD69CE912DACC9A854E3E8928CC3FA3142BBB44DBCB19F2C6ED",
+    "sha256": "3646DC82AAD6892B8957F3133007166E555FDF79324D5B9AD64192705F53BEDD",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -87,5 +87,10 @@
   {
     "path": "Source/GirlsSpire/AI/EnemyCharacterSkills.h",
     "sha256": "6A9D29AF78B1DD7E73BD47298611340754C42E122DE0E5790466D5B22CD2D97F"
+  },
+  {
+    "path": "Source/GirlsSpire/Domain/EnemyCatalog.h",
+    "sha256": "61FF87BD25F28DECBB63E0F7DC549420B0D9AF9F5C5459D2EB7A3BE40DB737D2",
+    "reason": "敵種ID・定数・集約データと関数宣言のみ。生成/登録はEnemyCatalog.cppで計測。"
   }
 ]

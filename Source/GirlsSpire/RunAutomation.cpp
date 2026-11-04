@@ -31,6 +31,7 @@
 #include "../../Tests/E2E/CharacterSkillSpec.cpp"
 #include "../../Tests/E2E/CharacterUltimateSpec.cpp"
 #include "../../Tests/E2E/BondComboSpec.cpp"
+#include "../../Tests/E2E/EnemyCodexSpec.cpp"
 #include "../../Tests/E2E/FormalEncounterSpec.cpp"
 #include "../../Tests/E2E/PersonalitySpec.cpp"
 #include "../../Tests/E2E/EnemyThinkingSpec.cpp"

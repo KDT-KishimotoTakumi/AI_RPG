@@ -54,6 +54,7 @@ public:
     static std::optional<Run> Restore(const RunCheckpoint& checkpoint,const Profile& profile);
     const Profile& ProfileState() const { return profile_; }
     bool DiscoverCombo(int recipeId);
+    bool DiscoverEnemies(const std::vector<BattleUnit>& units);
     bool Converse(std::uint64_t revision,int actorId,ConversationChoice choice);
     bool CanSpecialConverse(int actorId) const;
     bool SpecialConverse(std::uint64_t revision,int actorId);

@@ -69,3 +69,5 @@ GS-068（Run v18、検証済み）: BattleSnapshot.EnemyAIをint32で保存す�
 GS-050: 新規戦闘の開始時にProfileの絆をコピーして固定し、CombatControlのProfileDriven/Trustと一致させる。戦闘中にProfileから再計算しない。中断再開では保存済みのBattle/Controlを復元する従来経路を維持し、旧戦闘の識別・技能・構文・乱数を途中変換しない。新しい保存フィールド/版は追加しない（Run v16/Profile v4）。
 
 GS-051: preferences.savはrun.sav/profile.sav/transaction.savから独立。設定の読込だけでは書き込まず、保存前の再読込で検出した異常は上書きしない。既存の一時ファイル/flush/有限再試行/原子的置換を共有し、明示復旧はCorrupt/preferences-*へ原本保全が成功した場合だけ行う。Run v16/Profile v4と旧原本の意味は不変。
+
+GS-075: Profile v6へDiscoveredEnemiesを追加。旧v1～5互換、敵記録の過去補完なし。HighestDifficultyは旧v1～4の全解放移行を維持し、旧v5の値は維持する。敵発見は開始/途中出現の戦闘チェックポイントと同じ取引で保存し、保留中はLoadがPendingで進行停止、同じ候補を再試行する。周回消去時も保持。Run v19/外側の封筒形式は不変。

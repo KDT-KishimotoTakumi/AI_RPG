@@ -49,3 +49,5 @@ GS-068（検証済み）: EnemyThinking（Legacy/Basic/Disrupt/Tactical）とBat
 GS-050（新規戦闘への正式効果接続）: Encounter::CreateのProfile明示版は、従来生成と同じ盤面/編成/能力/手番/RNGにCompleteCharacters(4)と開始時Bonds[8]だけを付ける。不正Profileは生成前に拒否。通常のSRunScreenからこの版を使用し、固定戦場でも同じ開始時絆を保持する。Profileなしの旧APIはLegacyのまま。保存形式はRun v16/Profile v4を維持し、保存済み戦闘を新規生成で上書きしない。検証状態はVALIDATION.md/PLAN.md。
 
 GS-051: 設定payload v1/23 bytesを独立preferences.savへ保存。値/版は維持し、Run v16/Profile v4の状態/乱数に追加しない。PreferencesStoreは不在/読込失敗/破損を区別し、明示復旧時の原本保全と保存成功時だけの適用を扱う。詳細preferences-rules.md。
+
+Profile v6: DiscoveredEnemiesはEnemyKindの固定ID1～12を昇順・重複なしで保持。戦闘人物IDとは別。旧v1～4はHighestDifficulty=2/敵記録空、旧v5はHighestDifficulty等を維持/敵記録空。Run v19は不変。SaveCombatはRunコピーへ敵発見と連携発見を適用し、取引成功時にだけ公開する。閲覧UIは同じカタログを使い、何も更新しない。

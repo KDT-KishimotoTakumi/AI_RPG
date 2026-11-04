@@ -1,4 +1,5 @@
 #include "Battle.h"
+#include "EnemyCatalog.h"
 #include <algorithm>
 namespace GirlsSpire {
 void Battle::GeneratePeriodicSummons()
@@ -21,8 +22,8 @@ void Battle::GeneratePeriodicSummons()
             return unit.SummonerId==ownerId && unit.Hp==0;
         });
         if(reusable==state_.Units.end() && state_.Units.size()>=64)return;
-        BattleUnit soldier;soldier.Side=Faction::Enemy;soldier.At=at;soldier.SummonerId=ownerId;
-        soldier.Hp=soldier.MaxHp=22*enemyHpPercent_/100;soldier.Attack=10;
+        auto soldier=CreateEnemy(EnemyKind::Footman,1000,at);soldier.SummonerId=ownerId;
+        soldier.Hp=soldier.MaxHp=soldier.MaxHp*enemyHpPercent_/100;
         if(reusable!=state_.Units.end()) {
             soldier.Id=reusable->Id;*reusable=soldier;
         } else {

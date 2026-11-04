@@ -1,4 +1,5 @@
 #include "Encounter.h"
+#include "Domain/EnemyCatalog.h"
 #include "Domain/CharacterCatalog.h"
 #include "Domain/AbilityCatalog.h"
 #include <algorithm>
@@ -58,24 +59,23 @@ Battle Encounter::CreateConfigured(const RunSnapshot& run,std::uint64_t seed,con
         }
     }
     for(int index=0;index<enemyCount;++index) {
-        BattleUnit enemy; enemy.Id=100+index; enemy.Side=Faction::Enemy; enemy.At={4+index%2,1+index*2};
+        EnemyKind enemyKind=kind==NodeKind::MidBoss?EnemyKind::Princess:kind==NodeKind::FinalBoss?EnemyKind::Lord:EnemyKind::Footman;
+        if(kind==NodeKind::Elite && index==0)enemyKind=EnemyKind::Armour;
+        else if(!boss){
+            const auto type=(seed%3+run.Day+index)%3;
+            if(type==2 && run.Day>=5 && seed%2==0)enemyKind=EnemyKind::Ninja;
+            else if(type==2 && run.Day>=5 && seed%4==3)enemyKind=EnemyKind::Fox;
+            else if(type==1 && run.Day>=5 && seed%2==0)enemyKind=EnemyKind::Oni;
+            else if(type==1 && run.Day>=5 && seed%4==1)enemyKind=EnemyKind::CurseMonk;
+            else if(type==1)enemyKind=EnemyKind::Archer;
+            else if(type==2)enemyKind=EnemyKind::Gunner;
+            else if(run.Day>=5 && seed%4==1)enemyKind=EnemyKind::Spider;
+            else if(run.Day>=5)enemyKind=EnemyKind::Cavalry;
+        }
+        auto enemy=CreateEnemy(enemyKind,100+index,{4+index%2,1+index*2});
         const int baseHp=kind==NodeKind::MidBoss?160:kind==NodeKind::FinalBoss?240:kind==NodeKind::Elite?35:22;
         enemy.MaxHp=enemy.Hp=baseHp*(80+20*static_cast<int>(run.Level))/100;
-        enemy.Attack=boss?18:10; enemy.Speed=10;
-        if(kind==NodeKind::MidBoss){enemy.Role=BattleRole::FallenPrincess;enemy.Defense=4;enemy.Movement=2;enemy.Range=2;enemy.Speed=12;}
-        if(kind==NodeKind::FinalBoss){enemy.Role=BattleRole::CastleLord;enemy.Attack=22;enemy.Defense=6;enemy.Movement=2;enemy.Range=3;enemy.Speed=15;}
-        if(kind==NodeKind::Elite && index==0){enemy.CreatesCover=true;enemy.Defense=8;}
-        else if(!boss) {
-            const auto type=(seed%3+run.Day+index)%3;
-            if(type==2 && run.Day>=5 && seed%2==0){enemy.Role=BattleRole::Ninja;enemy.Movement=4;}
-            else if(type==2 && run.Day>=5 && seed%4==3){enemy.Role=BattleRole::Fox;enemy.Range=3;enemy.Attack=8;enemy.Skills[1]=true;}
-            else if(type==1 && run.Day>=5 && seed%2==0){enemy.Role=BattleRole::Oni;enemy.Movement=2;enemy.Attack=16;enemy.Skills[0]=true;}
-            else if(type==1 && run.Day>=5 && seed%4==1){enemy.Role=BattleRole::CurseMonk;enemy.Movement=2;enemy.Range=3;}
-            else if(type==1){enemy.Role=BattleRole::Archer;enemy.Range=4;}
-            else if(type==2){enemy.Role=BattleRole::Gunner;enemy.Range=5;enemy.Movement=2;}
-            else if(run.Day>=5 && seed%4==1){enemy.Role=BattleRole::Spider;enemy.Movement=2;enemy.Range=3;}
-            else if(run.Day>=5){enemy.Role=BattleRole::Cavalry;enemy.Movement=5;enemy.At.X=6;}
-        }
+        if(enemyKind==EnemyKind::Cavalry)enemy.At.X=6;
         units.push_back(enemy);
     }
     if(kind==NodeKind::Rescue) {

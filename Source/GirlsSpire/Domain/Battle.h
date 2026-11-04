@@ -29,7 +29,7 @@ struct BattleUnit {
     int Id = 0;
     Faction Side = Faction::Player;
     BattleRole Role = BattleRole::Standard;
-    Position At;
+    Position At{};
     int Hp = 30;
     int MaxHp = 30;
     int Attack = 12;
@@ -46,7 +46,7 @@ struct BattleUnit {
     bool AttackCursed=false;
     bool MovementWebbed=false;
     int SummonerId=-1;
-    TimedBoost AttackBoost,DefenseBoost,AccuracyBoost;
+    TimedBoost AttackBoost{},DefenseBoost{},AccuracyBoost{};
     bool operator==(const BattleUnit&) const = default;
 };
 struct BattleSnapshot {

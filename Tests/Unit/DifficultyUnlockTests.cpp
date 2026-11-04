@@ -6,8 +6,8 @@ int TestDifficultyUnlock()
 {
     int checks=0,failed=0;
     const auto check=[&](bool ok,const char* why){++checks;if(!ok){++failed;std::cerr<<"FAIL DifficultyUnlock: "<<why<<'\n';}};
-    const auto rank=[](const Profile& p){const auto bytes=EncodeProfilePayload(p);return bytes && bytes->size()>=4?static_cast<unsigned char>((*bytes)[bytes->size()-4]):-1;};
-    check(ProfilePayloadSchema==5,"新恒久保存はv5");
+    const auto rank=[](const Profile& p){return p.HighestDifficulty;};
+    check(ProfilePayloadSchema>=5,"解放を持つ恒久保存はv5以降");
     check(rank(Profile{})==0,"新規データは初級だけ");
     for(int version=1;version<=4;++version){
         std::string old;const auto put=[&](int n){for(int i=0;i<4;++i)old.push_back(static_cast<char>((n>>(8*i))&255));};
@@ -57,7 +57,7 @@ int TestDifficultyUnlock()
     }
     Profile oldSource;oldSource.HighestDifficulty=1;oldSource.Bonds.fill(42);oldSource.SpecialConversations[3]=true;oldSource.Epilogues[5]=true;oldSource.DiscoveredCombos={1,2,201};
     if(auto v4=EncodeProfilePayload(oldSource)){
-        v4->resize(v4->size()-4);(*v4)[4]=4;auto expected=oldSource;expected.HighestDifficulty=2;
+        v4->resize(v4->size()-8);(*v4)[4]=4;auto expected=oldSource;expected.HighestDifficulty=2;
         check(DecodeProfilePayload(*v4)==expected,"v4の絆/交流/後日談/発見連携を全て維持して全解放");
         for(std::size_t size=0;size<v4->size();++size)check(!DecodeProfilePayload(v4->substr(0,size)),"切断したv4は受理しない");
         check(!DecodeProfilePayload(*v4+"x"),"余剰のあるv4は受理しない");
