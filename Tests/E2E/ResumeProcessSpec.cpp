@@ -321,7 +321,8 @@ void FGirlsSpireResumeProcessSpec::Define()
                 if(!TestTrue(TEXT("保存準備と確定"),service->Prepare(fixture->State,fixture->Permanent)==SlotIssue::None && service->Retry()==SlotIssue::None)) return;
                 if(point==58 || point==59){
                     auto legacy=EncodeProfilePayload(fixture->Permanent);if(!legacy)return;
-                    legacy->resize(legacy->size()-4);(*legacy)[4]=5;
+                    // v7の外見37バイトと、v6の空の敵一覧4バイトを除く。
+                    legacy->resize(legacy->size()-41);(*legacy)[4]=5;
                     const auto bytes=EncodeSave({SaveKind::Profile,service->Load().Generation,*legacy});
                     if(!TestTrue(TEXT("前プロセスで旧v5プロフィール原本を保存"),bytes && files->Replace(SaveKind::Profile,false,*bytes) && files->Replace(SaveKind::Profile,true,*bytes)))return;
                 }

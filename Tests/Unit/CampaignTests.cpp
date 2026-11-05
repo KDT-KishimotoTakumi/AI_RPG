@@ -24,7 +24,7 @@ CampaignResult PlayCampaign(std::uint64_t seed,bool restoreEveryStep)
     const auto record=[&](Battle* battle=nullptr,CombatControl* control=nullptr) {
         require(run.DiscoverEnemies(battle?battle->Snapshot().Units:std::vector<BattleUnit>{}));
         if(battle && battle->Snapshot().LastCombo)require(run.DiscoverCombo(battle->Snapshot().LastCombo->RecipeId));
-        RunSaveState saved{run.Checkpoint()};
+        RunSaveState saved{run.Checkpoint(),{}};
         if(battle)saved.Combat=SavedCombat{battle->Checkpoint(),control->Checkpoint()};
         const auto bytes=EncodeRunPayload(saved),profileBytes=EncodeProfilePayload(run.ProfileState());
         require(bytes.has_value() && profileBytes.has_value());

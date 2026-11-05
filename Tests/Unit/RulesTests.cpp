@@ -209,5 +209,7 @@ int main()
     failed += TestGenerationRecovery();
     extern int TestCampaign();
     failed += TestCampaign();
+    extern int TestAppearance();
+    failed += TestAppearance();
     return failed == 0 ? 0 : 1;
 }

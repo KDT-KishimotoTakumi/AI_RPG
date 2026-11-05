@@ -46,6 +46,7 @@ bool Run::CompleteEvent(std::uint64_t revision, bool partyDefeated)
         state_.Levels[state_.Active.Candidate+1]={state_.Levels[0].Level,0};
     }
     if (state_.Active.Kind == NodeKind::FinalBoss) {
+        profile_.VictoryRecorded=true;
         profile_.HighestDifficulty=std::max(profile_.HighestDifficulty,std::min(2,static_cast<int>(state_.Level)+1));
         state_.Phase = RunPhase::Won;
         return true;

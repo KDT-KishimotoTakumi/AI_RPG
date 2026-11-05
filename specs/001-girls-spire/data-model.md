@@ -51,3 +51,5 @@ GS-050（新規戦闘への正式効果接続）: Encounter::CreateのProfile明
 GS-051: 設定payload v1/23 bytesを独立preferences.savへ保存。値/版は維持し、Run v16/Profile v4の状態/乱数に追加しない。PreferencesStoreは不在/読込失敗/破損を区別し、明示復旧時の原本保全と保存成功時だけの適用を扱う。詳細preferences-rules.md。
 
 Profile v6: DiscoveredEnemiesはEnemyKindの固定ID1～12を昇順・重複なしで保持。戦闘人物IDとは別。旧v1～4はHighestDifficulty=2/敵記録空、旧v5はHighestDifficulty等を維持/敵記録空。Run v19は不変。SaveCombatはRunコピーへ敵発見と連携発見を適用し、取引成功時にだけ公開する。閲覧UIは同じカタログを使い、何も更新しない。
+
+GS-079（検証済み・外見基盤）: Profile v7へVictoryRecorded（bool）とSelectedAppearances[9]（Standard=0/Alternate=1、人物ID0～8）を追加。承認条件は主人公が勝利記録または既存の後日談記録、仲間が当人のSpecialConversations。標準は全員使用可能、不正値/未解放差分の選択はProfile検証で拒否。初勝利は最終ボス勝利時・後日談前に記録し、敗北で消さない。選択APIは恒久値だけを変更しRNGを扱わない。UI/素材/保存戦闘の外見固定は未接続。Run v19は不変。

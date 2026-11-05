@@ -1,4 +1,5 @@
 #pragma once
+#include "Appearance.h"
 #include <array>
 #include <vector>
 namespace GirlsSpire {
@@ -13,6 +14,9 @@ struct Profile {
     // 0=初級、1=中級、2=上級。解放は連続し、周回終了でも失わない。
     int HighestDifficulty=0;
     std::vector<int> DiscoveredEnemies;
+    // 初勝利を後日談選択前に確定する。旧記録の後日談も勝利の根拠になる。
+    bool VictoryRecorded=false;
+    std::array<AppearanceVariant,9> SelectedAppearances{};
     bool operator==(const Profile&) const = default;
 };
 bool ValidProfile(const Profile& profile);

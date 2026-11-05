@@ -40,3 +40,5 @@ GS-066素材（2026-11-04）: Content/Art/Objects/terrain-atlas-v1.pngは草地/
 2026-11-05: 敵図鑑12種の画像にも既存Content/Art/Objects/enemy-atlas-v1.pngとBoardSpritesの同じ切出しを再使用。画像ファイル・出典・利用条件の変更なし。図鑑の検証PNGはSaved/Screenshots/EnemyCodexのGUID配下に保持し、ゲーム配布素材には追加しない。
 
 2026-11-05: 衣装配色差分の具体色はspecs/001-girls-spire/appearance-palette-proposal.mdの9人分を利用者が一括承認。標準原画9件を上書きせず別アセット化する方針。現時点で新画像は未生成・ゲーム未接続。人物同一性/肌/武器/金属/模様を維持し、作成後に比較検証を記録する。
+
+2026-11-05 主人公の衣装配色候補01: imagegenスキルの組込みimage_genで標準原画を参照編集し、白鼠/藍の布地を試作。布模様の差を目視確認したため未採用・Content未配置・ゲーム未接続。候補と原文プロンプトはSaved/ArtPrototypes/Appearance/hero-ren-dye1-candidate01.{png,prompt.md}に保全。原画を上書きしていない。他8人の差分は未生成。

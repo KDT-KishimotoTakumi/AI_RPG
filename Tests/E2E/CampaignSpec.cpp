@@ -70,10 +70,18 @@ void FGirlsSpireCampaignSpec::Define()
         FSlateApplication::Get().AddWindow(Window.ToSharedRef());Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    for(bool disk:{false,true})It(disk?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,disk]{
+    for(int scenario=0;scenario<3;++scenario)It(scenario==2?TEXT("外見選択データを実ディスクへ保持して12日完走する"):scenario==1?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,scenario]{
         using namespace GirlsSpire;
+        const bool disk=scenario!=0;
         // 初期シードだけ固定し、その後は状態注入・検証用勝利入力を使わない。
-        const auto run=std::make_shared<Run>(1,Difficulty::Beginner,HeroRole::CommandFan);
+        Profile initialProfile;
+        if(scenario==2){
+            // 過去周回で条件達成済みの恒久記録だけを準備する。画像の表示は未接続。
+            initialProfile.VictoryRecorded=true;initialProfile.HighestDifficulty=1;initialProfile.SpecialConversations.fill(true);
+            for(int id=0;id<=8;++id)if(!TestTrue(TEXT("初期解放済み外見をルールAPIで選ぶ"),ChooseAppearance(initialProfile,id,AppearanceVariant::Alternate)))return;
+        }
+        const auto expectedAppearances=initialProfile.SelectedAppearances;
+        const auto run=std::make_shared<Run>(1,Difficulty::Beginner,HeroRole::CommandFan,initialProfile);
         const auto files=std::make_shared<CampaignMemory>();
         std::vector<std::shared_ptr<DiskSlotFiles>> backends;
         const auto folder=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("Tests/Campaign")/FGuid::NewGuid().ToString(EGuidFormats::Digits));
@@ -93,6 +101,7 @@ void FGirlsSpireCampaignSpec::Define()
         for(int step=0;step<1024;++step){
             const auto saved=service->Load();
             if(!TestTrue(TEXT("各操作後に確定済み取引を読み取れる"),saved.Issue==SlotIssue::None && saved.Run.has_value()))return;
+            if(!TestTrue(TEXT("全操作で人物別の外見選択データを保持"),saved.Permanent.SelectedAppearances==expectedAppearances))return;
             const auto& state=saved.Run->Run.State;days.insert(state.Day);
             UE_LOG(LogTemp,Display,TEXT("CampaignUI step=%d day=%d phase=%d battle=%d"),step,state.Day,int(state.Phase),int(saved.Run->Combat.has_value()));
             const bool outside=disk && !outsideResumed && state.Day==5 && state.Phase==RunPhase::Route;
@@ -156,12 +165,12 @@ void FGirlsSpireCampaignSpec::Define()
             }
             if(state.PendingRescue>=0){if(!Click("rescue.choice.0") || !Click("rescue.confirm"))return;continue;}
             if(state.Phase==RunPhase::Won){
-                if(!TestTrue(TEXT("12日/加入4人/両ボス/中級解放"),days.size()==12 && state.Day==12 && state.Recruited.size()==4 && midBosses==1 && finalBosses==1 && saved.Permanent.HighestDifficulty==1))return;
+                if(!TestTrue(TEXT("12日/加入4人/両ボス/中級解放"),days.size()==12 && state.Day==12 && state.Recruited.size()==4 && midBosses==1 && finalBosses==1 && saved.Permanent.HighestDifficulty==1 && saved.Permanent.VictoryRecorded))return;
                 if(!Click("result.continue") || !Click("epilogue.select.0") || !Click("epilogue.confirm") || !Click("epilogue.back"))return;
                 TestTrue(TEXT("後日談記録からタイトルへ戻る"),Driver->FindElement(By::Id("title.start"))->Exists() && service->Load().Permanent.Epilogues[0]);
                 if(disk){
                     openDisk();const auto finished=service->Load();
-                    TestTrue(TEXT("内外の再構築を完了し、新ストアでも後日談/難易度/図鑑が保持され周回は終了"),outsideResumed && insideResumed && finished.Issue==SlotIssue::None && !finished.Run && finished.Permanent.Epilogues[0] && finished.Permanent.HighestDifficulty==1 && finished.Permanent.DiscoveredEnemies==saved.Permanent.DiscoveredEnemies && finished.Permanent.DiscoveredCombos==saved.Permanent.DiscoveredCombos);
+                    TestTrue(TEXT("内外の再構築を完了し、新ストアでも後日談/難易度/図鑑/外見選択を保持し周回は終了"),outsideResumed && insideResumed && finished.Issue==SlotIssue::None && !finished.Run && finished.Permanent.Epilogues[0] && finished.Permanent.HighestDifficulty==1 && finished.Permanent.VictoryRecorded && finished.Permanent.SelectedAppearances==expectedAppearances && finished.Permanent.DiscoveredEnemies==saved.Permanent.DiscoveredEnemies && finished.Permanent.DiscoveredCombos==saved.Permanent.DiscoveredCombos);
                 }
                 AddInfo(FString::Printf(TEXT("初級/軍配/seed1: %d戦、プレイヤー操作%d、全12日。初期値以外の状態注入なし。"),battles,playerActions));return;
             }

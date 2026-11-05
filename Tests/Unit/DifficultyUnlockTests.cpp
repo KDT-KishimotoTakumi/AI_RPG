@@ -51,13 +51,14 @@ int TestDifficultyUnlock()
         const auto revision=run.Snapshot().Revision;const auto rng=run.RandomState();
         check(!run.CompleteBattle(revision+1,BattleOutcome::Won) && run.ProfileState()==prior,"古い勝利入力では解放しない");
         check(run.CompleteBattle(revision,BattleOutcome::Won),"実戦結果経路で最終ボス勝利");
-        prior.HighestDifficulty=std::max(highest,std::min(2,d+1));
+        prior.HighestDifficulty=std::max(highest,std::min(2,d+1));prior.VictoryRecorded=true;
         check(run.ProfileState()==prior && run.Snapshot().Phase==RunPhase::Reward,"報酬前に解放し既存の記録は保持");
         check(run.RandomState()==rng,"解放処理は乱数を消費しない");
     }
     Profile oldSource;oldSource.HighestDifficulty=1;oldSource.Bonds.fill(42);oldSource.SpecialConversations[3]=true;oldSource.Epilogues[5]=true;oldSource.DiscoveredCombos={1,2,201};
     if(auto v4=EncodeProfilePayload(oldSource)){
-        v4->resize(v4->size()-8);(*v4)[4]=4;auto expected=oldSource;expected.HighestDifficulty=2;
+        // v7の外見37バイト＋v6の空の敵一覧4＋v5の難易度4を除く。
+        v4->resize(v4->size()-45);(*v4)[4]=4;auto expected=oldSource;expected.HighestDifficulty=2;
         check(DecodeProfilePayload(*v4)==expected,"v4の絆/交流/後日談/発見連携を全て維持して全解放");
         for(std::size_t size=0;size<v4->size();++size)check(!DecodeProfilePayload(v4->substr(0,size)),"切断したv4は受理しない");
         check(!DecodeProfilePayload(*v4+"x"),"余剰のあるv4は受理しない");

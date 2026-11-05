@@ -530,3 +530,12 @@ GS-072最終通常MSVC: ビルド成功42.57秒、対象UI28件警告0（94c5f26
 - 今回は同一UE内で保存ストアと画面を再構築した試験。別UEプロセスの12日通し、全武器/難易度/ストーリー/実解像度/配布は未完了。製品C++は不変で、全424件/Native/計測を今回再実行していない。直近の製品各90%以上の証跡は維持。
 
 2026-11-05 配色承認の資料反映: 表9人・主色/副色のHEX18件・重複しない標準原画9件への参照を確認。更新前後の原画SHA256は不変（Saved/AppearanceApproval-*/verification.json）。ゲームコード/素材/保存形式は未変更、今回はテストを再実行していない。衣装差分の素材作成/保存/UI接続/TDDはT026bで未完了を維持。
+
+## GS-079/T026b1 外見の恒久記録基盤（2026-11-05）
+- Domain/AppearanceのStandard/Alternateと解放・選択・検証API、Profile v7のVictoryRecorded/SelectedAppearances[9]を追加。主人公は初勝利または既存後日談、仲間は当人の専用交流完了が根拠。難易度全解放から勝利を推測しない。標準は全員選択可能、不正人物/列挙/未解放選択は状態を変えず拒否する。
+- 初勝利は最終ボス勝利後・報酬/後日談前に保存し、敗北で解放/選択を失わない。Profile旧v1～6互換、旧選択は標準/新旗false。Run v19と1200戦場の固定保存指紋9375212860804229285は維持。
+- Red183中75失敗→焦点Green184、切断/余剰/不正真偽値/列挙を加え全Native回帰293成功。集計後に旧v6Inspect/初敗北未解放を補強し、通常MSVC焦点294成功（appearance-final-native.log）。初回全Nativeの10失敗は旧テストのv7末尾オフセット/新勝利記録の期待値を訂正した。原本ログappearance-{red,green,core,core-2}.logを保持。
+- 全体計測79a55e5a602043dab0dc8d2d768177c4: 行5250/5279=99.45%、関数663/675=98.22%、分岐5425/5950=91.18%、Passed=true/Missing=[]。全UE424警告0、無音/音声の通常起動・独立音量・別プロセス再開・音声専用2件も成功。初回Clangは前工程CampaignTestsのCombat省略初期化を拒否し明示初期化で訂正。次回は全実行成功後の宣言ハッシュ正規化差で集計停止したが、登録専用RunAutomation.cppのLF正規化ハッシュを訂正し、同じ計測原本/実行物で既存と同じ全ソース/各90%ゲートを再集計した。Source/Testsの集計前後SHA不変と、補強テスト後も製品ソース147件のSHA不変を確認。appearance-aggregate.log/aggregation-source-hashes.json参照。JSON/profdata/計装DLLを保全、生計測6件4,301,423,320 bytes整理済み。
+- 隔離コピーで初勝利根拠を難易度2へ取り違えた変異を検出（期待終了1）、原本SHA不変。Saved/AppearanceMutation-99d0c9428aeb4d4bb36b1b20b69bffc1/result.json。
+- 通常MSVCへ復帰し、保存UI23件、別UEプロセス60地点＋世代復旧/独立設定、12日UI3件（メモリ/実ディスク/9人の外見選択データ入り実ディスク）、音声付き実戦/独立音量/別プロセス再開が成功。Save UI=04a0c01045ec421abbc8bd4dc15ab6b7、12日=3447ec7dc21c42b3abff1681a7abfed0、再開=ProcessResume/0f1d2fc4854440b2bcb50f44f0ef555c、音声=f9a2c0ff94a3462f998255bf9290e7d1/fed3399901954d00a4ce29436288cede。Saved/appearance-final-review.logの最終確認成功を確認。
+- 今回の完了はデータ/API基盤だけ。選択UI・画像差分・保存戦闘の外見固定は未接続でT026b全体は未完了。12日3件は初期Run/過去達成済みProfileをAPI準備し、以後は実マウス操作・勝利省略なし。衣装が実際に変わる画面のE2Eではない。主人公画像の生成候補は布模様差で未採用、標準原画は無変更。

@@ -4,7 +4,7 @@
 namespace GirlsSpire {
 bool ValidProfile(const Profile& profile)
 {
-    return std::all_of(profile.DiscoveredEnemies.begin(),profile.DiscoveredEnemies.end(),[](int id){return id>=1 && id<=EnemyKindCount;}) &&
+    return ValidAppearanceSelection(profile) && std::all_of(profile.DiscoveredEnemies.begin(),profile.DiscoveredEnemies.end(),[](int id){return id>=1 && id<=EnemyKindCount;}) &&
         std::adjacent_find(profile.DiscoveredEnemies.begin(),profile.DiscoveredEnemies.end(),[](int a,int b){return a>=b;})==profile.DiscoveredEnemies.end() &&
         profile.HighestDifficulty>=0 && profile.HighestDifficulty<=2 &&
         std::all_of(profile.Bonds.begin(),profile.Bonds.end(),[](int rank){return rank>=0 && rank<=100;}) &&

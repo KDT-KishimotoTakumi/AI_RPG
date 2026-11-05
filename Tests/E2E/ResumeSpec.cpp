@@ -137,9 +137,9 @@ void FGirlsSpireResumeSpec::Define()
         TestFalse(TEXT("後日談へ進めない"),Driver->FindElement(By::Id("result.continue"))->Exists());
         Files->Fail=false;if(!Click("save.retry"))return;
         auto saved=Service->Load();
-        TestTrue(TEXT("後日談を選ぶ前に勝利と解放を同時保存"),saved.Run && saved.Run->Run.State.Phase==RunPhase::Won && saved.Permanent.HighestDifficulty==level+1);
+        TestTrue(TEXT("後日談を選ぶ前に勝利と解放を同時保存"),saved.Run && saved.Run->Run.State.Phase==RunPhase::Won && saved.Permanent.HighestDifficulty==level+1 && saved.Permanent.VictoryRecorded);
         Reopen();if(!Click("title.resume"))return;
-        TestTrue(TEXT("勝利再開で解放を維持"),Service->Load().Permanent.HighestDifficulty==level+1);
+        TestTrue(TEXT("勝利再開で解放を維持"),Service->Load().Permanent.HighestDifficulty==level+1 && Service->Load().Permanent.VictoryRecorded);
     });
     It(TEXT("選択確定を自動保存し中断・画面再生成・一度だけ再開する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(150),[this] {
         using namespace GirlsSpire;

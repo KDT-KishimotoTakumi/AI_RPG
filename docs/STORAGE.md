@@ -172,3 +172,5 @@ GS-073容量整理: 合格Coverage/208403e4c4ab4b05a06bcc09a1d17e03の生計測6
 2026-11-05 GS-077後: 予備検証器の再生成obj 11,583,706 bytesを追加整理。保全16,637ファイルのSHA256/秘密設定メタデータ不変、実行物/失敗画像/集計/UE Intermediate/DDC保持。監査Saved/StorageAudit-ababc4884c4c48cbaf4fcb5b91821e69/result.json。今回2回のobj整理量は77,787,900 bytes（プロジェクト全体の純減量とは別）。
 
 2026-11-05 GS-078後: 隔離変異検証器の再生成obj4件、1,889,886 bytesを整理。既整理生計測の重複計上なし。保全16,661ファイルのSHA256・秘密設定メタデータ不変、ゲーム/素材/セーブ/実行物/失敗証跡/結果/UE Intermediate/DDC保持。監査Saved/StorageAudit-7f3ef4335c3542eeb482269b237ec291/result.json。
+
+2026-11-05 GS-079後: 全体計測79a55e5a602043dab0dc8d2d768177c4の成功profraw6件4,301,423,320 bytesを集計保持後に整理。通常MSVC最終確認後、Core/AppearanceFocused/隔離変異の再生成obj271件89,898,244 bytesも整理。処理量合計4,391,321,564 bytes（開発中の再生成を含み、プロジェクト全体の純減ではない）。保全17,124ファイルのSHA256・秘密設定メタデータ不変。ゲーム/原画/セーブ/実行物/JSON/profdata/計装DLL/失敗・未採用画像の証跡を保持し、現行UE Intermediate/DDCは残した。監査Saved/StorageAudit-9306ecfabe5641b0ae1fcf371d5f540b/result.json。
