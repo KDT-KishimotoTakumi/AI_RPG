@@ -207,5 +207,7 @@ int main()
     failed += TestRecoverySelection();
     extern int TestGenerationRecovery();
     failed += TestGenerationRecovery();
+    extern int TestCampaign();
+    failed += TestCampaign();
     return failed == 0 ? 0 : 1;
 }

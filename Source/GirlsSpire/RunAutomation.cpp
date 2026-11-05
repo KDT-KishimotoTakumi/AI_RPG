@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "../../Tests/E2E/RunSpec.cpp"
+#include "../../Tests/E2E/CampaignSpec.cpp"
 #include "../../Tests/E2E/BattleSpec.cpp"
 #include "../../Tests/E2E/ComboSpec.cpp"
 #include "../../Tests/E2E/ComboDiscoverySpec.cpp"
