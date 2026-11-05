@@ -176,3 +176,5 @@ GS-073容量整理: 合格Coverage/208403e4c4ab4b05a06bcc09a1d17e03の生計測6
 2026-11-05 GS-079後: 全体計測79a55e5a602043dab0dc8d2d768177c4の成功profraw6件4,301,423,320 bytesを集計保持後に整理。通常MSVC最終確認後、Core/AppearanceFocused/隔離変異の再生成obj271件89,898,244 bytesも整理。処理量合計4,391,321,564 bytes（開発中の再生成を含み、プロジェクト全体の純減ではない）。保全17,124ファイルのSHA256・秘密設定メタデータ不変。ゲーム/原画/セーブ/実行物/JSON/profdata/計装DLL/失敗・未採用画像の証跡を保持し、現行UE Intermediate/DDCは残した。監査Saved/StorageAudit-9306ecfabe5641b0ae1fcf371d5f540b/result.json。
 
 2026-11-05 GS-080後: Coverage/4a6fc7ddb58f45ffb9e92cbe1a87f6e6の合格・集計済みprofraw6件4,301,435,160 bytesを整理。追加の再生成obj対象は0件、過去回を重複計上しない。処理量はプロジェクト全体の純減とは別。保全17,212ファイルのSHA256/秘密設定メタデータ不変。ゲーム/原画/セーブ/実行物/JSON/profdata/計装DLL/失敗証跡/現行UE Intermediate/DDC保持。監査Saved/StorageAudit-6da0ebc6d7d84328ad98b82f661b8799/result.json。
+
+GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工程で再使用。未採用候補/失敗ログ/原画を保持し、追加の大規模削除なし。GS-080の4,301,435,160 bytesを二重計上しない。
