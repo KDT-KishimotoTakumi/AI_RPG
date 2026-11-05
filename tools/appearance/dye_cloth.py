@@ -56,6 +56,9 @@ def make_mask(source, layer):
     draw = ImageDraw.Draw(mask)
     for polygon in layer["polygons"]:
         draw.polygon([tuple(point) for point in polygon], fill=255)
+    # 色が布地と似ていても、髪・肌・金属等の明示保護を必ず優先する。
+    for polygon in layer.get("protected_polygons", []):
+        draw.polygon([tuple(point) for point in polygon], fill=0)
     selected = []
     for pixel, inside in zip(source.getdata(), mask.getdata()):
         red, green, blue, alpha = pixel
@@ -71,6 +74,36 @@ def make_mask(source, layer):
     return mask
 
 
+def verify_protected(source, result, layers):
+    protected = Image.new("L", source.size)
+    draw = ImageDraw.Draw(protected)
+    for layer in layers:
+        for polygon in layer.get("protected_polygons", []):
+            draw.polygon([tuple(point) for point in polygon], fill=255)
+    count = 0
+    for before, after, selected in zip(source.getdata(), result.getdata(), protected.getdata()):
+        if selected:
+            if before != after:
+                raise ValueError("別レイヤーを含む変更禁止領域のRGBAが変化")
+            count += 1
+    return count
+
+
+def validate_layer_names(layers):
+    if not isinstance(layers, list) or not layers:
+        raise ValueError("空でないレイヤー一覧が必要")
+    names = set()
+    for layer in layers:
+        name = layer.get("name") if isinstance(layer, dict) else None
+        if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]{0,63}", name):
+            raise ValueError("マスク名は英字で始まる64文字以内の英数字・ハイフン・下線に限定")
+        # Windowsのファイル名は大小文字だけでは区別されない。
+        key = name.casefold()
+        if key in names:
+            raise ValueError("マスク名が重複")
+        names.add(key)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=pathlib.Path, required=True)
@@ -78,6 +111,7 @@ def main():
     args = parser.parse_args()
     root = pathlib.Path(__file__).resolve().parents[2]
     config = json.loads(args.config.read_text(encoding="utf-8-sig"))
+    validate_layer_names(config["layers"])
     original = (root / config["source"]).resolve()
     output = args.output.resolve()
     if not original.is_relative_to(root / "Content/Art/Characters") or not output.is_relative_to(root / "Saved/ArtPrototypes"):
@@ -100,10 +134,13 @@ def main():
         result = recolor(result, mask, layer["color"], layer["reference_luma"])
         masks.append((layer["name"], mask))
     report = verify(source, result, union)
+    report["protected_pixels"] = verify_protected(source, result, config["layers"])
+    report["protected_rgba_identical"] = True
     if hashlib.sha256(original.read_bytes()).hexdigest() != source_hash:
         raise ValueError("処理中に原画が変化")
     output.mkdir(parents=True, exist_ok=False)
     result.save(output / "candidate.png", optimize=True)
+    report["candidate_sha256"] = hashlib.sha256((output / "candidate.png").read_bytes()).hexdigest()
     union.save(output / "mask.png", optimize=True)
     overlay = source.copy()
     tint = Image.new("RGBA", source.size, (255, 0, 160, 255))

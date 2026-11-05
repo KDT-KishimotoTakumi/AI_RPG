@@ -17,15 +17,19 @@ const TCHAR* FCharacterPortraits::Name(int actor)
     }();
     return *names[actor];
 }
-TSharedPtr<FSlateDynamicImageBrush> FCharacterPortraits::Get(int actor)
+TSharedPtr<FSlateDynamicImageBrush> FCharacterPortraits::Get(int actor,GirlsSpire::AppearanceVariant variant)
 {
+    using GirlsSpire::AppearanceVariant;
+    if(variant!=AppearanceVariant::Standard && variant!=AppearanceVariant::Alternate)return nullptr;
     const auto definition=GirlsSpire::FindCharacter(actor);if(!definition)return nullptr;
-    if(Images[actor])return Images[actor];
-    const auto path=FPaths::ConvertRelativePathToFull(Root/(FString(UTF8_TO_TCHAR(definition->Portrait.data()))+TEXT("-v1.png")));
+    auto& cached=Images[actor][static_cast<int>(variant)];
+    if(cached)return cached;
+    const auto suffix=variant==AppearanceVariant::Standard?TEXT("-v1.png"):TEXT("-dye1.png");
+    const auto path=FPaths::ConvertRelativePathToFull(Root/(FString(UTF8_TO_TCHAR(definition->Portrait.data()))+suffix));
     if(!FPaths::FileExists(path))return nullptr;
     const FName resource(*path);
     const auto size=FSlateApplication::Get().GetRenderer()->GenerateDynamicImageResource(resource);
     if(size.X<=0 || size.Y<=0)return nullptr;
-    Images[actor]=MakeShared<FSlateDynamicImageBrush>(resource,FVector2D(size.X,size.Y));
-    return Images[actor];
+    cached=MakeShared<FSlateDynamicImageBrush>(resource,FVector2D(size.X,size.Y));
+    return cached;
 }

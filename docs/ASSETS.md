@@ -44,3 +44,7 @@ GS-066素材（2026-11-04）: Content/Art/Objects/terrain-atlas-v1.pngは草地/
 2026-11-05 主人公の衣装配色候補01: imagegenスキルの組込みimage_genで標準原画を参照編集し、白鼠/藍の布地を試作。布模様の差を目視確認したため未採用・Content未配置・ゲーム未接続。候補と原文プロンプトはSaved/ArtPrototypes/Appearance/hero-ren-dye1-candidate01.{png,prompt.md}に保全。原画を上書きしていない。他8人の差分は未生成。
 
 2026-11-05 GS-081: Python/Pillow12.0.0のローカル布地マスク方式を利用者が明示承認。tools/appearance/hero-ren-dye1.jsonへ原画SHA・主色#C8CDD2/副色#243B5A・抽出領域を記録。Saved/ArtPrototypes/Appearance/hero-ren-local-01/02へcandidate.png、mask/重ね合わせ、report.jsonを保全。原画の模様を描き直していないが、候補は境界/模様の見え方が未達のため両方未採用・ゲーム未接続。他8人は未生成。最終マスクと目視品質を確定後に展開する。新たな配布素材の追加はない。
+
+2026-11-06 GS-082: 主人公の白鼠/藍の衣装差分hero-ren-dye1.pngを配置（画面未接続）。布地マスクを修正し、顔/髪/手/主要鎧など148,289画素の明示保護を追加。標準原画9枚SHA不変、122,858画素だけ変更、マスク外RGBA/全alpha/寸法不変、local-04/05のPNG再生成一致を確認して制作側で目視比較。差分SHA256=45ABE6AF2E762F48C1038CC50FD7DF7E716B2FEA296276034E85C5DEEE41F00B。配色/作成方法は承認済みで新たな人物・模様・露出・能力を追加しない。設定/確認表はtools/appearance/hero-ren-dye1.jsonとreviewed-portraits.json。監査はSaved/ArtPrototypes/Appearance/hero-ren-local-05/adoption-audit.json。候補01～03は未採用で保全。他8人の差分は未制作。戦場表示/選択UI/保存戦闘固定への接続は別工程。
+
+GS-084補強後もlocal-06で主人公の同一PNGを再生成し、正式差分SHAが不変であることを確認。外部画像生成サービスは利用せず、Pillowの開発環境だけを使用。

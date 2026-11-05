@@ -26,7 +26,7 @@
   },
   {
     "path": "Source/GirlsSpire/Presentation/CharacterPortraits.h",
-    "sha256": "B96FC3EA2AE1B2855BA009B475C1E402600B86B5605076FFFDF0A3B653F84955",
+    "sha256": "80684E802DFF947248B1D0ED2FDE013CE6784C06FAA466B77925AB51D096D84A",
     "reason": "関数宣言とメンバーのみ。全関数定義はCharacterPortraits.cppで計測。内容ハッシュで実装の追加を検出する。"
   },
   {

@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import uuid
 
 from PIL import Image
 
@@ -89,6 +90,54 @@ class DyeTests(unittest.TestCase):
     def test_unknown_extraction_rejected(self):
         with self.assertRaises(ValueError):
             dye.make_mask(self.source, {"filter": "unknown", "polygons": [[[0, 0], [3, 0], [3, 3]]]})
+
+    def test_protected_polygon_overrides_blue_cloth(self):
+        layer = {"filter": "blue-cloth", "polygons": [[[0, 0], [3, 0], [3, 3], [0, 3]]],
+                 "protected_polygons": [[[1, 1], [2, 1], [2, 2], [1, 2]]]}
+        mask = dye.make_mask(self.source, layer)
+        result = dye.recolor(self.source, mask, "#C8CDD2", 55)
+        self.assertEqual(mask.getpixel((1, 1)), 0)
+        self.assertEqual(result.getpixel((1, 1)), self.source.getpixel((1, 1)))
+        self.assertNotEqual(result.getpixel((0, 0)), self.source.getpixel((0, 0)))
+
+    def test_fully_protected_mask_is_rejected(self):
+        polygon = [[0, 0], [3, 0], [3, 3], [0, 3]]
+        with self.assertRaises(ValueError):
+            dye.make_mask(self.source, {"filter": "blue-cloth", "polygons": [polygon], "protected_polygons": [polygon]})
+
+    def test_final_protection_checks_all_layers(self):
+        layers = [{"protected_polygons": [[[1, 1], [2, 1], [2, 2], [1, 2]]]}, {}]
+        result = self.source.copy()
+        result.putpixel((1, 1), (100, 110, 120, 127))
+        with self.assertRaises(ValueError):
+            dye.verify_protected(self.source, result, layers)
+
+    def test_unchanged_protection_is_reported(self):
+        layers = [{"protected_polygons": [[[1, 1], [2, 1], [2, 2], [1, 2]]]}]
+        self.assertEqual(dye.verify_protected(self.source, self.source.copy(), layers), 4)
+
+    def test_valid_layer_names(self):
+        self.assertIsNone(dye.validate_layer_names([{"name": "primary"}, {"name": "secondary_2"}]))
+
+    def test_bad_and_duplicate_layer_names_rejected(self):
+        for layers in ([], None, {}, [None], [{}], [{"name": "../escape"}], [{"name": "x/y"}],
+                       [{"name": "x\\y"}], [{"name": ""}], [{"name": 2}], [{"name": "x" * 65}],
+                       [{"name": "primary"}, {"name": "PRIMARY"}]):
+            with self.subTest(layers=layers), self.assertRaises(ValueError):
+                dye.validate_layer_names(layers)
+
+    def test_cli_bad_layer_name_never_creates_output(self):
+        template = json.loads((ROOT / "tools/appearance/hero-ren-dye1.json").read_text(encoding="utf-8-sig"))
+        template["layers"][0]["name"] = "../escape"
+        output = ROOT / "Saved/ArtPrototypes/Appearance" / ("invalid-layer-proof-" + uuid.uuid4().hex)
+        scratch = ROOT / "Saved/Tests/AppearancePython"
+        scratch.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=scratch) as directory:
+            config_file = pathlib.Path(directory) / "config.json"
+            config_file.write_text(json.dumps(template), encoding="utf-8")
+            completed = subprocess.run([sys.executable, str(ROOT / "tools/appearance/dye_cloth.py"), "--config", str(config_file), "--output", str(output)], capture_output=True, timeout=30)
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertFalse(output.exists(), "不正設定では候補画像も作成しない")
 
     def test_transparent_rgb_is_not_repainted(self):
         self.source.putpixel((1, 1), (40, 50, 80, 0))

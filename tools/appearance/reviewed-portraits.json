@@ -1,0 +1,24 @@
+[
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 0,
+    "standard": "Content/Art/Characters/hero-ren-v1.png",
+    "alternate": "Content\\Art\\Characters\\hero-ren-dye1.png",
+    "alternate_sha256": "45abe6af2e762f48c1038cc50fd7df7e716b2fea296276034e85c5deee41f00b",
+    "config": "tools/appearance/hero-ren-dye1.json",
+    "review": "制作側で原画との顔・髪・手・主要鎧・布地境界を目視比較。04/05の再生成一致。",
+    "protected_pixels": 148289,
+    "changed_pixels": 122858,
+    "ui_connected": false,
+    "remaining_actors": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  }
+]

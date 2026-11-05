@@ -542,7 +542,7 @@ GS-072最終通常MSVC: ビルド成功42.57秒、対象UI28件警告0（94c5f26
 
 ## GS-080 初期化告知（2026-11-05）
 - 保存UIの既存2ケースへ全恒久カテゴリ入りProfileを使用。Redで告知不足6項目を再現し、Greenは23件・警告0（2908d6d9df7943c78f5aba2aef7aa01c）。取消、保存失敗/再試行、正常側保持、破損原本保全も維持。
-- 全Native294/全UE424・警告0。Coverage/4a6fc7ddb58f45ffb9e92cbe1a87f6e6はPassed=true、Missing=[]、行5250/5279=99.45%、関数663/675=98.22%、分岐5428/5950=91.23%。全UE報告0054470fee484fcebc5f5f16ad1b21a7。
+- Native全項目失敗0（外見294チェック）/全UE424・警告0。Coverage/4a6fc7ddb58f45ffb9e92cbe1a87f6e6はPassed=true、Missing=[]、行5250/5279=99.45%、関数663/675=98.22%、分岐5428/5950=91.23%。全UE報告0054470fee484fcebc5f5f16ad1b21a7。
 - 計測パイプラインの通常起動/音声/別プロセス音声再開と音声専用2件も成功。通常MSVCビルド成功。通常MSVC最終UI/起動の結果は以下へ追記する。衣装の実画像変更や選択UIの検証ではない。
 - 通常MSVC最終確認も保存UI23件・警告0（3b44411bc8f54ff5827192d9609980f4）、音声付き通常起動/独立音量/別プロセス再開が成功（26f8228dfac94e3392efd13efcd1cc36 / 5d74f24a4975458080602c976159a558）。Saved/reset-warning-final-review.logに成功を記録。レビューで製品差分が告知2文のみであることを確認。
 
@@ -551,3 +551,19 @@ GS-072最終通常MSVC: ビルド成功42.57秒、対象UI28件警告0（94c5f26
 - マスク外RGBA/全alphaの不変、濃淡順序、原画の非変更、寸法/二値/空マスク/極値/不正色/誤原画SHA/保護対象以外の出力先拒否、再現性、透明RGB保持を確認。候補01は225,706画素、候補02は118,258画素のみ変更し、画像寸法/全alpha/非対象RGBA一致。元原画SHAは設定値と一致。
 - 主人公2候補は目視で色替え境界等が目立つため未採用・Content未接続。人物同一性/模様の最終合格、他8人、実画像E2Eは未完了。Pythonテストはゲーム全体E2Eを代替しない。
 - 今回はSource/Content/Tests/E2Eに変更なし。直前のC++全体合格（4a6fc7ddb58f45ffb9e92cbe1a87f6e6、各90%以上）を保持し、製品コードを変えず制作ツールだけを検証した。
+
+## GS-082 制作保護の回帰（2026-11-06）
+- appearance-protected-red.logで18中2失敗を確認→greenは18成功。全レイヤーの最終保護を追加したRedは2エラー→appearance-protected-final-green.logで20成功。別レイヤー経由の保護画素変更、全保護で空になるマスクの拒否も確認。
+- 主人公local-04/05のPNGはSHA一致。05/adoption-audit.jsonで標準原画9枚SHA不変、保護148,289画素/マスク外RGBA/全alpha/寸法一致、変更122,858画素を確認。原画/04/05を比較し、05の同一PNGをContentへコピー、コピー後SHA一致。画像読込/実戦表示/全9人の受け入れとは区別する。
+
+## GS-083 配色別画像読込（2026-11-06）
+- Red: appearance-loader-red-build.logでGetの配色引数未実装によるC2660を確認。最小実装後はビルド成功、appearance-loader-green.logでUI.Portraits 13件警告0（361b0f5a31db481683d12d58051a541a）。
+- 標準/配色別リソースとキャッシュ、標準の既存表示9人、差分の実寸/ファイル対応、不正ID/列挙値/欠落を検証。欠落は隔離した存在しない画像ルートで確認し、将来他8人の素材を追加しても期待値を変えない。
+- Source/Tests/人物素材のSHAをSaved/appearance-loader-frozen.jsonへ固定し、appearance-loader-coverage.logで全体計測と不変確認を完了（結果は下記）。Profile/Run形式・能力値・RNG・既存表示の呼出しは変更していない。
+Nativeの293/294という従来の略記は外見スイートのチェック数であり、Native全体の件数ではないため今回明確化した。各スイートのチェック数と失敗0は保存済み原ログを正とする。
+- GS-083の全体計測完了: Coverage/aadd0ce54113474487b76a0058e6d238はPassed=true/Missing=[]、行5254/5283=99.45%、関数663/675=98.22%、分岐5434/5956=91.24%。Native全スイート失敗0、全UE425件警告0（6e2a5e2a7a164b95a144ba76b2273a48）。固定したSource/Tests/人物素材348ファイルのSHA不変を確認。
+- 通常起動98b8ccdf440449b8bdd928e028f981ad、音声/別プロセス再開906c64ed30b041e48b448fe2041d8540 / f58fae06269b46c9afd4ea788d2013ee、音声専用2件9a668cc4c49f48e29b15dbca4f9e670eも成功。JSON/profdata/計装DLLを保全し、生計測6件4,302,835,720 bytes整理。通常MSVC復帰確認は次項へ追記する。
+- 通常MSVC復帰ビルド成功、立ち絵UI13件警告0（7e74352b7a024ee9a397bd0475ce1e2c）。appearance-loader-final-review.logに最終確認成功。通常MSVCでの今回の再実行範囲は立ち絵UIであり、音声付き実起動/再開は全体計測側で確認。
+
+## GS-084 制作設定の安全な出力（2026-11-06）
+不正名で候補フォルダが作られることをappearance-layer-name-red.logで再現（23テスト、1失敗/13エラー）。validate_layer_namesを出力前に追加し、空一覧/不正型/パス文字/空名/長さ/大小文字重複を拒否、greenは23成功。失敗生成物invalid-layer-proof-*を保全。補強後のlocal-06は正式hero-ren-dye1.pngとSHA一致（appearance-tool-final-reproduction.json）。C++製品147ファイルの計測時SHA不変をappearance-source-after-tools.jsonで確認。Python追加はC++計測後のため、C++の新規未計測コードはない。

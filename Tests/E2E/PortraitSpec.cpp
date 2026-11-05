@@ -6,6 +6,7 @@
 #include "Widgets/SNullWidget.h"
 #include "Presentation/CombatScreen.h"
 #include "Presentation/CharacterPortraits.h"
+#include "Domain/Appearance.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
@@ -23,6 +24,26 @@ void FGirlsSpirePortraitSpec::Define()
         FSlateApplication::Get().AddWindow(Window.ToSharedRef());Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
+    It(TEXT("配色差分を標準と別に読み込み不正値と欠落を拒否する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(60),[this] {
+        Async(EAsyncExecution::TaskGraphMainThread,[this] {
+            using GirlsSpire::AppearanceVariant;
+            FCharacterPortraits portraits;
+            const auto standard=portraits.Get(0);
+            const auto alternate=portraits.Get(0,AppearanceVariant::Alternate);
+            if(!TestTrue(TEXT("標準と配色差分の実PNG読込み"),standard.IsValid() && alternate.IsValid()))return;
+            TestTrue(TEXT("別リソースで混同しない"),standard!=alternate);
+            TestTrue(TEXT("標準キャッシュを保持"),standard==portraits.Get(0,AppearanceVariant::Standard));
+            TestTrue(TEXT("配色キャッシュを再利用"),alternate==portraits.Get(0,AppearanceVariant::Alternate));
+            TestTrue(TEXT("配色画像の対応"),alternate->GetResourceName().ToString().EndsWith(TEXT("hero-ren-dye1.png")));
+            TestTrue(TEXT("配色でも寸法は固定"),alternate->ImageSize==standard->ImageSize && alternate->ImageSize==FVector2D(1024,1536));
+            TestFalse(TEXT("負の配色値を拒否"),portraits.Get(0,static_cast<AppearanceVariant>(-1)).IsValid());
+            TestFalse(TEXT("範囲外配色を拒否"),portraits.Get(0,static_cast<AppearanceVariant>(2)).IsValid());
+            TestFalse(TEXT("不正人物の配色を拒否"),portraits.Get(-1,AppearanceVariant::Alternate).IsValid());
+            TestFalse(TEXT("上限外人物の配色を拒否"),portraits.Get(9,AppearanceVariant::Alternate).IsValid());
+            FCharacterPortraits missing(FPaths::ProjectSavedDir()/TEXT("Tests/Portraits/NotInstalled"));
+            for(int id=0;id<=8;++id)TestFalse(TEXT("欠落する配色を標準と偽らず安全に返す"),missing.Get(id,AppearanceVariant::Alternate).IsValid());
+        }).Wait();
+    });
     It(TEXT("画像対応・再利用・欠落・不正な人物を安全に扱う"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(60),[this] {
         Async(EAsyncExecution::TaskGraphMainThread,[this] {
             FCharacterPortraits portraits;
