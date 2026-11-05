@@ -91,8 +91,8 @@ void SRunScreen::ConfirmReset(GirlsSpire::SaveKind kind)
 {
     Body->ClearChildren();
     const bool run=kind==GirlsSpire::SaveKind::Run;
-    AddText(run?TEXT("復元できない周回データを初期化しますか？ 周回内の成長・装備・所持品・戦闘状態を失います。正常な絆データは保持します。"):
-        TEXT("復元できない恒久データを初期化しますか？ 絆ランクが0になり、専用交流の完了記録と後日談の本を失います。正常な進行中の周回は保持します。"),"save.reset.warning");
+    AddText(run?TEXT("復元できない周回データを初期化しますか？ 周回内の成長・装備・所持品・戦闘状態を失います。正常な恒久記録は保持します。"):
+        TEXT("復元できない恒久データを初期化しますか？ 絆・専用交流の完了・連携図鑑・敵図鑑・難易度解放・衣装の解放/選択・勝利記録・後日談を失います。正常な進行中の周回は保持します。"),"save.reset.warning");
     AddText(TEXT("初期化前に、破損した本体とバックアップを保存フォルダ内のCorruptへ保全します。保全に失敗した場合は上書きしません。"),"save.reset.preserve",16);
     AddAction(TEXT("損失を確認して対象側を初期化"),"save.reset.confirm",[this,kind]{ResetSavedSlot(kind);});
     AddAction(TEXT("初期化せず戻る"),"save.reset.cancel",[this]{ShowTitle();});

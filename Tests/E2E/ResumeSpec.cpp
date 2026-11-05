@@ -262,7 +262,10 @@ void FGirlsSpireResumeSpec::Define()
     for(int side=0;side<2;++side) It(side==0?TEXT("周回だけの初期化を確認し破損ファイルと恒久を保つ"):TEXT("恒久だけの初期化を確認し破損ファイルと正常周回を保つ"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(180),[this,side] {
         using namespace GirlsSpire;
         const auto kind=side==0?SaveKind::Run:SaveKind::Profile;
-        Profile profile;profile.Bonds.fill(55);Run run(42,Difficulty::Intermediate,HeroRole::CommandFan,profile);
+        Profile profile;profile.Bonds.fill(55);profile.HighestDifficulty=2;profile.VictoryRecorded=true;
+        profile.SpecialConversations.fill(true);profile.Epilogues[0]=true;profile.DiscoveredCombos={2,201};profile.DiscoveredEnemies={1,12};
+        profile.SelectedAppearances.fill(AppearanceVariant::Alternate);
+        Run run(42,Difficulty::Intermediate,HeroRole::CommandFan,profile);
         const RunSaveState saved{run.Checkpoint(),{}};
         Service->Prepare(saved,profile);Service->Retry();
         Files->Replace(kind,false,"broken main");Files->Replace(kind,true,"broken backup");Reopen();
@@ -270,6 +273,10 @@ void FGirlsSpireResumeSpec::Define()
         if(!TestTrue(TEXT("対象側の初期化操作"),Driver->FindElement(By::Id(reset))->Exists())) return;
         if(!Click(reset)) return;
         TestTrue(TEXT("損失内容の確認表示"),Driver->FindElement(By::Id("save.reset.warning"))->Exists());
+        const auto warning=Driver->FindElement(By::Id("save.reset.warning"))->GetText().ToString();
+        if(side==0)TestTrue(TEXT("周回初期化は恒久記録全体の保持を知らせる"),warning.Contains(TEXT("恒久記録")));
+        else for(const TCHAR* category:{TEXT("絆"),TEXT("専用交流"),TEXT("連携"),TEXT("敵図鑑"),TEXT("難易度"),TEXT("衣装"),TEXT("勝利記録"),TEXT("後日談")})
+            TestTrue(FString(TEXT("失う記録を明示: "))+category,warning.Contains(category));
         TestTrue(TEXT("確認前に破損を消さない"),Files->Read(kind,false).Bytes=="broken main");
         if(!Click("save.reset.cancel") || !Click(reset)) return;
         Files->Fail=true;if(!Click("save.reset.confirm")) return;
