@@ -11,6 +11,7 @@
 #include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
 #include "Presentation/RunScreen.h"
+#include "Infrastructure/DiskSlotFiles.h"
 #include "AI/Intent.h"
 #include <algorithm>
 #include <set>
@@ -69,18 +70,45 @@ void FGirlsSpireCampaignSpec::Define()
         FSlateApplication::Get().AddWindow(Window.ToSharedRef());Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
-    It(TEXT("通常能力の12日を実戦とマウス操作で完走する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this]{
+    for(bool disk:{false,true})It(disk?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,disk]{
         using namespace GirlsSpire;
         // 初期シードだけ固定し、その後は状態注入・検証用勝利入力を使わない。
         const auto run=std::make_shared<Run>(1,Difficulty::Beginner,HeroRole::CommandFan);
-        const auto files=std::make_shared<CampaignMemory>();const auto service=std::make_shared<SaveTransaction>(*files,*files);
+        const auto files=std::make_shared<CampaignMemory>();
+        std::vector<std::shared_ptr<DiskSlotFiles>> backends;
+        const auto folder=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("Tests/Campaign")/FGuid::NewGuid().ToString(EGuidFormats::Digits));
+        std::shared_ptr<SaveTransaction> service;
+        const auto openDisk=[&]{
+            // 各ストアの参照先を、画面破棄まで保持する。個人セーブは使用しない。
+            backends.push_back(std::make_shared<DiskSlotFiles>(std::filesystem::path(*folder)));
+            service=std::make_shared<SaveTransaction>(*backends.back(),*backends.back());
+        };
+        if(disk){
+            if(!TestTrue(TEXT("隔離した実ディスク保存先を作成"),IFileManager::Get().MakeDirectory(*folder,true)))return;
+            openDisk();AddInfo(FString(TEXT("通し検証保存先: "))+folder);
+        }else service=std::make_shared<SaveTransaction>(*files,*files);
         Async(EAsyncExecution::TaskGraphMainThread,[this,run,service]{Window->SetContent(SNew(SRunScreen).InitialRun(run).SaveService(service).DevelopmentTools(false).FullField(true));}).Wait();DrainSlateLayout();
         std::set<int> days;int battles=0,midBosses=0,finalBosses=0,playerActions=0;
+        bool outsideResumed=false,insideResumed=false;
         for(int step=0;step<1024;++step){
             const auto saved=service->Load();
             if(!TestTrue(TEXT("各操作後に確定済み取引を読み取れる"),saved.Issue==SlotIssue::None && saved.Run.has_value()))return;
             const auto& state=saved.Run->Run.State;days.insert(state.Day);
             UE_LOG(LogTemp,Display,TEXT("CampaignUI step=%d day=%d phase=%d battle=%d"),step,state.Day,int(state.Phase),int(saved.Run->Combat.has_value()));
+            const bool outside=disk && !outsideResumed && state.Day==5 && state.Phase==RunPhase::Route;
+            const bool inside=disk && !insideResumed && state.Day==6 && saved.Run->Combat && saved.Run->Combat->Battle.State.Outcome==BattleOutcome::Ongoing;
+            if(outside || inside){
+                if(!Click("save.suspend"))return;
+                if(!TestTrue(TEXT("中断記録を実ディスクへ保存"),service->Load().Run && service->Load().Run->ResumeAvailable))return;
+                openDisk();
+                Async(EAsyncExecution::TaskGraphMainThread,[this,service]{Window->SetContent(SNew(SRunScreen).SaveService(service).DevelopmentTools(false).FullField(true));}).Wait();DrainSlateLayout();
+                if(!Click("title.resume"))return;
+                const auto resumed=service->Load();
+                auto expectedResume=*saved.Run;expectedResume.ResumeAvailable=false;
+                if(!TestTrue(TEXT("新ストアと新画面の再開で全周回/戦闘/抽選/恒久が一致し中断権を消費"),resumed.Issue==SlotIssue::None && resumed.Run==expectedResume && resumed.Permanent==saved.Permanent && resumed.Generation>saved.Generation))return;
+                if(outside)outsideResumed=true;else insideResumed=true;
+                continue;
+            }
             if(saved.Run->Combat){
                 const auto restored=Battle::Restore(saved.Run->Combat->Battle);
                 if(!TestTrue(TEXT("通常戦闘の保存を復元"),restored.has_value()))return;
@@ -131,6 +159,10 @@ void FGirlsSpireCampaignSpec::Define()
                 if(!TestTrue(TEXT("12日/加入4人/両ボス/中級解放"),days.size()==12 && state.Day==12 && state.Recruited.size()==4 && midBosses==1 && finalBosses==1 && saved.Permanent.HighestDifficulty==1))return;
                 if(!Click("result.continue") || !Click("epilogue.select.0") || !Click("epilogue.confirm") || !Click("epilogue.back"))return;
                 TestTrue(TEXT("後日談記録からタイトルへ戻る"),Driver->FindElement(By::Id("title.start"))->Exists() && service->Load().Permanent.Epilogues[0]);
+                if(disk){
+                    openDisk();const auto finished=service->Load();
+                    TestTrue(TEXT("内外の再構築を完了し、新ストアでも後日談/難易度/図鑑が保持され周回は終了"),outsideResumed && insideResumed && finished.Issue==SlotIssue::None && !finished.Run && finished.Permanent.Epilogues[0] && finished.Permanent.HighestDifficulty==1 && finished.Permanent.DiscoveredEnemies==saved.Permanent.DiscoveredEnemies && finished.Permanent.DiscoveredCombos==saved.Permanent.DiscoveredCombos);
+                }
                 AddInfo(FString::Printf(TEXT("初級/軍配/seed1: %d戦、プレイヤー操作%d、全12日。初期値以外の状態注入なし。"),battles,playerActions));return;
             }
             if(!TestTrue(TEXT("周回が敗北していない"),state.Phase!=RunPhase::Lost))return;

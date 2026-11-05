@@ -170,3 +170,5 @@ GS-073容量整理: 合格Coverage/208403e4c4ab4b05a06bcc09a1d17e03の生計測6
 2026-11-05 GS-076: 新Native検証後の再生成obj 66,204,194 bytesを整理。既整理profrawの重複計上なし。保全16,623ファイルのSHA256/秘密設定メタデータ不変、UE Intermediate/DDC保持。Saved/StorageAudit-b5e8cd168bc04326a3f535a8ecc468d6/result.json。PLANの重複完了履歴はIMPLEMENTED/VALIDATION参照へ集約した。
 
 2026-11-05 GS-077後: 予備検証器の再生成obj 11,583,706 bytesを追加整理。保全16,637ファイルのSHA256/秘密設定メタデータ不変、実行物/失敗画像/集計/UE Intermediate/DDC保持。監査Saved/StorageAudit-ababc4884c4c48cbaf4fcb5b91821e69/result.json。今回2回のobj整理量は77,787,900 bytes（プロジェクト全体の純減量とは別）。
+
+2026-11-05 GS-078後: 隔離変異検証器の再生成obj4件、1,889,886 bytesを整理。既整理生計測の重複計上なし。保全16,661ファイルのSHA256・秘密設定メタデータ不変、ゲーム/素材/セーブ/実行物/失敗証跡/結果/UE Intermediate/DDC保持。監査Saved/StorageAudit-7f3ef4335c3542eeb482269b237ec291/result.json。
