@@ -48,3 +48,20 @@ GS-066素材（2026-11-04）: Content/Art/Objects/terrain-atlas-v1.pngは草地/
 2026-11-06 GS-082: 主人公の白鼠/藍の衣装差分hero-ren-dye1.pngを配置（画面未接続）。布地マスクを修正し、顔/髪/手/主要鎧など148,289画素の明示保護を追加。標準原画9枚SHA不変、122,858画素だけ変更、マスク外RGBA/全alpha/寸法不変、local-04/05のPNG再生成一致を確認して制作側で目視比較。差分SHA256=45ABE6AF2E762F48C1038CC50FD7DF7E716B2FEA296276034E85C5DEEE41F00B。配色/作成方法は承認済みで新たな人物・模様・露出・能力を追加しない。設定/確認表はtools/appearance/hero-ren-dye1.jsonとreviewed-portraits.json。監査はSaved/ArtPrototypes/Appearance/hero-ren-local-05/adoption-audit.json。候補01～03は未採用で保全。他8人の差分は未制作。戦場表示/選択UI/保存戦闘固定への接続は別工程。
 
 GS-084補強後もlocal-06で主人公の同一PNGを再生成し、正式差分SHAが不変であることを確認。外部画像生成サービスは利用せず、Pillowの開発環境だけを使用。
+
+## 2026-11-06 GS-085 仲間8人の衣装差分
+
+承認済み配色/ローカルPillow方式で残る8人を制作し、正式9人が揃った。原画9枚/既存主人公差分SHA不変。候補の目視比較後に再生成PNGの一致、外側RGBA/全alpha/指定保護領域/寸法を検査した。模様を描き直さず、布地の画素色だけを変換。澪は上衣/袖/帯、火乃香は外套/腰紐を対象とし、別布地/内衣/裏地/鞄を維持。
+
+|人物|正式画像|変更画素|保護画素|
+|---|---|---:|---:|
+|真田 茜|Content/Art/Characters/akane-dye1.png|52,144|440,947|
+|白峰 澪|Content/Art/Characters/mio-dye1.png|107,081|180,339|
+|朧|Content/Art/Characters/oboro-dye1.png|384,207|271,743|
+|土御門 紫苑|Content/Art/Characters/shion-dye1.png|543,871|191,274|
+|鷹司 楓|Content/Art/Characters/kaede-dye1.png|142,636|243,342|
+|雑賀 火乃香|Content/Art/Characters/honoka-dye1.png|163,911|259,790|
+|柳生 千景|Content/Art/Characters/chikage-dye1.png|146,437|290,959|
+|鈴鹿 小夜|Content/Art/Characters/sayo-dye1.png|334,830|188,193|
+
+全SHA/設定/目視記録はtools/appearance/reviewed-portraits.json、原画照合はSaved/appearance-roster-adoption.json、候補/マスク/再現検証はSaved/ArtPrototypes/Appearance/<人物>-final-01。未採用01候補も保全。個人外見の選択UI/保存戦闘固定/ゲーム表示は未接続。

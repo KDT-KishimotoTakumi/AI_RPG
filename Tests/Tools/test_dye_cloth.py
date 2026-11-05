@@ -1,6 +1,8 @@
 """布地以外の画素を守る制作ツールの回帰テスト。"""
 import importlib.util
 import pathlib
+import hashlib
+import re
 import json
 import subprocess
 import sys
@@ -8,7 +10,7 @@ import tempfile
 import unittest
 import uuid
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location("dye_cloth", ROOT / "tools/appearance/dye_cloth.py")
@@ -91,6 +93,29 @@ class DyeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             dye.make_mask(self.source, {"filter": "unknown", "polygons": [[[0, 0], [3, 0], [3, 3]]]})
 
+    def test_other_cloth_colors_keep_gold_outside_mask(self):
+        for kind, rgb in [("cool-cloth", (60, 56, 67)), ("green-cloth", (45, 62, 48)),
+                          ("pale-cloth", (205, 198, 182)), ("warm-cloth", (90, 65, 48)),
+                          ("neutral-cloth", (65, 59, 55))]:
+            with self.subTest(kind=kind):
+                image = Image.new("RGBA", (4, 4), rgb + (255,))
+                image.putpixel((1, 1), (160, 145, 110, 255))
+                layer = {"filter": kind, "polygons": [[[0, 0], [3, 0], [3, 3], [0, 3]]]}
+                mask = dye.make_mask(image, layer)
+                self.assertEqual(mask.getpixel((0, 0)), 255)
+                self.assertEqual(mask.getpixel((1, 1)), 0)
+
+    def test_local_exclusion_can_be_colored_by_other_layer(self):
+        polygon = [[1, 1], [2, 1], [2, 2], [1, 2]]
+        primary = {"filter": "blue-cloth", "polygons": [[[0, 0], [3, 0], [3, 3], [0, 3]]], "excluded_polygons": [polygon]}
+        secondary = {"filter": "blue-cloth", "polygons": [polygon]}
+        mask = dye.make_mask(self.source, primary)
+        self.assertEqual(mask.getpixel((1, 1)), 0)
+        result = dye.recolor(self.source, mask, "#C8CDD2", 55)
+        result = dye.recolor(result, dye.make_mask(self.source, secondary), "#243B5A", 55)
+        self.assertNotEqual(result.getpixel((1, 1)), self.source.getpixel((1, 1)))
+        self.assertEqual(dye.verify_protected(self.source, result, [primary, secondary]), 0)
+
     def test_protected_polygon_overrides_blue_cloth(self):
         layer = {"filter": "blue-cloth", "polygons": [[[0, 0], [3, 0], [3, 3], [0, 3]]],
                  "protected_polygons": [[[1, 1], [2, 1], [2, 2], [1, 2]]]}
@@ -138,6 +163,50 @@ class DyeTests(unittest.TestCase):
             completed = subprocess.run([sys.executable, str(ROOT / "tools/appearance/dye_cloth.py"), "--config", str(config_file), "--output", str(output)], capture_output=True, timeout=30)
             self.assertNotEqual(completed.returncode, 0)
             self.assertFalse(output.exists(), "不正設定では候補画像も作成しない")
+
+    def test_nine_recipes_match_approved_palette_and_originals(self):
+        table = (ROOT / "specs/001-girls-spire/appearance-palette-proposal.md").read_text(encoding="utf-8-sig")
+        count = 0
+        for row in table.splitlines():
+            name = re.search(r"Characters/([a-z-]+)-v1\.png", row)
+            if not name:
+                continue
+            colors = re.findall(r"#[0-9A-Fa-f]{6}", row)
+            recipe = json.loads((ROOT / f"tools/appearance/{name[1]}-dye1.json").read_text(encoding="utf-8-sig"))
+            self.assertEqual([item["color"].upper() for item in recipe["layers"]], colors)
+            source = ROOT / recipe["source"]
+            self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), recipe["source_sha256"])
+            with Image.open(source) as original:
+                self.assertEqual(list(original.size), recipe["size"])
+            self.assertTrue(all(item["protected_polygons"] for item in recipe["layers"]))
+            dye.validate_layer_names(recipe["layers"])
+            count += 1
+        self.assertEqual(count, 9)
+
+    def test_reviewed_variants_match_manifest(self):
+        reviewed = json.loads((ROOT / "tools/appearance/reviewed-portraits.json").read_text(encoding="utf-8"))
+        self.assertEqual(sorted(item["actor_id"] for item in reviewed), list(range(9)))
+        for item in reviewed:
+            with self.subTest(actor=item["actor_id"]):
+                path = ROOT / item["alternate"]
+                self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), item["alternate_sha256"])
+                with Image.open(path) as image:
+                    self.assertEqual(image.size, (1024, 1536))
+
+    def test_all_reviewed_images_keep_noncloth_and_alpha(self):
+        reviewed = json.loads((ROOT / "tools/appearance/reviewed-portraits.json").read_text(encoding="utf-8"))
+        for item in reviewed:
+            with self.subTest(actor=item["actor_id"]):
+                recipe = json.loads((ROOT / item["config"]).read_text(encoding="utf-8-sig"))
+                with Image.open(ROOT / item["standard"]) as image:
+                    source = image.convert("RGBA")
+                with Image.open(ROOT / item["alternate"]) as image:
+                    result = image.convert("RGBA")
+                mask = Image.new("L", source.size)
+                for layer in recipe["layers"]:
+                    mask = ImageChops.lighter(mask, dye.make_mask(source, layer))
+                self.assertGreater(dye.verify(source, result, mask)["changed_pixels"], 0)
+                self.assertEqual(dye.verify_protected(source, result, recipe["layers"]), item["protected_pixels"])
 
     def test_transparent_rgb_is_not_repainted(self):
         self.source.putpixel((1, 1), (40, 50, 80, 0))

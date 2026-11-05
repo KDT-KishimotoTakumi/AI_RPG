@@ -10,15 +10,102 @@
     "protected_pixels": 148289,
     "changed_pixels": 122858,
     "ui_connected": false,
-    "remaining_actors": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8
-    ]
+    "remaining_actors": []
+  },
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 1,
+    "standard": "Content/Art/Characters/akane-v1.png",
+    "alternate": "Content/Art/Characters/akane-dye1.png",
+    "alternate_sha256": "d8a08f0ccc287e6a22b7c36796f26722c25151bbcb01e9299018e572f827faae",
+    "config": "tools/appearance/akane-dye1.json",
+    "review": "原画と候補を目視比較。別生成のPNG一致。顔・髪・手・装備を保護し、布地のみを点単位で色替え。",
+    "protected_pixels": 440947,
+    "changed_pixels": 52144,
+    "ui_connected": false
+  },
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 2,
+    "standard": "Content/Art/Characters/mio-v1.png",
+    "alternate": "Content/Art/Characters/mio-dye1.png",
+    "alternate_sha256": "36680681f382c8a3d6e743c173d0385702db8a6959befbec54671b135b1ec77f",
+    "config": "tools/appearance/mio-dye1.json",
+    "review": "原画と候補を目視比較。別生成のPNG一致。顔・髪・手・装備を保護し、布地のみを点単位で色替え。",
+    "protected_pixels": 180339,
+    "changed_pixels": 107081,
+    "ui_connected": false
+  },
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 3,
+    "standard": "Content/Art/Characters/oboro-v1.png",
+    "alternate": "Content/Art/Characters/oboro-dye1.png",
+    "alternate_sha256": "a616cae45ff9097377e633d5cf316428e83261a70605f077f7c61e8d53b0c9a0",
+    "config": "tools/appearance/oboro-dye1.json",
+    "review": "原画と候補を目視比較。別生成のPNG一致。顔・髪・手・装備を保護し、布地のみを点単位で色替え。",
+    "protected_pixels": 271743,
+    "changed_pixels": 384207,
+    "ui_connected": false
+  },
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 4,
+    "standard": "Content/Art/Characters/shion-v1.png",
+    "alternate": "Content/Art/Characters/shion-dye1.png",
+    "alternate_sha256": "23576990af2381e4645b3dc16d63584bf6024708d178fbe433f92e60f8fc52df",
+    "config": "tools/appearance/shion-dye1.json",
+    "review": "原画と候補を目視比較。別生成のPNG一致。顔・髪・手・装備を保護し、布地のみを点単位で色替え。",
+    "protected_pixels": 191274,
+    "changed_pixels": 543871,
+    "ui_connected": false
+  },
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 5,
+    "standard": "Content/Art/Characters/kaede-v1.png",
+    "alternate": "Content/Art/Characters/kaede-dye1.png",
+    "alternate_sha256": "0fdb01b57d5d6bd68c627ba00fafb89743e28618c83046fd4dcccd1b06819c73",
+    "config": "tools/appearance/kaede-dye1.json",
+    "review": "原画と候補を目視比較。別生成のPNG一致。顔・髪・手・装備を保護し、布地のみを点単位で色替え。",
+    "protected_pixels": 243342,
+    "changed_pixels": 142636,
+    "ui_connected": false
+  },
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 6,
+    "standard": "Content/Art/Characters/honoka-v1.png",
+    "alternate": "Content/Art/Characters/honoka-dye1.png",
+    "alternate_sha256": "1b23b0b51ab2525bccfbd0f1d96edced3f2430b663982633e87459696aff9c63",
+    "config": "tools/appearance/honoka-dye1.json",
+    "review": "原画と候補を目視比較。別生成のPNG一致。顔・髪・手・装備を保護し、布地のみを点単位で色替え。",
+    "protected_pixels": 259790,
+    "changed_pixels": 163911,
+    "ui_connected": false
+  },
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 7,
+    "standard": "Content/Art/Characters/chikage-v1.png",
+    "alternate": "Content/Art/Characters/chikage-dye1.png",
+    "alternate_sha256": "6a3fbaf35b9a595d9b1513c0b279d91ff9398e38d38bc96a9dc0889bf592a3a7",
+    "config": "tools/appearance/chikage-dye1.json",
+    "review": "原画と候補を目視比較。別生成のPNG一致。顔・髪・手・装備を保護し、布地のみを点単位で色替え。",
+    "protected_pixels": 290959,
+    "changed_pixels": 146437,
+    "ui_connected": false
+  },
+  {
+    "review_date": "2026-11-06",
+    "actor_id": 8,
+    "standard": "Content/Art/Characters/sayo-v1.png",
+    "alternate": "Content/Art/Characters/sayo-dye1.png",
+    "alternate_sha256": "82a1a33caf13eec12d13cec7f223d2f56c3df8ce82aa42570bf7469de6ca2777",
+    "config": "tools/appearance/sayo-dye1.json",
+    "review": "原画と候補を目視比較。別生成のPNG一致。顔・髪・手・装備を保護し、布地のみを点単位で色替え。",
+    "protected_pixels": 188193,
+    "changed_pixels": 334830,
+    "ui_connected": false
   }
 ]

@@ -56,6 +56,9 @@ def make_mask(source, layer):
     draw = ImageDraw.Draw(mask)
     for polygon in layer["polygons"]:
         draw.polygon([tuple(point) for point in polygon], fill=255)
+    # 帯などを別レイヤーで色替えする穴。全レイヤーで不変な保護領域とは分ける。
+    for polygon in layer.get("excluded_polygons", []):
+        draw.polygon([tuple(point) for point in polygon], fill=0)
     # 色が布地と似ていても、髪・肌・金属等の明示保護を必ず優先する。
     for polygon in layer.get("protected_polygons", []):
         draw.polygon([tuple(point) for point in polygon], fill=0)
@@ -66,6 +69,16 @@ def make_mask(source, layer):
             keep = blue > red * 1.12 and blue > green * 1.06
         elif layer["filter"] == "red-cord":
             keep = red > green * 1.35 and red > blue * 1.35
+        elif layer["filter"] == "cool-cloth":
+            keep = blue >= red * 0.98 and green <= blue * 1.05
+        elif layer["filter"] == "green-cloth":
+            keep = green > red * 1.03 and green > blue * 1.03
+        elif layer["filter"] == "pale-cloth":
+            keep = red <= green * 1.15 and green <= blue * 1.20
+        elif layer["filter"] == "neutral-cloth":
+            keep = blue >= red * 0.80 and green <= blue * 1.30
+        elif layer["filter"] == "warm-cloth":
+            keep = red > green * 1.15 and red > blue * 1.25 and green > blue * 1.05
         else:
             raise ValueError("未定義の布地抽出条件")
         selected.append(255 if inside and keep and alpha else 0)

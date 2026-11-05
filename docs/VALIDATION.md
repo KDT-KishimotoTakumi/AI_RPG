@@ -567,3 +567,10 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 
 ## GS-084 制作設定の安全な出力（2026-11-06）
 不正名で候補フォルダが作られることをappearance-layer-name-red.logで再現（23テスト、1失敗/13エラー）。validate_layer_namesを出力前に追加し、空一覧/不正型/パス文字/空名/長さ/大小文字重複を拒否、greenは23成功。失敗生成物invalid-layer-proof-*を保全。補強後のlocal-06は正式hero-ren-dye1.pngとSHA一致（appearance-tool-final-reproduction.json）。C++製品147ファイルの計測時SHA不変をappearance-source-after-tools.jsonで確認。Python追加はC++計測後のため、C++の新規未計測コードはない。
+
+## GS-085 9人の配色素材と読込（2026-11-06）
+- appearance-cloth-red.logで1失敗/4エラー→greenで25成功。無彩色判定もappearance-neutral-red.logで失敗再現→green成功。最終appearance-roster-final-tests.logは28テスト成功、承認済み9人の配色/原画SHA/画像寸法、正式PNG SHA、マスク外RGBA/全alpha/全レイヤー保護を確認。
+- 繰り返し生成と正式配置の検証はappearance-roster-adoption.jsonと各<人物>-final-01/adoption-audit.json。原画9枚は以前の凍結スナップショットとSHA一致、主人公の再生成も既存正式画像と一致。候補を目視比較し、斑点状の01候補を修正してから採用。
+- 通常MSVCビルド成功、UI.Portraits13件警告0（9ae045b6f2db4059a349ddfbe35ca321）。9人の標準/配色実PNG、人物対応、再利用/別キャッシュ、1024×1536、不正値/欠落を確認。コードはAssets読込APIまでで、外見選択/保存戦闘固定/9人の通常ゲーム外見変更E2Eではない。
+- C++製品コードは不変。aadd0ce54113474487b76a0058e6d238の行99.45%/関数98.22%/分岐91.24%・未計測なしを保持し、今回は全体カバレッジ/全UE425件を再実行していない。今回の追加は制作Python/レシピ/素材と読込テスト。Source147ファイルの不変を別途照合する。
+- C++製品147ファイルのaadd計測時SHA不変をSaved/appearance-roster-cpp-unchanged.jsonで確認。容量整理は旧検証物8件の展開SHAと保全17,465ファイル一致で検証（StorageAudit-29699a3b6fec4563a26894011948fec7）。最新計測/現行ビルドを保持し、整理後にゲームE2Eを重複実行していない。

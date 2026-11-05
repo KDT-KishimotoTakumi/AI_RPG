@@ -180,3 +180,6 @@ GS-073容量整理: 合格Coverage/208403e4c4ab4b05a06bcc09a1d17e03の生計測6
 GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工程で再使用。未採用候補/失敗ログ/原画を保持し、追加の大規模削除なし。GS-080の4,301,435,160 bytesを二重計上しない。
 
 2026-11-06 GS-082～084後: Coverage/aadd0ce54113474487b76a0058e6d238の合格・集計済みprofraw6件4,302,835,720 bytesを整理。追加obj対象0件、過去回を二重計上しない。処理量はプロジェクト全体純減とは別。保全17,325ファイルのSHA256/秘密設定メタデータ不変。原画/正式差分/セーブ/JSON/profdata/計装DLL/失敗証跡/現行UE Intermediate/DDC保持。監査Saved/StorageAudit-14311055c5e9469ba7480d180f04a61b/result.json。
+
+2026-11-06 GS-085後: 従来のgzip可逆保管を継続し、過去合格2回（4a6fc7ddb58f45ffb9e92cbe1a87f6e6 / 79a55e5a602043dab0dc8d2d768177c4）のcoverage.json / coverage.profdata / CoreTests.exe / UnrealEditor-GirlsSpire.dll、計8件を同じフォルダの.gzへ保管。展開SHAを圧縮前/保管後に照合し、重複する原本を除去。207,459,138→24,904,722 bytes、対象の論理サイズ182,554,416 bytes削減（プロジェクト全体純減/ディスク割当とは別）。最新aadd0ce54113474487b76a0058e6d238と各gate、現行Binaries/Intermediate/DDC、ゲーム/原画/正式差分/セーブを保持。保全17,465ファイルのSHA256/秘密設定メタデータ不変。監査StorageAudit-29699a3b6fec4563a26894011948fec7/result.json、元パス/サイズ/時刻/SHAは同archives.json。使用時だけgzipを展開して元のパスへ戻す。今回profrawの追加削除はなく、過去の4.30GB整理量を二重計上しない。
+事前ガード初回はFileInfo.Parentがないため原本選定時に停止（圧縮/削除なし）。FileInfo.DirectoryとDirectoryInfo.Parentを分けて再検証し、完了した。監査対象の移動/削除は作業ツリー内の通常ファイルだけ。

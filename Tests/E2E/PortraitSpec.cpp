@@ -36,6 +36,14 @@ void FGirlsSpirePortraitSpec::Define()
             TestTrue(TEXT("配色キャッシュを再利用"),alternate==portraits.Get(0,AppearanceVariant::Alternate));
             TestTrue(TEXT("配色画像の対応"),alternate->GetResourceName().ToString().EndsWith(TEXT("hero-ren-dye1.png")));
             TestTrue(TEXT("配色でも寸法は固定"),alternate->ImageSize==standard->ImageSize && alternate->ImageSize==FVector2D(1024,1536));
+            const TCHAR* stems[]={TEXT("hero-ren"),TEXT("akane"),TEXT("mio"),TEXT("oboro"),TEXT("shion"),TEXT("kaede"),TEXT("honoka"),TEXT("chikage"),TEXT("sayo")};
+            for(int id=0;id<=8;++id) {
+                const auto image=portraits.Get(id,AppearanceVariant::Alternate);
+                if(!TestTrue(FString::Printf(TEXT("人物%dの配色PNGを実読込み"),id),image.IsValid()))continue;
+                TestTrue(TEXT("人物別の配色画像に対応"),image->GetResourceName().ToString().EndsWith(FString(stems[id])+TEXT("-dye1.png")));
+                TestTrue(TEXT("配色別キャッシュと標準を混同しない"),image==portraits.Get(id,AppearanceVariant::Alternate) && image!=portraits.Get(id));
+                TestTrue(TEXT("9人とも実画像寸法を維持"),image->ImageSize==FVector2D(1024,1536));
+            }
             TestFalse(TEXT("負の配色値を拒否"),portraits.Get(0,static_cast<AppearanceVariant>(-1)).IsValid());
             TestFalse(TEXT("範囲外配色を拒否"),portraits.Get(0,static_cast<AppearanceVariant>(2)).IsValid());
             TestFalse(TEXT("不正人物の配色を拒否"),portraits.Get(-1,AppearanceVariant::Alternate).IsValid());
