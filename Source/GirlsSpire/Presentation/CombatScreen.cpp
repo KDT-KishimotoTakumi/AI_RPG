@@ -93,7 +93,7 @@ void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()
 {
     const auto button=SNew(SButton).ButtonStyle(&FSpireStyle::Command()).ContentPadding(FMargin(10,6)).IsEnabled(enabled).AddMetaData(FDriverMetaData::Id(id))
         .OnClicked_Lambda([this,callback=MoveTemp(callback)] { if(Audio)Audio->Cue(EGameCue::Confirm);callback(); return FReply::Handled(); })
-        [ SNew(STextBlock).Text(FText::FromString(label)).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16))) ];
+        [ SNew(STextBlock).Text(FText::FromString(label)).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16))) ];
     if(wrap)wrap->AddSlot()[button];
     else if(row) row->AddSlot().AutoWidth().Padding(0,0,6,0) [button];
     else Panel->AddSlot().AutoHeight().Padding(0,0,0,7) [button];

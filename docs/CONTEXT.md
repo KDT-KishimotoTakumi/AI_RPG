@@ -20,7 +20,7 @@ Girls Spireを承認済み仕様で完成させる。全体は未完成。完成
 - 最新証跡はSaved/campaign-process-{guards-green.log,regression.log,final.json}、ProcessCampaign/a7d09d28b0054b68bb7f75d0f5790cfcの段階ログ/期待データ/guard記録。3段階レポート37d0563439e746a5a36a5277bbbe8b8c / 2b5798585bf748269cb6a0730edecec2 / 20dced36648b42db84cb50442080baab、従来3件c3378ec851b24393aef564d66b359f73。使うコマンドはtools/test-campaign-process.ps1 -Guards。
 - GS-089: Native48条件（4役割×3難易度×seed1～4）が12日到達、47勝/最終日1敗（上級刀seed2）。372戦/9324行動/12502保存地点で連続と毎操作再構築が一致。隔離乱数破損も全48＋既存4シードで検出。
 - GS-090: seed1の4役割×3難易度の実マウス/実IO12日＋既存3=15件警告0、3e7226c4212344bb91816ab44344e877。全追加12組勝利、追加72戦/1460操作、全体90戦/1727操作。tools/test-campaign.ps1 -Matrix。
-- 最新全体計測0c4eb3278a0e4cab9367d4e2b02ad5e2: Passed=true/Missing=[]、行5333/5361=99.48%、関数679/691=98.26%、分岐5485/6004=91.36%。Native全回帰/全UE432警告0、通常起動/音声/別プロセス再開成功。Source/Tests/Content378ファイルの計測時SHA不変、計装DLL/集計保持。通常MSVC復帰後の併用実寸2件も警告0。
+- 最新全体計測d2217b1f0790409e8ff1ae5a5a766ab3: Passed=true/Missing=[]、行5333/5361=99.48%、関数679/691=98.26%、分岐5485/6004=91.36%。Native全回帰/全UE433警告0、通常起動/音声/別プロセス再開成功。Source/Tests/Content378ファイルの計測時SHA不変、計装DLL/集計保持。通常MSVC復帰後の全画面13件と併用実寸2件も警告0。
 - 衣装はGS-079～088で9人の正式差分/選択/取消/取引保存/会話・駒反映/保存戦闘固定/旧互換/別プロセスv20を接続済み。レシピ/SHAはtools/appearance/reviewed-portraits.json。Python3.14.7/Pillow12.0.0はSaved/Tools/AppearancePythonに隔離。詳細はIMPLEMENTED/VALIDATION。
 ## 【未解決の課題】
 - Git同期の実行結果を確認。外見の関連回帰/容量監査は完了。
@@ -51,4 +51,6 @@ GS-091補足: 戦闘外自動保存が既に再開可能なら同一状態の中
 
 GS-092/T031i完了: 最大文字/字幕/軽減/抑制/消音をタイトル実UIで保存し、単色/危険域と併用して1920×1080/2560×1440の12日を完走。仲間手番でRefreshIntentへ早期returnして表示操作/危険域説明が欠落する実不具合を再現し、CombatScreen.cpp/.hのRefreshBoardCuesを主人公/仲間で共用して修正。戦闘/保存/RNG/数値/素材は不変。通常MSVC最終2件4600b799ae3849219025698f52a050fe / 36678aba9d214e539d96fc3c2548711c、全UE d6856454b36f400abd4c98a78b72cbf9。証跡Saved/campaign-accessibility-{coverage.log,msvc-final.log,frozen-result.json,final-review.log}と各失敗ログ/撮影を保持。別モデル読み取りレビュー指摘なし。
 最新0c4の成功生計測6件4439902368 bytesを集計保持後に整理、追加obj0件。保全19443ファイルSHA/秘密メタデータ不変、現行UE Intermediate/DDC/全セーブ保持。監査StorageAudit-06fa14d3999544f387e12e642540769a。処理量はプロジェクト全体純減とは別。旧計測b64は今回の製品変更前の記録で、最新と混同しない。
-未完T031j: 撮影で最大文字の長い戦闘ボタン文言末尾欠けを確認、ActionのSTextBlockに折返し指定なし。SC-012/全項目視認は未完了。ゲーム文言/効果を変えず実寸TDDで修正する。まず今回Git同期結果を確認し、その後この修正を進める。
+
+GS-093/T031j完了: 最大文字の対象選択ボタンが必要448×38/配置286×38で欠けるRedを再現し、CombatScreen::ActionにAutoWrapText(true)のみ追加。文言/HP/効果/戦闘/RNGを維持し、必要260×76/配置286×76へ全文が収まるGreenを確認。全画面13件300ea6d8328946b2902145ca0aa3f8cc、併用実寸2件77bc545f85084602b4030eb69c59f545 / 22f4911838d54f1d928ce2af6dc57a91、目視撮影/読み取りレビュー指摘なし。最新全体はd221、通常MSVC復帰後は全画面13件47b4c0488020487c9c80ced6e77c3d98＋実寸2件8aeec671ef8d4a1c80c5af608001d8e9 / 82248667af2c4522b473d5babe169a93、すべて警告0。証跡Saved/field-caption-{coverage.log,frozen-result.json,msvc-ui.log,msvc-accessibility.log,final-review.log}。
+最終d221の合格生計測6件4442481104 bytesを集計保持後に整理、追加obj0件。保全19561ファイルSHA/秘密設定メタデータ不変、現行UE Intermediate/DDC/全セーブ/失敗証跡保持。監査StorageAudit-52c7f8f84af14633a8f2b1f74e9a0293。直前0c4は折返し前の計測で最新と混同しない。全SC-012/全UIの全長文や全7ユーザーストーリー/配布等の製品受け入れはまだ未完了。次はGit同期結果を確認してPLANの残作業へ進む。

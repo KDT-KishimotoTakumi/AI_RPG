@@ -193,3 +193,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 2026-11-07 GS-091後: 過去合格e67de344b2a04c3aa3bb2e8545f6a8bb / 1c37fb16c3624566851da1542ea6dd42のcoverage.json/coverage.profdata/CoreTests.exe、計6件を同フォルダ.gzへ可逆保管。45,734,052→4,663,365 bytes、対象の論理削減41,070,687 bytes。全展開SHA/保全19,296ファイルSHA/秘密設定メタデータ一致。監査StorageAudit-6a0394b8148a4ff2b0f045364add3fc7/result.json、元パス/時刻/SHAはarchives.json。最新b64/ゲーム/全セーブ/実行物/失敗証跡/現行UE Intermediate/DDC保持。使用時のみ展開する。生計測追加削除なし、以前の削減量を重複計上していない。
 
 2026-11-07 GS-092後: 全体計測0c4eb3278a0e4cab9367d4e2b02ad5e2合格後のprofraw6件4,439,902,368 bytesを集計保持で整理。追加obj0件。通常MSVC実寸2件成功後の監査はStorageAudit-06fa14d3999544f387e12e642540769a/result.json、保全19,443ファイルSHA/秘密設定メタデータ不変。計装DLL/JSON/profdata/通常Binaries/全セーブ/失敗証跡/現行UE Intermediate/DDC保持。処理量は開発中再生成を含み、プロジェクト全体純減とは別。旧削減を再計上しない。
+
+2026-11-07 GS-093後: 最終計測d2217b1f0790409e8ff1ae5a5a766ab3の合格生計測6件4,442,481,104 bytesを集計保持後に整理。追加obj0件。保全19,561ファイルSHA/秘密設定メタデータ不変、最新JSON/profdata/計装DLL/通常Binaries/全セーブ/失敗証跡/現行UE Intermediate/DDC保持。監査StorageAudit-52c7f8f84af14633a8f2b1f74e9a0293/result.json。GS-092とは別回の処理量で、開発中再生成を含みプロジェクト全体純減とは別。以前の整理を重複計上しない。

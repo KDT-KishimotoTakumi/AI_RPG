@@ -630,3 +630,12 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 合格集計後、生計測6件4,439,902,368 bytesを整理。追加obj0件、保全19,443ファイルSHA/秘密設定メタデータ不変。最新計測/通常Binaries/全セーブ/失敗ログ・画像/現行UE Intermediate/DDC保持。監査StorageAudit-06fa14d3999544f387e12e642540769a/result.json。処理量はプロジェクト全体純減とは別。
 
 - 別モデルによる読み取りレビューでも要修正の指摘なし。レビューは実行結果/Red証跡の報告を前提とし、Source/Tests/ツールを確認。秘密設定は未参照。
+
+## GS-093 / T031j 最大文字の長文ボタン（2026-11-07）
+- FullFieldSpecに実STextBlockの必要寸法と配置寸法の比較を追加。最大文字の「弓兵亡者・敵100を狙う（HP100）」を表示し、文言/HP保持・戦闘/RNG不変も検証。元実装は必要448×38 / 配置286×38で失敗（field-caption-red-engine.log）。
+- CombatScreen::Actionの文字へAutoWrapText(true)のみ追加。必要260×76 / 配置286×76となり、全画面フィールド13件警告0（300ea6d8328946b2902145ca0aa3f8cc）。読み取りレビューでも要修正指摘なし。文言/対象/技の効果/乱数を変更していない。
+- 折返し後の最大文字・字幕・演出軽減・親密抑制・消音・単色/危険域併用12日も、1920×1080/2560×1440で各1件警告0（77bc545f85084602b4030eb69c59f545 / 22f4911838d54f1d928ce2af6dc57a91）。撮影で対象/HP/ゲージ条件が折り返されることを目視確認。証跡field-caption-accessibility.logとScreenshots/CampaignAccessibility。
+- 最終Source/Tests/Content378ファイルをfield-caption-frozen.jsonへ固定し、全体計測d2217b1f0790409e8ff1ae5a5a766ab3を実行中。直前0c4の合格をこの1行変更後の最終結果として流用せず、新ゲートと通常MSVC復帰結果を追記する。
+- 最終計測d2217b1f0790409e8ff1ae5a5a766ab3: Passed=true/Missing=[]、行5333/5361=99.48%、関数679/691=98.26%、分岐5485/6004=91.36%。Native全回帰成功、全UE433警告0（1afed273f4c74865ace8da65766f981b）。通常起動afbba4c4db304630a3702577d4d3bb47、音声/別プロセス再開5507dde2256c4e24b0bb5111af58f8af / adcaa76014e24611b4c618d6f780e2c4、音声専用2件ec7ddaf182f541daa05101d065a6696dも成功。
+- 固定378ファイルSHA不変（field-caption-frozen-result.json）、計装DLL/JSON/profdata/実行物保全。通常MSVC復帰成功、全画面13件警告0（47b4c0488020487c9c80ced6e77c3d98）と実寸併用2件各警告0（8aeec671ef8d4a1c80c5af608001d8e9 / 82248667af2c4522b473d5babe169a93）。field-caption-final-review.logへ最終成功を記録。
+- 合格生計測6件4,442,481,104 bytesを集計保持後に整理、追加obj0件。保全19,561ファイルSHA/秘密設定メタデータ不変。最新計測/通常Binaries/全セーブ/失敗証跡/現行UE Intermediate/DDC保持。監査StorageAudit-52c7f8f84af14633a8f2b1f74e9a0293/result.json。GS-092の4,439,902,368 bytesと別回の処理量で重複計上しない。プロジェクト全体純減とは別。

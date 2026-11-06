@@ -19,6 +19,18 @@ FVector2D FieldExtent(const TSharedRef<SWidget>& widget)
     const auto tag=widget->GetMetaData<FDriverIdMetaData>();if(tag && tag->Id=="battle.field.root")return widget->GetCachedGeometry().GetAbsoluteSize();
     auto* children=widget->GetChildren();for(int i=0;i<children->Num();++i){const auto size=FieldExtent(children->GetChildAt(i));if(!size.IsZero())return size;}return FVector2D::ZeroVector;
 }
+TSharedPtr<SWidget> FieldCaptionTarget(const TSharedRef<SWidget>& widget,const FName& id)
+{
+    const auto tag=widget->GetMetaData<FDriverIdMetaData>();if(tag && tag->Id==id)return widget;
+    auto* children=widget->GetChildren();for(int i=0;i<children->Num();++i)if(const auto found=FieldCaptionTarget(children->GetChildAt(i),id))return found;
+    return {};
+}
+TSharedPtr<SWidget> FieldCaptionText(const TSharedRef<SWidget>& widget)
+{
+    if(widget->GetTypeAsString()==TEXT("STextBlock"))return widget;
+    auto* children=widget->GetChildren();for(int i=0;i<children->Num();++i)if(const auto found=FieldCaptionText(children->GetChildAt(i)))return found;
+    return {};
+}
 class FieldMemory : public GirlsSpire::SlotFiles,public GirlsSpire::JournalFiles {
 public:
     std::array<std::array<std::optional<std::string>,2>,2> Slots{};std::optional<std::string> Journal;
@@ -133,6 +145,24 @@ void FGirlsSpireFullFieldSpec::Define()
         const auto forecast=Driver->FindElement(By::Id("intent.forecast"))->GetText().ToString();
         TestFalse(TEXT("射程3の弱い技だけで安全と判断しない"),forecast.Contains(TEXT("移動(2,1)")));
         TestTrue(TEXT("指示と予告は戦闘状態と乱数を変更しない"),combat->Checkpoint()==before);
+    });
+    It(TEXT("最大文字でも長い戦闘ボタンの全文を内容領域内へ表示する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+        using namespace GirlsSpire;Preferences prefs;prefs.Text=TextSize::Largest;prefs.ReducedEffects=true;
+        BattleUnit hero;hero.At={1,1};hero.Speed=30;hero.Range=3;
+        auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.Role=BattleRole::Archer;enemy.At={3,1};enemy.Speed=10;enemy.Hp=enemy.MaxHp=100;
+        auto combat=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);const auto before=combat->Checkpoint();
+        Async(EAsyncExecution::TaskGraphMainThread,[this,combat,prefs]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true).DisplayPreferences(prefs));}).Wait();DrainSlateLayout();
+        const auto button=Driver->FindElement(By::Id("battle.target.100"));
+        if(!button->IsVisible())Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("battle.target.100"));DrainSlateLayout();
+        TestTrue(TEXT("対象名/HP/操作文言を保持"),button->GetText().ToString()==TEXT("弓兵亡者・敵100を狙う（HP100）"));
+        Async(EAsyncExecution::TaskGraphMainThread,[this]{
+            const auto button=FieldCaptionTarget(Window.ToSharedRef(),"battle.target.100");if(!TestTrue(TEXT("実ボタンを取得"),button.IsValid()))return;
+            const auto caption=FieldCaptionText(button.ToSharedRef());if(!TestTrue(TEXT("実文字レイアウトを取得"),caption.IsValid()))return;
+            const auto desired=caption->GetDesiredSize(),allocated=caption->GetCachedGeometry().GetLocalSize();
+            AddInfo(FString::Printf(TEXT("ボタン全文: 必要%.1f×%.1f / 配置%.1f×%.1f"),double(desired.X),double(desired.Y),double(allocated.X),double(allocated.Y)));
+            TestTrue(TEXT("全文が切れず文字の配置領域に収まる"),desired.X>0 && desired.Y>0 && desired.X<=allocated.X+1 && desired.Y<=allocated.Y+1);
+        }).Wait();
+        TestTrue(TEXT("全文確認で戦闘/RNGを変更しない"),combat->Checkpoint()==before);
     });
     AfterEach([this]{Driver.Reset();if(Window.IsValid()){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}IAutomationDriverModule::Get().Disable();});
 }
