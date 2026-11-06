@@ -1,6 +1,6 @@
 # Girls Spire
 
-更新: 2026-11-06。Windows/UE5.7.4で開発中の戦国怪異・グリッドターン制ローグライクRPGです。ゲーム全体は未完成です。
+更新: 2026-11-07。Windows/UE5.7.4で開発中の戦国怪異・グリッドターン制ローグライクRPGです。ゲーム全体は未完成です。
 
 ## 現在の状態
 
@@ -39,7 +39,7 @@ PowerShell 7でプロジェクトルートから実行します。
 ./tools/build-unreal.ps1
 ./tools/test-unreal.ps1 -UI -Filter 'GirlsSpire'
 ./tools/test-resume.ps1
-./tools/test-campaign.ps1
+./tools/test-campaign.ps1 -Matrix
 ./tools/test-runtime.ps1 -Audio
 ```
 
