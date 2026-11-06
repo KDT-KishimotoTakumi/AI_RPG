@@ -443,6 +443,41 @@ void FGirlsSpireResumeProcessSpec::Define()
         if(!TestTrue(TEXT("確認復旧後の消費再開も全状態一致"),resumed.Run==expected && resumed.Permanent==fixture->Permanent && service->PrepareResume()==SlotIssue::Invalid))return;
         TestTrue(TEXT("別プロセス復旧の成功記録"),FFileHelper::SaveStringToFile(TEXT("pass"),*(root/TEXT("generation-recovery.done"))));
     });
+    It(stage==TEXT("Save")?TEXT("配色v20の固定外見を別プロセス用に保存する"):TEXT("別プロセスで配色v20を再開し固定外見のまま再中断する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this,stage,root,validRoot]{
+        using namespace GirlsSpire;
+        if(!TestTrue(TEXT("配色用の専用試験保存先"),validRoot) ||
+           !TestTrue(TEXT("有効な配色試験段階"),stage==TEXT("Save") || stage==TEXT("Verify")))return;
+        auto fixture=ProcessFixture(46);
+        if(!TestTrue(TEXT("正式技能のプレイヤー手番を準備"),fixture && fixture->State.Combat && fixture->State.Combat->Battle.State.ActiveId==0))return;
+        fixture->Permanent.VictoryRecorded=true;fixture->Permanent.SpecialConversations.fill(true);
+        fixture->Permanent.SelectedAppearances.fill(AppearanceVariant::Standard);
+        DiscoverEnemies(fixture->Permanent,fixture->State.Combat->Battle.State.Units);
+        // 現在の恒久選択と異なる外見を保存し、再開時の上書きを検出する。
+        fixture->State.Combat->Appearances.fill(AppearanceVariant::Alternate);
+        const auto payload=EncodeRunPayload(fixture->State);
+        if(!TestTrue(TEXT("配色保存はv20"),payload && static_cast<unsigned char>((*payload)[4])==20))return;
+        const auto directory=root/TEXT("appearance");
+        auto files=std::make_shared<ProcessResumeFiles>(std::filesystem::path(*directory));
+        auto service=std::make_shared<SaveTransaction>(*files,*files);
+        if(stage==TEXT("Save")){
+            TestTrue(TEXT("次プロセス用に配色戦闘を実保存"),service->Prepare(fixture->State,fixture->Permanent)==SlotIssue::None && service->Retry()==SlotIssue::None);return;
+        }
+        const auto saved=service->Load();
+        if(!TestTrue(TEXT("前プロセスの9人の固定衣装/全戦闘/乱数/恒久を復元"),saved.Issue==SlotIssue::None && saved.Run==fixture->State && saved.Permanent==fixture->Permanent))return;
+        Async(EAsyncExecution::TaskGraphMainThread,[this,service]{Window->SetContent(SNew(SRunScreen).SaveService(service));}).Wait();DrainSlateLayout();
+        if(!TestTrue(TEXT("配色戦闘を画面から再開"),ClickAndDrain(Driver->FindElement(By::Id("title.resume")))))return;
+        auto expected=fixture->State;expected.ResumeAvailable=false;
+        const auto resumed=service->Load();
+        if(!TestTrue(TEXT("現在標準でも固定配色と戦闘/作戦/抽選状態を維持"),resumed.Run==expected && resumed.Permanent==fixture->Permanent && resumed.Generation>saved.Generation) ||
+           !TestTrue(TEXT("再開権を二重消費しない"),service->PrepareResume()==SlotIssue::Invalid) ||
+           !TestTrue(TEXT("再開した戦場に主人公画像を表示"),Driver->FindElement(By::Id("battle.portrait.image.0"))->Exists()))return;
+        const auto suspend=Driver->FindElement(By::Id("save.suspend"));
+        if(!suspend->IsVisible()){Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("save.suspend"));DrainSlateLayout();}
+        if(!TestTrue(TEXT("配色を保持して画面から再中断"),ClickAndDrain(suspend)))return;
+        DiskSlotFiles reopened{std::filesystem::path(*directory)};SaveTransaction reader(reopened,reopened);const auto suspended=reader.Load();
+        if(!TestTrue(TEXT("別ストアでも中断権以外の全状態と9人の配色を保持"),suspended.Run==fixture->State && suspended.Permanent==fixture->Permanent && suspended.Generation>resumed.Generation))return;
+        TestTrue(TEXT("配色の別プロセス成功記録"),FFileHelper::SaveStringToFile(TEXT("pass"),*(root/TEXT("appearance.done"))));
+    });
     AfterEach([this] {
         Driver.Reset();if(Window.IsValid()) {Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());}
         Window.Reset();IAutomationDriverModule::Get().Disable();

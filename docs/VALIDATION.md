@@ -585,3 +585,10 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 凍結したSource/Tests331ファイルSHA不変（appearance-feature-frozen-result.json）。JSON/profdata/CoreTests.exe/計装DLLを保持し、生計測6件4,435,650,520 bytesを整理。通常MSVC復帰後の最終回帰と容量監査は実行後に追記する。
 - 通常MSVC復帰成功（appearance-feature-msvc-build.log）。最終UI20件警告0=d29f1c3c8fe240e4b523b7aa294d99b2、専用12日3件警告0=53a02ba5268a448c972b71b5f4452b6a。別UEプロセス60地点・世代復旧・独立設定も成功（8282763e1695414fb99be09e070f807b / a8bba540b1314b589f10f0b1bf1b6ead、保存先5c3668c953c249c78232e1aa42aeae58）。この60地点は既存の別プロセス回帰であり、v20専用追加地点を実装したものではない。
 - 外見接続の最終確認をappearance-feature-final-review.logに記録。容量監査はStorageAudit-a01898bea5c94415bc8db44bf45c95e6/result.json、保全18,011ファイルSHA/秘密設定メタデータ不変。再生成Native obj67,249,165 bytesを追加整理し、生計測との処理量は4,502,899,685 bytes。ゲーム/素材/セーブ/結果/失敗証跡/現行UE Intermediate/DDCを保持。外見の関連受け入れは完了、製品全体は未完了。
+
+## GS-088 / T026b3b 配色戦闘の別UEプロセス再開（2026-11-06）
+- ゲーム製品Source148ファイルはb64計測時SHA不変（appearance-process-final.json）。通常MSVCでテストだけを追加し、既存の行99.46%/関数98.26%/分岐91.17%・Missing=[]を保持。全UE432や12日3件を今回重複実行したものではない。
+- tools/test-resume.ps1に独立したappearance.doneの必須検査を追加。既存60地点/復旧/設定だけでは失敗するRedをappearance-process-red.logへ保存。初回Verifyの1件失敗は、開始保存で敵図鑑ID1が追加される既存仕様をテスト準備が含めていなかったため。実保存とSaveCombatの発見処理を照合し、DiscoverEnemiesを準備へ追加した。失敗ログ/実保存/診断JSONは保全。製品ガード・処理を変更していない。
+- 通常MSVC再ビルド成功。最終Save4件（b597ce5de706446aa26b52a4d0b34848）/別UE Verify4件（096f48854dab443aa1d9e9a8bb0bfd02）、警告/失敗0。既存60地点＋配色戦闘1件＋世代復旧/設定を確認。保存先8cfa2e9b2abc47b8a4955c0a2e7ab22f、appearance-process-fixed-green.log。
+- 配色戦闘は9人全員Alternate、現在の恒久選択は全員Standard。v20の前プロセス保存から全状態/戦闘/作戦/抽選乱数を復元し、UI再開時の中断権消費・固定外見維持・二重再開拒否、UI再中断後に新ストアで全状態一致を確認。別プロセスの12日通し/全武器・難易度/製品全体の受け入れは残る。
+- 追加Native obj対象0件、追加の生計測なし。過去の4,502,899,685 bytesを再計上せず、現行UE Intermediate/DDCと全失敗証跡を保持した。
