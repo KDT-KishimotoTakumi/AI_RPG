@@ -9,6 +9,10 @@ bool Unlocked(const Profile& profile,int actorId)
     return actorId==0?profile.VictoryRecorded || std::any_of(profile.Epilogues.begin(),profile.Epilogues.end(),[](bool value){return value;}):profile.SpecialConversations[actorId-1];
 }
 }
+bool ValidAppearanceSnapshot(const AppearanceSelection& appearances)
+{
+    return std::all_of(appearances.begin(),appearances.end(),[](auto variant){return variant==AppearanceVariant::Standard || variant==AppearanceVariant::Alternate;});
+}
 bool ValidAppearanceSelection(const Profile& profile)
 {
     for(int id=0;id<=8;++id){

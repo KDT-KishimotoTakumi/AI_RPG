@@ -119,6 +119,7 @@ void FGirlsSpireCampaignSpec::Define()
                 continue;
             }
             if(saved.Run->Combat){
+                if(!TestTrue(TEXT("戦闘中は開始時の人物別衣装を保持"),saved.Run->Combat->Appearances==expectedAppearances))return;
                 const auto restored=Battle::Restore(saved.Run->Combat->Battle);
                 if(!TestTrue(TEXT("通常戦闘の保存を復元"),restored.has_value()))return;
                 auto expected=*restored;

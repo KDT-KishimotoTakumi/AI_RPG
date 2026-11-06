@@ -11,6 +11,7 @@ class SHorizontalBox;
 class SBox;
 class IGameAudio;
 class FBoardSprites;
+class FCharacterPortraits;
 struct FSlateDynamicImageBrush;
 class SRunScreen : public SCompoundWidget
 {
@@ -48,7 +49,7 @@ private:
     void ShowSetup();
     void StartRun();
     void StartBattle(bool forceGenerationFailure=false);
-    void ShowCombat(TSharedPtr<GirlsSpire::Battle> combat,const FString& summary,std::optional<GirlsSpire::CombatControlCheckpoint> control={});
+    void ShowCombat(TSharedPtr<GirlsSpire::Battle> combat,const FString& summary,std::optional<GirlsSpire::CombatControlCheckpoint> control={},std::optional<GirlsSpire::AppearanceSelection> appearances={});
     bool PersistState(const std::optional<GirlsSpire::RunSaveState>& state,const GirlsSpire::Profile& profile,bool consume=false);
     bool SaveCurrent(bool suspend=false);
     bool SaveCombat(const GirlsSpire::SavedCombat& combat,bool suspend,std::uint64_t revision);
@@ -78,6 +79,11 @@ private:
     void ShowEpilogueLibrary();
     void ShowComboLibrary(int recipeId=0);
     void ShowEnemyLibrary(int enemyId=0);
+    void ShowAppearance(int actor=-1,std::optional<GirlsSpire::AppearanceVariant> preview={});
+    void SaveAppearance(int actor,GirlsSpire::AppearanceVariant variant);
+    void AddActorPortrait(int actor,GirlsSpire::AppearanceVariant variant,const FName& id);
+    TSharedPtr<SVerticalBox> AddDialoguePortrait(int actor,GirlsSpire::AppearanceVariant variant,const FName& id);
+    TSharedPtr<FCharacterPortraits> AppearancePortraits;
     TSharedPtr<FBoardSprites> EnemyLibrarySprites;
     void ShowEpiloguePage(int actorId,bool archived);
     void ConfirmEpilogue(int actorId);

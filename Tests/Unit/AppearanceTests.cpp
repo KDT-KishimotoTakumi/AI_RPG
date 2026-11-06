@@ -1,5 +1,6 @@
 #include "Domain/Appearance.h"
 #include "Infrastructure/SavePayload.h"
+#include "Application/Encounter.h"
 #include <algorithm>
 #include <iostream>
 int TestAppearance()
@@ -8,7 +9,7 @@ int TestAppearance()
     int checks=0,failed=0;
     const auto check=[&](bool pass,const char* message){++checks;if(!pass){++failed;std::cerr<<"FAIL Appearance: "<<message<<'\n';}};
     Profile fresh;
-    check(RunPayloadSchema==19 && ProfilePayloadSchema==7,"周回v19を維持し外見を恒久v7へ保存");
+    check(RunPayloadSchema==20 && ProfilePayloadSchema==7,"配色戦闘の最大版v20と恒久v7を使用");
     for(int id=0;id<=8;++id){
         check(CanChooseAppearance(fresh,id,AppearanceVariant::Standard),"標準は全員選択可能");
         auto copy=fresh;
@@ -66,5 +67,31 @@ int TestAppearance()
         malformed=*bytes;malformed[malformed.size()-4]=2;
         check(!DecodeProfilePayload(malformed),"保存された不正な外見列挙を拒否");
     }else check(false,"全員解放済みの保存を作成");
+    Run start(42,Difficulty::Beginner,HeroRole::Sword);
+    check(start.ChooseNode(start.Snapshot().Revision,0),"保存用の最初の救出戦を開始");
+    const auto battle=Encounter::Create(start.Snapshot(),start.RandomState());
+    CombatControl control;control.ChoiceRandom=Random(12);
+    RunSaveState snapshot{start.Checkpoint(),SavedCombat{battle.Checkpoint(),control.Checkpoint()}};
+    const auto standard=EncodeRunPayload(snapshot);
+    check(standard && static_cast<unsigned char>((*standard)[4])==19,"標準外見の保存は旧v19のバイト形式を維持");
+    const auto legacy=standard?DecodeRunPayload(*standard):std::nullopt;
+    check(legacy && *legacy==snapshot,"旧v19を全員標準の固定外見として読む");
+    for(int id=0;id<=8;++id){
+        auto changed=snapshot;changed.Combat->Appearances[id]=AppearanceVariant::Alternate;
+        check(changed!=snapshot,"固定外見を保存状態の比較へ含める");
+        const auto bytes=EncodeRunPayload(changed);
+        check(bytes && static_cast<unsigned char>((*bytes)[4])==20 && InspectPayload(*bytes,SaveKind::Run)==SaveError::None,"差分がある戦闘だけv20へ拡張");
+        const auto restored=bytes?DecodeRunPayload(*bytes):std::nullopt;
+        check(restored && *restored==changed && restored->Run==snapshot.Run && restored->Combat->Battle==snapshot.Combat->Battle && restored->Combat->Control==snapshot.Combat->Control,"人物別の固定外見を保存し戦闘/乱数/作戦を変えない");
+        for(int raw:{-1,2}){auto invalid=changed;invalid.Combat->Appearances[id]=static_cast<AppearanceVariant>(raw);check(!EncodeRunPayload(invalid),"不正な戦闘外見値を符号化しない");}
+        if(bytes){auto bad=*bytes;bad[bad.size()-37+4*id]=2;check(!DecodeRunPayload(bad),"保存内の不正な固定外見を拒否");}
+    }
+    auto allChanged=snapshot;allChanged.Combat->Appearances.fill(AppearanceVariant::Alternate);
+    if(const auto bytes=EncodeRunPayload(allChanged)){
+        for(std::size_t n=0;n<bytes->size();++n)check(!DecodeRunPayload(bytes->substr(0,n)),"固定外見を含む戦闘保存の全切断を拒否");
+        check(!DecodeRunPayload(*bytes+"x"),"固定外見保存の余剰を拒否");
+    }else check(false,"全員差分の保存が可能");
+    allChanged.Combat->Appearances.fill(AppearanceVariant::Standard);
+    check(EncodeRunPayload(allChanged)==standard,"標準へ戻すと同じv19バイト列になる");
     std::cout<<"Appearance: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }

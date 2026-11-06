@@ -1,53 +1,48 @@
 # 作業再開メモ
 
-更新: 2026-11-06。要約。PROAGENTS.md・仕様正本・最新利用者指示を優先する。
+更新: 2026-11-06。要約。PROAGENTS.md・仕様正本・最新利用者指示を優先。
 
 ## 【現在の目的】
-Girls Spireを承認済み仕様どおり完成させる。全体は未完成。完成またはトークン限界まで継続し、区切りでゲーム内容を変えない容量整理とcommit→pull --ff-only→pushを行う。
+Girls Spireを承認済み仕様で完成させる。全体は未完成。完成またはトークン限界まで進め、区切りで内容を変えない容量整理とcommit→pull --ff-only→pushを行う。
 
 ## 【確定事項・重要な設定】
-- 計画/実装は2026-09-20承認済み。要件はspecs/001-girls-spire/spec.md、ゲーム概要GAME、実装IMPLEMENTED、残作業PLAN/tasks、証跡VALIDATION/E2E_MATRIX。必要箇所だけ読む。
-- 導入済みUE5.7.4/Windowsを使う。bUseUnity=false。パスはcwd/環境/Epic manifest/vswhereから解決。通常ゲームを勝手に起動/強制終了しない。
-- 戦国怪異/グリッドターン制/マウス/2Dスプライト。12日、1日1～2イベント、1～4日各1人救出、主人公＋4人、ボス6/12日、Lv10。黒鉄蓮25歳男性固定＋女性8人（全員成人/恋愛候補）。全滅で周回性能を失い、絆/発見/図鑑/外見/難易度/後日談は保持。
-- 絆0～100恒久、開始時信頼へ固定。救出3択＋10/0/−5。専用交流は加入/絆80以上・交流1回で完了恒久。勝利/当該周回加入/絆80/専用交流完了で該当者全員か単独の後日談を選ぶ。複数恋愛可、嫉妬等なし、合意/部分的裸体まで/抑制設定。承認本文は接続済み。
-- 正式18技能/9必殺/絆100強化、通常20＋専用8連携、性格AI8条件、難易度思考、敵人物技能は実装済み。専用201～208は主人公の承→仲間の結・同敵命中/隣接/絆100、ゲージ20・重複加算なし。数値は承認済みproposal/rulesが正本。
-- 未救出4人は周回シードで敵50％/中立50％、城主撃破で勝利。敵12種の開始/途中出現は最初の保存成功時に発見し、敗北/放棄で保持。人物8人は敵図鑑へ重複登録しない。
-- Run v19（旧v2～18互換）/Profile v7（旧v1～6互換）。HighestDifficultyは新規0→初級勝利1→中級勝利2、旧v1～4は2で移行。旧v5以前のDiscoveredEnemiesは空。初勝利はVictoryRecordedで後日談前に確定し、旧Epiloguesも根拠にするが難易度全解放から勝利を推測しない。
-- 外見案A・9人の配色表・Python/Pillow方式を利用者が明示承認済み。再質問不要。標準＋衣装色違い各1種、顔/髪/体型/衣装形状/模様/名前/肌/露出/武器/金属は固定。主人公初勝利、仲間は専用交流完了で解放。人物別選択も恒久。新規戦闘/会話から反映し、既存保存戦闘の外見は維持する。
+- 計画/実装は2026-09-20承認済み。要件specs/001-girls-spire/spec.md、概要GAME、実績IMPLEMENTED、予定PLAN/tasks、証跡VALIDATION/E2E_MATRIX。必要部分だけ読む。
+- Windows/導入済みUE5.7.4、bUseUnity=false。パスはcwd/環境/Epic manifest/vswhereで解決。通常ゲームを勝手に起動/強制終了しない。
+- 戦国怪異/グリッドターン/マウス/2Dスプライト。12日、1日1～2イベント、1～4日各1人救出、主人公＋4人、6/12日ボス、Lv10。黒鉄蓮25歳男性固定＋成人女性8人全員恋愛候補。全滅時に周回性能を失い、絆/発見/図鑑/外見/難易度/後日談を保持。
+- 恒久絆0～100を開始時信頼へ固定。救出3択＋10/0/−5。加入/絆80以上で専用交流（交流1回消費、完了恒久）。勝利/当該周回加入/絆80/専用交流で条件達成者全員または単独の後日談。複数恋愛可/嫉妬なし、合意/部分的裸体まで/抑制設定。
+- 正式18技能/9必殺/絆100強化、通常20＋専用8連携、性格AI8条件/難易度思考/敵人物技能は接続済み。専用201～208は主人公の承→仲間の結、同敵命中/隣接/絆100、ゲージ20/重複なし。数値は承認済みproposal/rules。
+- Run対応上限20。標準外見のみ/戦闘なしは同一バイトのv19を出力し、配色のある戦闘だけv20。旧v2～19は標準外見で読む。Profile v7（旧v1～6互換）。難易度は新規0→初級勝利1→中級勝利2、旧v1～4は2で移行。旧v5以前の敵図鑑は空。
+- 勝利はVictoryRecordedを後日談前に記録。旧Epiloguesも根拠にするがHighestDifficultyだけから推測しない。
+- 衣装案A/9人の配色/Python・Pillow方式は明示承認済み。標準＋各1差分、原画/顔/髪/体型/衣装形状/模様/肌/露出/武器/金属は固定。主人公初勝利、仲間専用交流で解放。新規戦闘/会話から反映、保存戦闘は開始時9人分を維持。
 
 ## 【現在の進捗】
-- 最新GS-085: 仲間8人の正式差分を追加し9人が揃った。制作28テスト/通常MSVC立ち絵13件警告0（9ae045b6f2db4059a349ddfbe35ca321）。原画9枚/既存主人公差分不変、各再生成一致。レシピ/正式SHA/保護画素はtools/appearance/reviewed-portraits.json、証跡はSaved/appearance-roster-adoption.jsonと各<人物>-final-01。C++製品コードは不変。選択UI/保存戦闘固定/通常ゲームへの反映は未接続。
-- 外見データ基盤: Domain/Appearance、Profile.VictoryRecorded/SelectedAppearances[9]（Standard=0/Alternate=1）。旧選択は標準、不正値/未解放選択は拒否。敗北で失わない。初期化告知にも全恒久損失を明記済み。
-- GS-082: 主人公hero-ren-dye1.pngを配置。主色#C8CDD2/副色#243B5A。標準原画9枚SHA不変、変更122,858/保護148,289画素、外側RGBA/全alpha/寸法不変。local-04/05/06の再生成一致。正式PNG SHA256=45ABE6AF2E762F48C1038CC50FD7DF7E716B2FEA296276034E85C5DEEE41F00B。設定/確認表はtools/appearance/hero-ren-dye1.jsonとreviewed-portraits.json。
-- GS-083: FCharacterPortraits.Get(actor,variant=Standard)と9×2キャッシュをTDD実装。不正ID/列挙値/欠落はnullptrで、標準と偽らない。旧呼出しは標準のまま。主人公の配色別API読込まで確認し、選択UI/保存戦闘固定は未接続。
-- 最新全体計測（C++コード不変で保持）Coverage/aadd0ce54113474487b76a0058e6d238: Passed=true/Missing=[]、行5254/5283=99.45%、関数663/675=98.22%、分岐5434/5956=91.24%。Native全スイート失敗0（外見は294チェック。Native全体件数とは別）。全UE425警告0=6e2a5e2a7a164b95a144ba76b2273a48。通常起動/音声/別プロセス音声再開/音声専用2件も成功。詳細VALIDATION。
-- GS-083計測中は固定したSource/Tests/人物素材348ファイルSHA不変。計装DLLを最新Coverageへ退避し通常MSVCへ復帰、立ち絵UI13件警告0=7e74352b7a024ee9a397bd0475ce1e2c。Saved/appearance-loader-final-review.logに成功。通常MSVCでの今回の最終再実行範囲は立ち絵UI。
-- GS-084: 制作ツールの禁止領域優先/全レイヤー最終再検査/不正名/大小文字重複/出力前拒否をTDD補強。Python23テスト成功。補強後もC++製品147ファイルSHA不変。Python3.14.7をuvから動的解決しSaved/Tools/AppearancePythonへPillow12.0.0を隔離導入。使用法はtools/appearance/README.md。
-- 証跡: Saved/appearance-{protected*,final-protection*,layer-name*,loader-*}のログ、ArtPrototypes/Appearanceの候補/マスク/重ね合わせ/report/adoption-audit。主人公候補01～03とimagegen候補は未採用で保全。GS-085で他8人の差分も配置・検証済み。通常ゲームは起動していない。
+- GS-081～085: 正式差分9枚、制作28テスト、9×2画像キャッシュを検証済み。レシピ/正式SHAはtools/appearance/reviewed-portraits.json。Python3.14.7はuvから動的解決、Saved/Tools/AppearancePythonにPillow12.0.0隔離。未採用画像/原画は保持。
+- GS-086/087: SavedCombat.Appearances[9]、立ち絵/盤面駒/保存再開、タイトル「衣装」の9人一覧/予告取消/確定/失敗再試行を接続。会話画像は横置きで最大文字の救出3択を維持。能力/技/乱数不変。
+- 最新全体計測b64ecb5862414bbda7aad993cf2ba278: Passed=true/Missing=[]、行5329/5358=99.46%、関数678/690=98.26%、分岐5474/6004=91.17%。Native全回帰成功（外見2608チェックでありNative全体件数ではない）。全UE432警告0=54786651c42a4e7680ad57e07930ab7e。通常起動/音声/別プロセス音声再開/音声専用2件も成功。
+- Source/Tests331ファイルの計測時SHA不変、JSON/profdata/実行物/計装DLL保持。通常MSVCへ復帰済み、外見/立ち絵20件警告0=d29f1c3c8fe240e4b523b7aa294d99b2。12日3件（53a02ba5268a448c972b71b5f4452b6a）、別プロセス60地点/世代復旧/設定（8282763e1695414fb99be09e070f807b / a8bba540b1314b589f10f0b1bf1b6ead）も警告0で成功。T026b完了。
+- 詳細Red/Greenと失敗原因/証跡はVALIDATIONのGS-086/087。v20の実ディスク/新ストア再開は同一UE内の確認であり、v20専用の別プロセス実証とは区別する。
 
 ## 【未解決の課題】
-- T026b全体: 選択UI/予告取消/取引保存、新規戦闘/会話への反映、保存戦闘の固定外見、9人の通常ゲーム外見反映E2E。主人公素材配置やAPI読込だけを外見全体の完成としない。
-- 正式敵/地形差分、歩行コマ/攻撃演出、音調整、全設定の実寸回帰、全7ストーリー/全武器・難易度/実戦12日総合、Windows配布/オフライン/日本語フォント/性能/45～90分実測。
-- 実fullscreen title.settingsカーソル不一致/title.start未検出、旧battle.start未検出、OS置換エラー5の原因は未確定。今回のoffscreen成功を原因修正と断定しない。
+- Git同期の実行結果を確認。外見の関連回帰/容量監査は完了。
+- 全武器/難易度/7ストーリーの総合E2E、生成安全検査、正式敵/地形差分、歩行コマ/攻撃演出/音調整/全設定実寸、Windows配布/オフライン/日本語フォント/性能/45～90分実測。
+- 実フルスクリーンtitle.settingsカーソル不一致/title.start未検出、旧battle.start未検出、OS置換エラー5は原因未確定。他経路の成功で解決扱いにしない。
 
 ## 【重要な制約・注意点】
-- TDDと全自作C++の行/関数/分岐各90%以上。実UI/実IO/別プロセス/全体を区別。ビルド/計測中はSource/Testsを凍結。宣言ハッシュはLF正規化UTF8（Raw Get-FileHashではない）。計測後は通常MSVCへ戻す。
-- Config/DefaultEngine.iniは秘密情報。内容の読取/出力/ステージ禁止。整理ではサイズ/更新日時だけ。原画/セーブ/固定原本/集計/失敗証跡を保全し、現行UE Intermediate/DDCを保持。
-- 固定原本Tests/Fixtures/{roster-v11,ability-v12,skill-v13,ultimate-v14,bond-v15,personality-v16,enemy-v17,enemy-v18}.binは再生成しない。enemy-v18は3423 bytes/FNV1a64=7282346423887295310/SHA256=465FE4FECCCFF16BC18D4459AB99D959D814413D27F555F07CD7618EF72E93CA。
-- EnemyEncounterFingerprint.h/.mdの1200戦場Run v19指紋は9375212860804229285（基準edc5b5a）。外見固定の保存拡張でも旧原本/戦闘処理不変を検証し、比較値を都合よく更新しない。
-- 旧v5合成テストはv7の外見37＋空の敵一覧4を除き、旧v4はさらに難易度4を除く。独立v6レイアウトもAppearanceTestsで確認済み。
-- UIは-UI/-RenderOffscreen、-windowedを追加しない。実寸はクライアント/撮影寸法でも確認。通常ゲームを勝手に起動/強制終了せず、所有する隔離試験だけ実行する。
-- 必要なスキル/資料だけ使用し、秘密設定/セーブの一括索引・全体フック・無断委任をしない。Spec Kit全体の「曖昧さなし」1件は未確認だが、継続承認済みの確定範囲を実装する。
-- Gitはmain、origin=https://github.com/KDT-KishimotoTakumi/AI_RPG.git。秘密設定/セーブ/生成物を除外しcommit→pull --ff-only→push、clean/0・0を確認。同期の最新状態はgit status/logを正とする。
+- TDD/自作C++行・関数・分岐各90%以上。実UI/実IO/別プロセス/全体を区別。ビルド/計測中Source/Tests凍結、宣言ハッシュはLF正規化UTF8。計測後通常MSVCへ戻す。
+- Config/DefaultEngine.iniは秘密。内容の読取/出力/ステージ禁止、容量監査はサイズ/更新日時のみ。原画/セーブ/固定原本/集計/失敗証跡と現行UE Intermediate/DDCを保持。
+- Tests/Fixturesのroster-v11/ability-v12/skill-v13/ultimate-v14/bond-v15/personality-v16/enemy-v17/enemy-v18.binは再生成禁止。enemy-v18は3423 bytes/FNV7282346423887295310/SHA256=465FE4FECCCFF16BC18D4459AB99D959D814413D27F555F07CD7618EF72E93CA。
+- EnemyEncounterFingerprint.h/.mdの1200戦場Run v19指紋9375212860804229285（基準edc5b5a）を更新して帳尻を合わせない。
+- 旧v5合成は外見37＋空敵一覧4を除去、旧v4はさらに難易度4を除去。独立v6レイアウトも検証済み。
+- UIは-UI/-RenderOffscreen、-windowed不可。非入力の盤面画像はDriver.IsVisibleでなく実Widget/撮影画素で検証。実寸は撮影寸法も確認。
+- Spec Kit/スキルは工程別に必要部分だけ読む。秘密/セーブの一括索引・全体フック・無断委任はしない。未確定仕様は事実扱いしない。
+- Git main、origin=https://github.com/KDT-KishimotoTakumi/AI_RPG.git。秘密設定/セーブ/生成物を除外し明示ステージ、commit→pull --ff-only→push後clean/0・0を確認。
 
 ## 【次に行う作業】
-1. 今回の容量監査/Git同期の実行結果を確認。合格済みC++/UIを理由なく繰り返さない。最新計測の成功profraw6件4,302,835,720 bytesは集計保持後に整理済み（全体純減とは別）。
-2. 未完のT026b2/3/4へ進む。主人公原画/配色/方式の再質問、未採用候補の接続、原画の上書きをしない。9人の正式レシピ/画像と既存APIを使い、選択UI/取引保存/戦闘外見の固定へ進む。
-3. 区切りで保全付き容量整理とGit同期。集計/実行物/セーブ/失敗証跡を保持する。
+1. Git同期結果を確認し、PLAN/tasksの次の総合受け入れへ進む。完了した衣装を再実装せず、v20専用別プロセスや全武器/難易度/ストーリー等の未検証だけを追加する。
+2. 容量監査完了: StorageAudit-a01898bea5c94415bc8db44bf45c95e6。今回の合格生計測6件4,435,650,520 bytes＋再生成obj67,249,165 bytes、処理量4,502,899,685 bytes。保全18,011ファイルSHA/秘密設定メタデータ不変、現行UE Intermediate/DDC保持。プロジェクト全体純減とは別。重複計上しない。
+3. 完了した外見を作り直さず、PLAN/tasksの次の未検証受け入れ条件へ進む。ゲーム全体を完成扱いにしない。
 
-削除しても支障がない情報: 重複継続指示、正本へ記録済みの過去ログ再掲。
-失うと困る情報: 承認範囲、保存互換/RNG、固定原本/指紋、最新証跡/未解決、秘密設定の非参照、次の確定作業。
+削除しても支障がない情報: 重複継続指示、正本へ記録済みの日報/過去説明。
+失うと困る情報: 承認範囲、互換/RNG/固定原本と指紋、最新ゲート/未解決、秘密設定の非参照、次の確定作業。
 
-容量監査完了: StorageAudit-14311055c5e9469ba7480d180f04a61b。今回生計測6件4,302,835,720 bytes/追加obj0件、保全17,325ファイルSHAと秘密設定メタデータ不変。原画/正式差分/セーブ/実行物/結果/失敗証跡/現行UE Intermediate/DDC保持。Git同期の最終出力はSaved/appearance-sync.log（生成物でGit管理外）。
-
-GS-085容量整理完了: 旧4a6fc7ddb58f45ffb9e92cbe1a87f6e6/79a55e5a602043dab0dc8d2d768177c4のcoverage.json/profdata/CoreTests.exe/計装DLLは各同フォルダ.gzへ可逆保管、使う時だけ展開。8件207,459,138→24,904,722 bytes、論理削減182,554,416 bytes。全展開SHA/保全17,465ファイルSHA/秘密設定メタデータ一致。最新aaddは非圧縮保持。監査StorageAudit-29699a3b6fec4563a26894011948fec7。今回新たなprofraw削除はない。Git同期出力はSaved/appearance-roster-sync.log。
+旧合格4a6fc7ddb58f45ffb9e92cbe1a87f6e6/79a55e5a602043dab0dc8d2d768177c4のJSON/profdata/実行物は各.gzへ可逆保管。使用時のみ展開する。最新b64は通常保持。過去の削減を再計上しない。過去監査はSTORAGEを参照。

@@ -53,6 +53,7 @@ void FGirlsSpireRescueDialogueSpec::Define()
         Async(EAsyncExecution::TaskGraphMainThread,[this,run]{Window->SetContent(SNew(SRunScreen).InitialRun(run));}).Wait();DrainSlateLayout();
         const FString opening=FString(UTF8_TO_TCHAR(FindCharacter(actor)->Name.data()))+TEXT("「")+UTF8_TO_TCHAR(dialogue->Opening.data())+TEXT("」");
         TestEqual(TEXT("人物名と本人の台詞"),Driver->FindElement(By::Id("rescue.dialogue"))->GetText().ToString(),opening);
+        TestTrue(TEXT("救出人物の衣装画像を表示"),Driver->FindElement(By::Id("rescue.image"))->Exists());
         const TCHAR* effects[]={TEXT("（＋10）"),TEXT("（0）"),TEXT("（−5）")};
         for(int index=0;index<3;++index){const auto id=FString::Printf(TEXT("rescue.choice.%d"),index);TestEqual(TEXT("承認済みの本文と効果数値"),Driver->FindElement(By::Id(*id))->GetText().ToString(),FString(UTF8_TO_TCHAR(dialogue->Replies[index].data()))+effects[index]);}
         const auto id=FString::Printf(TEXT("rescue.choice.%d"),choice);

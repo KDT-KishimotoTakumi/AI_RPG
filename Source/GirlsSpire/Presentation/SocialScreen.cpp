@@ -23,6 +23,8 @@ void SRunScreen::RefreshSocial()
     }
     const auto* text=FindSocialDialogue(SocialActor);
     check(text); // 交流相手は検証済みの加入者IDだけ。
+    const auto content=AddDialoguePortrait(SocialActor,CurrentRun->ProfileState().SelectedAppearances[SocialActor],"social.image");
+    TGuardValue<TSharedPtr<SVerticalBox>> target(Body,content);
     AddText(ActorName(SocialActor)+TEXT("「")+UTF8_TO_TCHAR(text->Opening.data())+TEXT("」"),"social.dialogue",18);
     if(CurrentRun->CanSpecialConverse(SocialActor)) {
         if(SocialChoice==-2) {

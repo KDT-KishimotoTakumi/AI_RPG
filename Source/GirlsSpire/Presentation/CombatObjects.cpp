@@ -18,7 +18,7 @@ FVector2D SCombatScreen::BoardCellSize() const
 const FSlateBrush* SCombatScreen::UnitSprite(const GirlsSpire::BattleUnit& unit) const
 {
     if(MonochromeBoard)return nullptr;
-    if(unit.Id>=0 && unit.Id<=8)return PortraitResources->Get(unit.Id).Get();
+    if(unit.Id>=0 && unit.Id<=8)return PortraitResources->Get(unit.Id,AppearanceSnapshot[unit.Id]).Get();
     return unit.Side==GirlsSpire::Faction::Enemy?Sprites->Enemy(unit):nullptr;
 }
 void SCombatScreen::RefreshObjects()

@@ -17,7 +17,7 @@ void SCombatScreen::RefreshPortraits()
         TSharedPtr<SVerticalBox> card;
         PortraitPanel->AddSlot().AutoWidth().Padding(0,0,4,0)
             [SNew(SBox).WidthOverride(76)[SAssignNew(card,SVerticalBox)]];
-        const auto image=PortraitResources->Get(unit.Id);
+        const auto image=PortraitResources->Get(unit.Id,AppearanceSnapshot[unit.Id]);
         if(image) {
             card->AddSlot().AutoHeight().HAlign(HAlign_Center)
                 [SNew(SBox).WidthOverride(64).HeightOverride(96)

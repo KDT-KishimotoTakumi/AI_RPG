@@ -9,7 +9,7 @@ bool SCombatScreen::PersistCheckpoint()
     if(SavingBlocked) return false;
     auto& save=SuspensionPending?OnSuspend:OnCheckpoint;
     if(!save) return true;
-    SavingBlocked=!save({Combat->Checkpoint(),Control.Checkpoint()});
+    SavingBlocked=!save({Combat->Checkpoint(),Control.Checkpoint(),AppearanceSnapshot});
     return !SavingBlocked;
 }
 void SCombatScreen::ShowSaveFailure()

@@ -155,7 +155,7 @@ int TestEnemyCharacterSkills()
     auto saved=TestData::AbilityContextCase(true);saved.Combat->Battle.State.AbilityRules=AbilityRuleSet::CompleteCharacters;
     saved.Combat->Battle.State.EnemyAI=EnemyThinking::Basic;saved.Combat->Battle.State.EnemyCharacterSkills=true;
     const auto encoded=EncodeRunPayload(saved);
-    check(encoded && DecodeRunPayload(*encoded)==saved && RunPayloadSchema==19,"新しい人物技能AI識別をRun v19で保存往復する");
+    check(encoded && DecodeRunPayload(*encoded)==saved && static_cast<unsigned char>((*encoded)[4])==19,"新しい人物技能AI識別をRun v19で保存往復する");
     const auto path=std::filesystem::path(u8"" __FILE__).parent_path().parent_path()/"Fixtures"/"enemy-v18.bin";
     std::ifstream input(path,std::ios::binary);const std::string bytes{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
     const auto old=DecodeRunPayload(bytes);

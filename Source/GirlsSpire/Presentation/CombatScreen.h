@@ -28,6 +28,7 @@ public:
         SLATE_ARGUMENT(FString, GenerationSummary)
         SLATE_ARGUMENT(std::optional<GirlsSpire::Profile>, BondProfile)
         SLATE_ARGUMENT(std::optional<GirlsSpire::CombatControlCheckpoint>, SavedControl)
+        SLATE_ARGUMENT(std::optional<GirlsSpire::AppearanceSelection>, SavedAppearances)
         SLATE_ARGUMENT(TSharedPtr<FCharacterPortraits>, Portraits)
         SLATE_ARGUMENT(TSharedPtr<FBoardSprites>, Sprites)
         SLATE_ARGUMENT(GirlsSpire::Preferences, DisplayPreferences)
@@ -39,6 +40,7 @@ public:
     void Construct(const FArguments& Args);
     GirlsSpire::CombatControlCheckpoint ControlCheckpoint() const {return Control.Checkpoint();}
 private:
+    GirlsSpire::AppearanceSelection AppearanceSnapshot{};
     void BuildField();
     bool SelectFieldCell(GirlsSpire::Position cell);
     enum class EFieldAction { None, Move, Attack, Intent };

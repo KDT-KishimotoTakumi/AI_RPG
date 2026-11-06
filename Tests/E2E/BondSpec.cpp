@@ -68,6 +68,7 @@ void FGirlsSpireBondUiSpec::Define()
         for(int id:run->Unrecruited()) TestFalse(TEXT("未加入者は非表示"),Driver->FindElement(By::Id(*FString::Printf(TEXT("social.actor.%d"),id+1)))->Exists());
         if(!Click(TCHAR_TO_UTF8(*actorId))) return;
         const auto* text=GirlsSpire::FindSocialDialogue(actor);if(!TestNotNull(TEXT("承認済み通常交流"),text))return;
+        TestTrue(TEXT("交流相手の衣装画像を表示"),Driver->FindElement(By::Id("social.image"))->Exists());
         TestEqual(TEXT("人物別の台詞"),Driver->FindElement(By::Id("social.dialogue"))->GetText().ToString(),FString(UTF8_TO_TCHAR(GirlsSpire::FindCharacter(actor)->Name.data()))+TEXT("「")+UTF8_TO_TCHAR(text->Opening.data())+TEXT("」"));
         const TCHAR* effects[]={TEXT("（＋10）"),TEXT("（0）"),TEXT("（−5）")};
         for(int index=0;index<3;++index){const auto key=FString::Printf(TEXT("social.choice.%d"),index);TestEqual(TEXT("人物別3返答と既存効果"),Driver->FindElement(By::Id(*key))->GetText().ToString(),FString(UTF8_TO_TCHAR(text->Replies[index].data()))+effects[index]);}

@@ -11,10 +11,43 @@
 #include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
 #include "ImageUtils.h"
+#include "Framework/MetaData/DriverIdMetaData.h"
+#include <vector>
+
+namespace {
+TSharedPtr<SWidget> FindAppearanceWidget(const TSharedRef<SWidget>& widget,FName id)
+{
+    if(!widget->GetVisibility().IsVisible())return nullptr;
+    const auto tag=widget->GetMetaData<FDriverIdMetaData>();if(tag && tag->Id==id)return widget;
+    auto* children=widget->GetChildren();
+    for(int i=0;i<children->Num();++i)if(const auto found=FindAppearanceWidget(children->GetChildAt(i),id))return found;
+    return nullptr;
+}
+}
 
 BEGIN_DEFINE_SPEC(FGirlsSpirePortraitSpec,"GirlsSpire.UI.Portraits",EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
     FAutomationDriverPtr Driver;
     TSharedPtr<SWindow> Window;
+    std::vector<FColor> CaptureRegion(const char* id) {
+        std::vector<FColor> region;
+        Async(EAsyncExecution::TaskGraphMainThread,[this,&region,id]{
+            const auto target=FindAppearanceWidget(Window.ToSharedRef(),FName(UTF8_TO_TCHAR(id)));
+            if(!TestTrue(TEXT("比較する画像が描画される"),target.IsValid()))return;
+            const auto geometry=target->GetCachedGeometry();
+            const auto position=geometry.LocalToAbsolute(FVector2D::ZeroVector),extent=geometry.LocalToAbsolute(geometry.GetLocalSize())-position;
+            TArray<FColor> pixels;FIntVector size;
+            if(!TestTrue(TEXT("外見比較用の実画面を取得"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,size)))return;
+            TArray64<uint8> png;FImageUtils::PNGCompressImageArray(size.X,size.Y,pixels,png);
+            const auto dir=FPaths::ProjectSavedDir()/TEXT("Screenshots/AppearanceCombat")/FGuid::NewGuid().ToString(EGuidFormats::Digits);
+            IFileManager::Get().MakeDirectory(*dir,true);TestTrue(TEXT("比較画面を保全"),FFileHelper::SaveArrayToFile(png,*(dir/TEXT("frame.png"))));
+            const auto origin=Window->GetCachedGeometry().LocalToAbsolute(FVector2D::ZeroVector);
+            const int x=FMath::RoundToInt(position.X-origin.X),y=FMath::RoundToInt(position.Y-origin.Y);
+            const int width=FMath::RoundToInt(extent.X),height=FMath::RoundToInt(extent.Y);
+            if(!TestTrue(TEXT("画像範囲が撮影内に収まる"),x>=0 && y>=0 && width>0 && height>0 && x+width<=size.X && y+height<=size.Y))return;
+            for(int row=y;row<y+height;++row)for(int column=x;column<x+width;++column)region.push_back(pixels[row*size.X+column]);
+        }).Wait();
+        return region;
+    }
 END_DEFINE_SPEC(FGirlsSpirePortraitSpec)
 void FGirlsSpirePortraitSpec::Define()
 {
@@ -24,6 +57,44 @@ void FGirlsSpirePortraitSpec::Define()
         FSlateApplication::Get().AddWindow(Window.ToSharedRef());Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
+    It(TEXT("新規外見を両画像へ反映し保存外見を現在設定より優先する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+        using namespace GirlsSpire;
+        BattleUnit hero;hero.At={1,1};hero.Speed=30;
+        BattleUnit enemy;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={6,6};enemy.Speed=10;
+        const auto original=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);
+        const auto before=original->Checkpoint();Preferences preferences;preferences.ReducedEffects=true;
+        const auto recorded=std::make_shared<std::optional<SavedCombat>>();auto& last=*recorded;
+        Profile profile;profile.VictoryRecorded=true;
+        const auto show=[&](const Profile& current,std::optional<AppearanceSelection> saved){
+            Async(EAsyncExecution::TaskGraphMainThread,[&,current,saved]{
+                const auto battle=MakeShared<Battle>(*Battle::Restore(before));
+                Window->SetContent(SNew(SCombatScreen).Combat(battle).BondProfile(current).SavedAppearances(saved).DisplayPreferences(preferences)
+                    .OnCheckpoint([recorded](const SavedCombat& state){*recorded=state;return true;}));
+            }).Wait();DrainSlateLayout();
+        };
+        show(profile,{});const auto normalPortrait=CaptureRegion("battle.portrait.image.0"),normalPawn=CaptureRegion("battle.unit.art.0");
+        if(!TestTrue(TEXT("標準の外見をチェックポイントへ保存"),last && last->Appearances[0]==AppearanceVariant::Standard && last->Battle==before))return;
+        const auto standardControl=last->Control;
+        profile.SelectedAppearances[0]=AppearanceVariant::Alternate;show(profile,{});
+        const auto alternatePortrait=CaptureRegion("battle.portrait.image.0"),alternatePawn=CaptureRegion("battle.unit.art.0");
+        const auto different=[](const auto& a,const auto& b){if(a.size()!=b.size() || a.empty())return false;int n=0;for(std::size_t i=0;i<a.size();++i)if(a[i]!=b[i])++n;return n>20;};
+        TestTrue(TEXT("立ち絵の実画素が配色へ変化"),different(normalPortrait,alternatePortrait));
+        TestTrue(TEXT("戦場スプライトの実画素も配色へ変化"),different(normalPawn,alternatePawn));
+        if(!TestTrue(TEXT("配色だけを固定し戦闘/乱数/作戦を変更しない"),last && last->Appearances==profile.SelectedAppearances && last->Battle==before && last->Control==standardControl))return;
+        const auto frozen=last->Appearances;profile.SelectedAppearances.fill(AppearanceVariant::Standard);show(profile,frozen);
+        TestTrue(TEXT("再開した立ち絵の実画素が以前の配色のまま"),CaptureRegion("battle.portrait.image.0")==alternatePortrait);
+        TestTrue(TEXT("再開したスプライトの実画素が以前の配色のまま"),CaptureRegion("battle.unit.art.0")==alternatePawn);
+        TestTrue(TEXT("再保存も同じ固定外見"),last && last->Appearances==frozen);
+        show(profile,{});TestTrue(TEXT("次の新規戦闘には変更後の標準を使用"),CaptureRegion("battle.portrait.image.0")==normalPortrait);
+    });
+    It(TEXT("不正な保存外見は表示を止め保存しない"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(60),[this]{
+        using namespace GirlsSpire;AppearanceSelection invalid{};invalid[0]=static_cast<AppearanceVariant>(2);const auto writes=std::make_shared<int>(0);
+        BattleUnit hero;hero.At={1,1};hero.Speed=30;BattleUnit enemy;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={6,6};enemy.Speed=10;
+        auto battle=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);
+        Async(EAsyncExecution::TaskGraphMainThread,[&]{Window->SetContent(SNew(SCombatScreen).Combat(battle).SavedAppearances(invalid).OnCheckpoint([writes](const SavedCombat&){++*writes;return true;}));}).Wait();DrainSlateLayout();
+        TestTrue(TEXT("保存外見の不正を表示"),Driver->FindElement(By::Id("save.appearance.error"))->Exists());
+        TestEqual(TEXT("不正な見た目で進行・保存しない"),*writes,0);
+    });
     It(TEXT("配色差分を標準と別に読み込み不正値と欠落を拒否する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(60),[this] {
         Async(EAsyncExecution::TaskGraphMainThread,[this] {
             using GirlsSpire::AppearanceVariant;

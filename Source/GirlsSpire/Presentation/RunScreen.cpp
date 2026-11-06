@@ -136,6 +136,7 @@ void SRunScreen::ShowTitle()
     AddAction(TEXT("新しい周回へ"), "title.start", [this] {if(StoredRun) ConfirmAbandon();else ShowSetup();});
     AddAction(TEXT("連携図鑑"),"title.combo.library",[this]{ShowComboLibrary();});
     AddAction(TEXT("敵図鑑"),"title.enemy.library",[this]{ShowEnemyLibrary();});
+    AddAction(TEXT("衣装"),"title.appearance",[this]{ShowAppearance();});
     if(PreferencesService) AddAction(TEXT("設定"),"title.settings",[this]{ShowPreferences();});
     if(PreferencesLoadIssue==GirlsSpire::PreferencesIssue::Corrupt || PreferencesLoadIssue==GirlsSpire::PreferencesIssue::ReadFailed) AddText(TEXT("設定を読み込めません。設定画面から確認できます。"),"title.settings.error",16);
     if(std::any_of(RetainedProfile.Epilogues.begin(),RetainedProfile.Epilogues.end(),[](bool read){return read;}))

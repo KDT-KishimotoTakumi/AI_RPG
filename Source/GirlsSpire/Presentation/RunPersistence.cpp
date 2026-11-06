@@ -76,7 +76,7 @@ void SRunScreen::CommitResume(GirlsSpire::RunSaveState saved,GirlsSpire::Profile
     if(saved.Combat) {
         const auto battle=GirlsSpire::Battle::Restore(saved.Combat->Battle);
         if(!battle) {Body->ClearChildren();AddText(TEXT("戦闘を復元できません。記録は保持しています。"),"save.load.error");return;}
-        ShowCombat(MakeShared<GirlsSpire::Battle>(*battle),TEXT("保存した戦場から再開"),saved.Combat->Control);
+        ShowCombat(MakeShared<GirlsSpire::Battle>(*battle),TEXT("保存した戦場から再開"),saved.Combat->Control,saved.Combat->Appearances);
     } else RefreshRun();
 }
 void SRunScreen::SuspendRun()
@@ -101,7 +101,7 @@ void SRunScreen::AbandonSaved()
     if(!PersistState({},RetainedProfile)) {ShowSaveError([this]{AbandonSaved();});return;}
     ShowSetup();
 }
-void SRunScreen::ShowCombat(TSharedPtr<GirlsSpire::Battle> combat,const FString& summary,std::optional<GirlsSpire::CombatControlCheckpoint> control)
+void SRunScreen::ShowCombat(TSharedPtr<GirlsSpire::Battle> combat,const FString& summary,std::optional<GirlsSpire::CombatControlCheckpoint> control,std::optional<GirlsSpire::AppearanceSelection> appearances)
 {
     const auto revision=CurrentRun->Snapshot().Revision;
     TFunction<bool(const GirlsSpire::SavedCombat&)> checkpoint,suspend;
@@ -113,7 +113,7 @@ void SRunScreen::ShowCombat(TSharedPtr<GirlsSpire::Battle> combat,const FString&
         };
     }
     Body->ClearChildren();
-    const auto screen=SNew(SCombatScreen).Combat(combat).FullField(FullField).GenerationSummary(summary).BondProfile(CurrentRun->ProfileState()).SavedControl(control).DisplayPreferences(DisplayPreferences).Audio(Audio)
+    const auto screen=SNew(SCombatScreen).Combat(combat).FullField(FullField).GenerationSummary(summary).BondProfile(CurrentRun->ProfileState()).SavedControl(control).SavedAppearances(appearances).DisplayPreferences(DisplayPreferences).Audio(Audio)
         .OnCheckpoint(MoveTemp(checkpoint)).OnSuspend(MoveTemp(suspend))
         .OnFinished(FSimpleDelegate::CreateLambda([this,combat,revision] {
             if(!CurrentRun || !CurrentRun->CompleteBattle(revision,combat->Snapshot())) return;

@@ -32,6 +32,13 @@ void SCombatScreen::Construct(const FArguments& Args)
     GenerationSummary=Args._GenerationSummary;
     if(Args._BondProfile)KnownCombos=Args._BondProfile->DiscoveredCombos;
     check(Combat.IsValid());
+    const auto selected=Args._BondProfile?Args._BondProfile->SelectedAppearances:GirlsSpire::AppearanceSelection{};
+    AppearanceSnapshot=Args._SavedAppearances.value_or(selected);
+    if(!GirlsSpire::ValidAppearanceSnapshot(AppearanceSnapshot)) {
+        ChildSlot[SNew(STextBlock).Text(FText::FromString(TEXT("保存された衣装を復元できません。記録は保持しています。")))
+            .AddMetaData(FDriverMetaData::Id("save.appearance.error"))];
+        return;
+    }
     if(Args._SavedControl) {
         const auto restored=GirlsSpire::CombatControl::Restore(*Args._SavedControl,*Combat);
         if(!restored) {

@@ -125,7 +125,7 @@ template<class T> bool Fields(Wire& a,T& v)
     }
     else if constexpr(std::is_same_v<T,IntentOrder>) return a(v.Kind,v.TargetId,v.Point);
     else if constexpr(std::is_same_v<T,CombatControlCheckpoint>) return a(v.Orders,v.Trust,v.ChoiceRandomState,v.ProfileDriven);
-    else if constexpr(std::is_same_v<T,SavedCombat>) return a(v.Battle,v.Control);
+    else if constexpr(std::is_same_v<T,SavedCombat>) return a(v.Battle,v.Control) && (a.Version<20 || a(v.Appearances));
     else if constexpr(std::is_same_v<T,RunSaveState>) return a(v.Run,v.Combat,v.ResumeAvailable);
     else if constexpr(std::is_same_v<T,Profile>) {
         if(!a(v.Bonds,v.SpecialConversations,v.Epilogues))return false;
@@ -140,6 +140,7 @@ bool ValidState(const RunSaveState& saved)
 {
     if(!Run::Restore(saved.Run,{})) return false;
     if(!saved.Combat) return true;
+    if(!ValidAppearanceSnapshot(saved.Combat->Appearances))return false;
     const auto& run=saved.Run.State;
     const auto kind=run.Active.Kind;
     if(run.Phase!=RunPhase::Event || (kind!=NodeKind::Battle && kind!=NodeKind::Elite &&
@@ -160,6 +161,10 @@ bool ValidState(const RunSaveState& saved)
 template<class T> std::optional<std::string> Encode(T value,std::uint32_t kind)
 {
     Wire archive(false);std::uint32_t version=kind==1?RunPayloadSchema:ProfilePayloadSchema;
+    // 標準だけの戦闘はv19で完全に表現できる。旧原本/保存指紋も同じバイト列で保つ。
+    if constexpr(std::is_same_v<T,RunSaveState>) {
+        if(!value.Combat || std::all_of(value.Combat->Appearances.begin(),value.Combat->Appearances.end(),[](auto variant){return variant==AppearanceVariant::Standard;}))version=19;
+    }
     archive.Version=version;
     if(!archive(kind,version,value)) return std::nullopt;
     return archive.Output;
@@ -191,7 +196,7 @@ template<class T> std::optional<T> Decode(std::string_view input,std::uint32_t e
             return value;
         }
     }
-    const bool supported=version==(expected==1?RunPayloadSchema:ProfilePayloadSchema) || (expected==1 && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16 || version==17 || version==18));
+    const bool supported=version==(expected==1?RunPayloadSchema:ProfilePayloadSchema) || (expected==1 && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16 || version==17 || version==18 || version==19));
     if(!supported || !archive(value) || !archive.Complete()) return std::nullopt;
     return value;
 }
@@ -207,7 +212,7 @@ SaveError InspectPayload(std::string_view bytes,SaveKind expected)
     if(kind!=static_cast<std::uint32_t>(expected)) return SaveError::WrongKind;
     if(version!=(expected==SaveKind::Run?RunPayloadSchema:ProfilePayloadSchema) &&
         !(expected==SaveKind::Profile && (version==1 || version==2 || version==3 || version==4 || version==5 || version==6)) &&
-        !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16 || version==17 || version==18))) return SaveError::UnsupportedVersion;
+        !(expected==SaveKind::Run && (version==2 || version==3 || version==4 || version==5 || version==6 || version==7 || version==8 || version==9 || version==10 || version==11 || version==12 || version==13 || version==14 || version==15 || version==16 || version==17 || version==18 || version==19))) return SaveError::UnsupportedVersion;
     return SaveError::None;
 }
 std::optional<std::string> EncodeRunPayload(const RunSaveState& state)

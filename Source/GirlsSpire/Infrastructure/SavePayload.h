@@ -7,11 +7,13 @@
 #include <string_view>
 
 namespace GirlsSpire {
-inline constexpr std::uint32_t RunPayloadSchema=19,ProfilePayloadSchema=7;
+// 対応上限。標準外見だけの周回は同一バイトのv19で保存する。
+inline constexpr std::uint32_t RunPayloadSchema=20,ProfilePayloadSchema=7;
 SaveError InspectPayload(std::string_view bytes,SaveKind expected);
 struct SavedCombat {
     BattleCheckpoint Battle;
     CombatControlCheckpoint Control;
+    AppearanceSelection Appearances{};
     bool operator==(const SavedCombat&) const = default;
 };
 struct RunSaveState {

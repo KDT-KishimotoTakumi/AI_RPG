@@ -9,6 +9,8 @@ void SRunScreen::RefreshRescueConversation()
     AddText(TEXT("救出後の返答を一度だけ選びます。追加の日数・イベントは消費しません。確定後はやり直せません。"),"rescue.help",17);
     const auto* dialogue=FindRescueDialogue(actor);
     check(dialogue); // 救出人物IDは周回状態の生成・復元で検証済み。
+    const auto content=AddDialoguePortrait(actor,CurrentRun->ProfileState().SelectedAppearances[actor],"rescue.image");
+    TGuardValue<TSharedPtr<SVerticalBox>> target(Body,content);
     AddText(ActorName(actor)+TEXT("「")+UTF8_TO_TCHAR(dialogue->Opening.data())+TEXT("」"),"rescue.dialogue",18);
     const TCHAR* effects[]={TEXT("（＋10）"),TEXT("（0）"),TEXT("（−5）")};
     std::array<FString,3> replies;
