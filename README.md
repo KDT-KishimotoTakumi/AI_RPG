@@ -42,6 +42,7 @@ PowerShell 7でプロジェクトルートから実行します。
 ./tools/test-campaign.ps1 -Matrix
 ./tools/test-campaign-process.ps1 -Guards
 ./tools/test-campaign-accessibility.ps1
+./tools/test-field-performance.ps1
 ./tools/test-runtime.ps1 -Audio
 ```
 
@@ -68,3 +69,5 @@ PowerShell 7でプロジェクトルートから実行します。
 [作業規約](PROAGENTS.md) / [引継ぎ](docs/CONTEXT.md) / [ゲーム仕様](docs/GAME.md) / [要件正本](specs/001-girls-spire/spec.md) / [タスク](specs/001-girls-spire/tasks.md) / [実装実績](docs/IMPLEMENTED.md) / [素材](docs/ASSETS.md) / [容量整理](docs/STORAGE.md) / [開発スキル](docs/DEV_SKILLS.md)
 
 秘密設定Config/DefaultEngine.ini、個人セーブ、生成物はGit管理しません。原画・固定テスト原本・検証結果を保全し、再生成可能な不要物だけを整理します。
+
+性能スクリプトはEditor/offscreenの基礎計測です。製品版・実戦AI・物理画面・長時間の性能合格とは区別します。

@@ -13,6 +13,7 @@
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
+#include "FieldPerformanceSpec.h"
 namespace {
 FVector2D FieldExtent(const TSharedRef<SWidget>& widget)
 {
