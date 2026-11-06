@@ -20,7 +20,7 @@ Girls Spireを承認済み仕様で完成させる。全体は未完成。完成
 - 最新証跡はSaved/campaign-process-{guards-green.log,regression.log,final.json}、ProcessCampaign/a7d09d28b0054b68bb7f75d0f5790cfcの段階ログ/期待データ/guard記録。3段階レポート37d0563439e746a5a36a5277bbbe8b8c / 2b5798585bf748269cb6a0730edecec2 / 20dced36648b42db84cb50442080baab、従来3件c3378ec851b24393aef564d66b359f73。使うコマンドはtools/test-campaign-process.ps1 -Guards。
 - GS-089: Native48条件（4役割×3難易度×seed1～4）が12日到達、47勝/最終日1敗（上級刀seed2）。372戦/9324行動/12502保存地点で連続と毎操作再構築が一致。隔離乱数破損も全48＋既存4シードで検出。
 - GS-090: seed1の4役割×3難易度の実マウス/実IO12日＋既存3=15件警告0、3e7226c4212344bb91816ab44344e877。全追加12組勝利、追加72戦/1460操作、全体90戦/1727操作。tools/test-campaign.ps1 -Matrix。
-- 最新全体計測b64ecb5862414bbda7aad993cf2ba278はPassed=true/Missing=[]、行5329/5358=99.46%、関数678/690=98.26%、分岐5474/6004=91.17%。全UE432警告0、通常起動/音声/別プロセス音声再開も成功。以後の変更はテスト等だけで製品Source148ファイルの計測時SHA不変。今回それら全体を再実行したものではない。通常MSVCへ復帰済み。
+- 最新全体計測0c4eb3278a0e4cab9367d4e2b02ad5e2: Passed=true/Missing=[]、行5333/5361=99.48%、関数679/691=98.26%、分岐5485/6004=91.36%。Native全回帰/全UE432警告0、通常起動/音声/別プロセス再開成功。Source/Tests/Content378ファイルの計測時SHA不変、計装DLL/集計保持。通常MSVC復帰後の併用実寸2件も警告0。
 - 衣装はGS-079～088で9人の正式差分/選択/取消/取引保存/会話・駒反映/保存戦闘固定/旧互換/別プロセスv20を接続済み。レシピ/SHAはtools/appearance/reviewed-portraits.json。Python3.14.7/Pillow12.0.0はSaved/Tools/AppearancePythonに隔離。詳細はIMPLEMENTED/VALIDATION。
 ## 【未解決の課題】
 - Git同期の実行結果を確認。外見の関連回帰/容量監査は完了。
@@ -48,3 +48,7 @@ Girls Spireを承認済み仕様で完成させる。全体は未完成。完成
 
 GS-091補足: 戦闘外自動保存が既に再開可能なら同一状態の中断は世代を維持する。初回期待値の世代強制増加を、ResumeAvailable=1/Generation35とPersistStateの重複保存省略から診断してテストだけ訂正。失敗原本は保持。製品変更なし。
 今回容量整理: 旧合格e67de344b2a04c3aa3bb2e8545f6a8bb / 1c37fb16c3624566851da1542ea6dd42のJSON/profdata/CoreTests.exe計6件を.gzへ可逆保管。45734052→4663365 bytes、論理削減41070687 bytes。保全19296ファイルSHA/秘密メタデータ不変、最新b64/現行UE Intermediate/DDC/全セーブ保持。監査StorageAudit-6a0394b8148a4ff2b0f045364add3fc7。使う時だけ展開、過去削減は再計上しない。次はGit同期結果を確認してPLANの残作業へ進む。
+
+GS-092/T031i完了: 最大文字/字幕/軽減/抑制/消音をタイトル実UIで保存し、単色/危険域と併用して1920×1080/2560×1440の12日を完走。仲間手番でRefreshIntentへ早期returnして表示操作/危険域説明が欠落する実不具合を再現し、CombatScreen.cpp/.hのRefreshBoardCuesを主人公/仲間で共用して修正。戦闘/保存/RNG/数値/素材は不変。通常MSVC最終2件4600b799ae3849219025698f52a050fe / 36678aba9d214e539d96fc3c2548711c、全UE d6856454b36f400abd4c98a78b72cbf9。証跡Saved/campaign-accessibility-{coverage.log,msvc-final.log,frozen-result.json,final-review.log}と各失敗ログ/撮影を保持。別モデル読み取りレビュー指摘なし。
+最新0c4の成功生計測6件4439902368 bytesを集計保持後に整理、追加obj0件。保全19443ファイルSHA/秘密メタデータ不変、現行UE Intermediate/DDC/全セーブ保持。監査StorageAudit-06fa14d3999544f387e12e642540769a。処理量はプロジェクト全体純減とは別。旧計測b64は今回の製品変更前の記録で、最新と混同しない。
+未完T031j: 撮影で最大文字の長い戦闘ボタン文言末尾欠けを確認、ActionのSTextBlockに折返し指定なし。SC-012/全項目視認は未完了。ゲーム文言/効果を変えず実寸TDDで修正する。まず今回Git同期結果を確認し、その後この修正を進める。

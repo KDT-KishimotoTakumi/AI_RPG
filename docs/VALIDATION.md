@@ -618,3 +618,15 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - -Guardsでは既存保存先のStartを拒否（e10dbea7f29d49df873d8dc073c7b5ad）、引継ぎのない空保存先のFinishも拒否（ce881a7bd72a4d80b59713dfed3a367a）。各意図した1失敗のメッセージを検証し、前者の全スロットSHA不変/後者の保存ファイル0件を確認。クラッシュや未検出を期待失敗として通さない。両guard-*.json/logは完走保存先に保持。
 - 従来の通常通し3件も警告/失敗0（c3378ec851b24393aef564d66b359f73、campaign-process-regression.log）。製品Source148ファイルはb64計測時SHA不変（campaign-process-final.json）、前回行99.46%/関数98.26%/分岐91.17%、Missing=[]を保持。全UE432/Native48/実UI15件を今回一括再実行したものではない。
 - 過去合格e67de344b2a04c3aa3bb2e8545f6a8bb / 1c37fb16c3624566851da1542ea6dd42のJSON/profdata/CoreTests.exe、計6件を各.gzへ可逆保管。45,734,052→4,663,365 bytes、論理削減41,070,687 bytes。展開SHA/保全19,296ファイルSHA/秘密設定メタデータ一致。最新b64/現行UE Intermediate/DDC/全セーブ/失敗証跡は保持。監査StorageAudit-6a0394b8148a4ff2b0f045364add3fc7/result.json、元パス/時刻/SHAはarchives.json。生計測追加削除なし、過去削減を再計上しない。
+
+## GS-092 / T031i 設定併用の実寸通し・仲間手番の表示（2026-11-07）
+- 最大文字150%/字幕/演出軽減/親密抑制/両音量0をタイトルの実マウス設定で保存し、単色と危険域表示を併用する12日通しを1920×1080/2560×1440へ追加。クライアント寸法と撮影寸法、各操作の設定保持、全存命者の陣営記号、HPと危険域説明、表示切替で保存/世代/RNGが変わらないこと、内外中断/新ストア再開を確認。
+- 未登録ケースのRedはcampaign-accessibility-red-engine.log。最初の予測表示の有効化操作不足をテストへ追加。その後、仲間手番でRefreshIntentへ早期returnするため表示切替/危険域説明が欠落する実不具合を再現。campaign-accessibility-diagnose-engine.logはactive=1、HP45/45、scope=0、threats空。根拠を個別記録してから製品RefreshBoardCuesを抽出し、主人公/仲間で共用する最小修正をした。戦闘ルール/保存形式/数値/素材は変更なし。
+- 通常MSVCの実寸2件は各1件警告0、63819fce653145b7967607566d7f1fd1 / c9783d842bbd46398e9883f56a931a42。初級/軍配/seed1・9人配色で12日完走。撮影はSaved/Screenshots/CampaignAccessibility、失敗ログ/保存も保持。音声再生や親密差分すべての視認をこの消音通しだけで完了扱いにしない。
+- 撮影で最大文字の長いボタン文言の末尾欠けを確認。Actionのテキストに折返し指定がなく、T031jで別途検証・修正する。したがって全設定/全項目視認・SC-012全体は未完了。
+- Source/Tests/Content378ファイルをcampaign-accessibility-frozen.jsonへ固定。新しい全体品質計測0c4eb3278a0e4cab9367d4e2b02ad5e2を実行中。製品変更があるため旧b64の計測値だけでは今回の合格としない。完了後に新結果と通常MSVC復帰確認を追記する。
+- 全体計測0c4eb3278a0e4cab9367d4e2b02ad5e2はPassed=true/Missing=[]。行5333/5361=99.48%、関数679/691=98.26%、分岐5485/6004=91.36%。Native全回帰成功、全UE432警告0（d6856454b36f400abd4c98a78b72cbf9）。通常起動3dd1740c8fa148c7af62c908219ab61b、音声/別プロセス再開27e6ed36b8f340028f4e95d648c3dae6 / beab34e06cac4571b53b42d55fe83799、音声専用2件be74f6b5afa24bd598f2dc62bd1d4324も成功。
+- Source/Tests/Content378ファイルの計測時SHA不変、計装DLL/JSON/profdata/実行物を保全。通常MSVCへ復帰し実寸2件を再確認、各1件警告0（4600b799ae3849219025698f52a050fe / 36678aba9d214e539d96fc3c2548711c）。campaign-accessibility-msvc-final.logとfinal-review.logに記録。初級/軍配/seed1の併用条件の範囲であり、長文ボタンのT031jや全SC-012の完了ではない。
+- 合格集計後、生計測6件4,439,902,368 bytesを整理。追加obj0件、保全19,443ファイルSHA/秘密設定メタデータ不変。最新計測/通常Binaries/全セーブ/失敗ログ・画像/現行UE Intermediate/DDC保持。監査StorageAudit-06fa14d3999544f387e12e642540769a/result.json。処理量はプロジェクト全体純減とは別。
+
+- 別モデルによる読み取りレビューでも要修正の指摘なし。レビューは実行結果/Red証跡の報告を前提とし、Source/Tests/ツールを確認。秘密設定は未参照。

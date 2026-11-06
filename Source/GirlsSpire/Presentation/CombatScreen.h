@@ -65,6 +65,7 @@ private:
     int FontSize(int base) const {return GirlsSpire::ScaledFontSize(DisplayPreferences.Text,base);}
     GirlsSpire::Preferences DisplayPreferences;
     void Refresh(bool persist=true);
+    void RefreshBoardCues();
     void RefreshPortraits();
     void RefreshSkills();
     void RefreshMedicine();

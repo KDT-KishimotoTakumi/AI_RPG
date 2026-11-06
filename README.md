@@ -41,6 +41,7 @@ PowerShell 7でプロジェクトルートから実行します。
 ./tools/test-resume.ps1
 ./tools/test-campaign.ps1 -Matrix
 ./tools/test-campaign-process.ps1 -Guards
+./tools/test-campaign-accessibility.ps1
 ./tools/test-runtime.ps1 -Audio
 ```
 

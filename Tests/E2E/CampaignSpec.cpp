@@ -65,9 +65,12 @@ void FGirlsSpireCampaignSpec::Define()
 {
     // 長時間の通し検証は専用コマンドで明示実行し、通常の画面回帰と分ける。
     if(!FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireCampaignTest")))return;
-    BeforeEach([this]{
+    const bool accessibility=FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireCampaignAccessibility"));
+    int width=1920;FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireCampaignWidth="),width);
+    BeforeEach([this,accessibility]{
         FSlateApplication::Get().CloseToolTip();IAutomationDriverModule::Get().Enable();
-        Window=SNew(SWindow).ClientSize(FVector2D(1280,900));
+        if(accessibility)Window=SNew(SWindow).ClientSize(FVector2D(1280,900)).AutoCenter(EAutoCenter::None).ScreenPosition(FVector2D::ZeroVector).SaneWindowPlacement(false).AdjustInitialSizeAndPositionForDPIScale(false);
+        else Window=SNew(SWindow).ClientSize(FVector2D(1280,900));
         FSlateApplication::Get().AddWindow(Window.ToSharedRef());Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);
@@ -75,8 +78,9 @@ void FGirlsSpireCampaignSpec::Define()
     FString stage,processRoot;const bool process=FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireCampaignStage="),stage);
     FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireCampaignRoot="),processRoot);
     processRoot=FPaths::ConvertRelativePathToFull(processRoot);
-    for(int scenario=process?2:0;scenario<(process?3:matrix?15:3);++scenario)It(process?FString::Printf(TEXT("別プロセス12日通し%s"),*stage):scenario>=3?FString::Printf(TEXT("難易度%d・役割%dの実ディスク12日通し"),(scenario-3)/4,(scenario-3)%4):FString(scenario==2?TEXT("外見選択データを実ディスクへ保持して12日完走する"):scenario==1?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,scenario,process,stage,processRoot]{
+    for(int scenario=process || accessibility?2:0;scenario<(process || accessibility?3:matrix?15:3);++scenario)It(accessibility?FString::Printf(TEXT("併用設定%dの12日通し"),width):process?FString::Printf(TEXT("別プロセス12日通し%s"),*stage):scenario>=3?FString::Printf(TEXT("難易度%d・役割%dの実ディスク12日通し"),(scenario-3)/4,(scenario-3)%4):FString(scenario==2?TEXT("外見選択データを実ディスクへ保持して12日完走する"):scenario==1?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,scenario,process,stage,processRoot,accessibility,width]{
         using namespace GirlsSpire;
+        if(accessibility && !TestTrue(TEXT("併用設定の検証寸法"),(width==1920 || width==2560) && !process))return;
         if(process){
             const auto prefix=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("Tests/ProcessCampaign"));
             if(!TestTrue(TEXT("専用のプロセス通し保存先"),processRoot!=prefix && FPaths::IsUnderDirectory(processRoot,prefix)) ||
@@ -100,19 +104,28 @@ void FGirlsSpireCampaignSpec::Define()
         std::vector<std::shared_ptr<DiskSlotFiles>> backends;
         const auto folder=process?processRoot/TEXT("slots"):FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("Tests/Campaign")/FGuid::NewGuid().ToString(EGuidFormats::Digits));
         std::shared_ptr<SaveTransaction> service;
+        std::shared_ptr<PreferencesStore> preferences;
+        const Preferences combined{TextSize::Largest,0,0,true,true,true};
         const auto openDisk=[&]{
             // 各ストアの参照先を、画面破棄まで保持する。個人セーブは使用しない。
             backends.push_back(std::make_shared<DiskSlotFiles>(std::filesystem::path(*folder)));
             service=std::make_shared<SaveTransaction>(*backends.back(),*backends.back());
+            if(accessibility)preferences=std::make_shared<PreferencesStore>(*backends.back());
         };
         if(disk){
             if(process && stage==TEXT("Start") && !TestFalse(TEXT("既存の通し保存を上書きしない"),IFileManager::Get().DirectoryExists(*folder)))return;
             if(!TestTrue(TEXT("隔離した実ディスク保存先を作成"),IFileManager::Get().MakeDirectory(*folder,true)))return;
             openDisk();AddInfo(FString(TEXT("通し検証保存先: "))+folder);
         }else service=std::make_shared<SaveTransaction>(*files,*files);
-        Async(EAsyncExecution::TaskGraphMainThread,[this,run,service]{Window->SetContent(SNew(SRunScreen).InitialRun(run).SaveService(service).DevelopmentTools(false).FullField(true));}).Wait();DrainSlateLayout();
+        if(accessibility){
+            bool dimensions=false;Async(EAsyncExecution::TaskGraphMainThread,[this,service,preferences,width,&dimensions]{Window->Resize(FVector2D(width,width==1920?1080:1440));Window->SetContent(SNew(SRunScreen).SaveService(service).PreferencesService(preferences).DevelopmentTools(false));const auto size=Window->GetClientSizeInScreen();dimensions=FMath::IsNearlyEqual(double(size.X),double(width),.5) && FMath::IsNearlyEqual(double(size.Y),double(width==1920?1080:1440),.5);}).Wait();DrainSlateLayout();
+            if(!TestTrue(TEXT("併用設定の実クライアント寸法"),dimensions) || !Click("title.settings") || !Click("settings.text.2") || !Click("settings.bgm.mute") || !Click("settings.sfx.mute") || !Click("settings.subtitles") || !Click("settings.subtitles") || !Click("settings.effects") || !Click("settings.intimacy") || !Click("settings.intimacy") || !Click("settings.save"))return;
+            if(!TestTrue(TEXT("最大文字/字幕/演出軽減/抑制/消音を実保存"),preferences->Load().Issue==PreferencesIssue::None && preferences->Load().Value==combined && !service->Load().Run))return;
+        }
+        Async(EAsyncExecution::TaskGraphMainThread,[this,run,service,preferences]{Window->SetContent(SNew(SRunScreen).InitialRun(run).SaveService(service).PreferencesService(preferences).DevelopmentTools(false).FullField(true));}).Wait();DrainSlateLayout();
         std::set<int> days;int battles=0,midBosses=0,finalBosses=0,playerActions=0;
         bool outsideResumed=false,insideResumed=false;
+        bool captured=false;
         if(process && stage!=TEXT("Start")){
             const auto transfer=ReadCampaignTransfer(processRoot);const auto saved=service->Load();
             if(!TestTrue(TEXT("前プロセスの全保存/恒久/確定世代と独立期待記録が一致"),transfer && saved.Issue==SlotIssue::None && saved.Run==transfer->State && saved.Permanent==transfer->Permanent && saved.Generation==transfer->Progress.Generation))return;
@@ -128,6 +141,7 @@ void FGirlsSpireCampaignSpec::Define()
         for(int step=0;step<1024;++step){
             const auto saved=service->Load();
             if(!TestTrue(TEXT("各操作後に確定済み取引を読み取れる"),saved.Issue==SlotIssue::None && saved.Run.has_value()))return;
+            if(accessibility && !TestTrue(TEXT("通し全操作で併用設定を維持"),preferences->Load().Issue==PreferencesIssue::None && preferences->Load().Value==combined))return;
             if(!TestTrue(TEXT("全操作で人物別の外見選択データを保持"),saved.Permanent.SelectedAppearances==expectedAppearances))return;
             const auto& state=saved.Run->Run.State;days.insert(state.Day);
             UE_LOG(LogTemp,Display,TEXT("CampaignUI step=%d day=%d phase=%d battle=%d"),step,state.Day,int(state.Phase),int(saved.Run->Combat.has_value()));
@@ -145,7 +159,7 @@ void FGirlsSpireCampaignSpec::Define()
                 }
                 if(!TestTrue(TEXT("中断記録を実ディスクへ保存"),service->Load().Run && service->Load().Run->ResumeAvailable))return;
                 openDisk();
-                Async(EAsyncExecution::TaskGraphMainThread,[this,service]{Window->SetContent(SNew(SRunScreen).SaveService(service).DevelopmentTools(false).FullField(true));}).Wait();DrainSlateLayout();
+                Async(EAsyncExecution::TaskGraphMainThread,[this,service,preferences]{Window->SetContent(SNew(SRunScreen).SaveService(service).PreferencesService(preferences).DevelopmentTools(false).FullField(true));}).Wait();DrainSlateLayout();
                 if(!Click("title.resume"))return;
                 const auto resumed=service->Load();
                 auto expectedResume=*saved.Run;expectedResume.ResumeAvailable=false;
@@ -154,6 +168,20 @@ void FGirlsSpireCampaignSpec::Define()
                 continue;
             }
             if(saved.Run->Combat){
+                if(accessibility && saved.Run->Combat->Battle.State.Outcome==BattleOutcome::Ongoing){
+                    if(!Driver->FindElement(By::Id("battle.field.menu"))->IsVisible() && !Click("battle.field.open"))return;
+                    if(Driver->FindElement(By::Id("battle.cues.monochrome"))->GetText().ToString().Contains(TEXT("色付き")) && !Click("battle.cues.monochrome"))return;
+                    if(Driver->FindElement(By::Id("battle.cues.threats"))->GetText().ToString().Contains(TEXT("非表示")) && !Click("battle.cues.threats"))return;
+                    if(!Driver->FindElement(By::Id("battle.cues.scope"))->Exists() && !Click("battle.field.details"))return;
+                    const auto selection=Driver->FindElement(By::Id("battle.field.selection"))->GetText().ToString();const bool scope=Driver->FindElement(By::Id("battle.cues.scope"))->Exists();
+                    if(!selection.Contains(TEXT("HP")) || !scope)AddInfo(FString::Printf(TEXT("併用表示: selection=%s scope=%d details=%s threats=%s active=%d"),*selection,int(scope),*Driver->FindElement(By::Id("battle.field.details"))->GetText().ToString(),*Driver->FindElement(By::Id("battle.cues.threats"))->GetText().ToString(),saved.Run->Combat->Battle.State.ActiveId));
+                    if(!TestTrue(TEXT("単色でもHPを取得"),selection.Contains(TEXT("HP"))) || !TestTrue(TEXT("危険域の文字説明を取得"),scope) || !TestTrue(TEXT("表示操作は全保存と乱数/世代を変更しない"),service->Load().Run==saved.Run && service->Load().Permanent==saved.Permanent && service->Load().Generation==saved.Generation))return;
+                    for(const auto& unit:saved.Run->Combat->Battle.State.Units)if(unit.Hp>0){
+                        const auto key=FString::Printf(TEXT("battle.cues.%d.%d"),unit.At.X,unit.At.Y);const auto label=Driver->FindElement(By::Id(TCHAR_TO_UTF8(*key)))->GetText().ToString();
+                        if(!TestTrue(TEXT("色以外の陣営記号を維持"),label.Contains(unit.Side==Faction::Player?TEXT("○"):unit.Side==Faction::Enemy?TEXT("△"):TEXT("◇"))))return;
+                    }
+                    if(!captured){Async(EAsyncExecution::TaskGraphMainThread,[this,width]{TArray<FColor> pixels;FIntVector size;if(!TestTrue(TEXT("併用設定の戦場を撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,size)))return;TestTrue(TEXT("撮影寸法でも実寸を確認"),size.X>=width && size.Y>=(width==1920?1080:1440));TArray64<uint8> png;FImageUtils::PNGCompressImageArray(size.X,size.Y,pixels,png);const auto dir=FPaths::ProjectSavedDir()/TEXT("Screenshots/CampaignAccessibility")/FGuid::NewGuid().ToString(EGuidFormats::Digits);IFileManager::Get().MakeDirectory(*dir,true);TestTrue(TEXT("併用設定の撮影を保全"),FFileHelper::SaveArrayToFile(png,*(dir/TEXT("battle.png"))));}).Wait();captured=true;}
+                }
                 if(!TestTrue(TEXT("戦闘中は開始時の人物別衣装を保持"),saved.Run->Combat->Appearances==expectedAppearances))return;
                 const auto restored=Battle::Restore(saved.Run->Combat->Battle);
                 if(!TestTrue(TEXT("通常戦闘の保存を復元"),restored.has_value()))return;

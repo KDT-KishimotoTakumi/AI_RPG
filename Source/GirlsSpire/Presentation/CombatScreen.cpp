@@ -230,7 +230,7 @@ void SCombatScreen::Refresh(bool persist)
     if(SelectingUltimate) { RefreshUltimate(); Text(Message,"battle.log",14); return; }
     RefreshMedicine();
     if(SelectingMedicine) {Text(Message,"battle.log",14);return;}
-    if(state.ActiveId>0 && state.ActiveId<9) { RefreshIntent(); return; }
+    if(state.ActiveId>0 && state.ActiveId<9) { RefreshIntent(); RefreshBoardCues(); return; }
     Text(TEXT("人物マスの数値はHP。移動先・攻撃対象をクリックし、予告を確認して確定します。"),"battle.help",15);
     if(MoveTarget) {
         const auto movement=Combat->PreviewMove(state.ActiveId,*MoveTarget);
@@ -280,6 +280,11 @@ void SCombatScreen::Refresh(bool persist)
     RefreshSkills();
     RefreshUltimate();
     Text(Message,"battle.log",14);
+    RefreshBoardCues();
+}
+
+void SCombatScreen::RefreshBoardCues()
+{
     Text(TEXT("○ 味方 / △ 敵 / ◇ 中立 / ＋ 移動先 / × 通常攻撃可能 / ！ 罠・予測被害"),"battle.cues.legend",13);
     Action(MonochromeBoard?TEXT("盤面：単色（切替）"):TEXT("盤面：色付き（切替）"),"battle.cues.monochrome",[this]{MonochromeBoard=!MonochromeBoard;Refresh(false);});
     Action(ShowThreats?TEXT("敵被害上限の予測：表示中（切替）"):TEXT("敵被害上限の予測：非表示（切替）"),"battle.cues.threats",[this]{ShowThreats=!ShowThreats;Refresh(false);});
