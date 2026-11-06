@@ -49,3 +49,5 @@ Girls Spireを承認済み仕様で完成させる。全体は未完成。完成
 
 Git: GS-086/087は3aa16b9をmainへcommit→pull --ff-only→push済み、直後clean/0・0確認。前回の自動審査の利用上限による停止は再開後に解消した。
 GS-088/T026b3b完了: 配色v20専用の別UEプロセス保存/再開/再中断を検証。現在の恒久選択は標準、固定戦闘9人は配色とし、全戦闘/作戦/RNG/恒久/中断権の維持を確認。Save4=b597ce5de706446aa26b52a4d0b34848、Verify4=096f48854dab443aa1d9e9a8bb0bfd02、警告/失敗0。既存60地点＋配色1件/復旧/設定成功。製品Source148ファイルはb64計測時SHA不変、追加整理対象0件。初回失敗は開始保存の敵図鑑発見をテスト準備に含めていなかったためで、実保存からID1追加を確認して準備だけ訂正。失敗証跡は保全。詳細VALIDATION/appearance-process-final.json。次はGit同期結果を確認し、PLANの総合受け入れへ進む。
+
+GS-089/T034f完了: Nativeの全4役割×3難易度×4シードを通常能力で終局まで検証。48条件が12日到達、47勝/最終日1敗（上級・刀・seed2）。連続/毎操作保存再構築で全バイトと結果一致、372戦/9324行動/12502保存地点（連続側）。既存初級軍配4シードの勝利必須を維持、Campaign108チェック・Native全回帰成功。隔離乱数破損は全48＋既存4で検出し原本SHA不変。Source148ファイルがb64計測時SHA不変、各90%保持。UI/実IO/別プロセスの12日総合は未完了。証跡Saved/campaign-matrix-{green.log,summary.json,cases.json,mutation-verified.json,source.json}。追加obj68,256,078 bytes整理、保全19,158ファイルSHA/秘密メタデータ不変、StorageAudit-de5f29c91f0e44d4a2430c6396d4926c。過去削減は再計上しない。次にGit同期結果を確認して実UI総合へ進む。

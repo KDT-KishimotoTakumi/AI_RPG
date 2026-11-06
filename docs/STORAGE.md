@@ -185,3 +185,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 事前ガード初回はFileInfo.Parentがないため原本選定時に停止（圧縮/削除なし）。FileInfo.DirectoryとDirectoryInfo.Parentを分けて再検証し、完了した。監査対象の移動/削除は作業ツリー内の通常ファイルだけ。
 
 2026-11-06 GS-086/087後: 全体計測b64ecb5862414bbda7aad993cf2ba278に合格後、生計測6件4,435,650,520 bytesを集計保持のうえ整理。通常MSVCの外見UI20/12日3件/別プロセス60地点・復旧・設定成功後、再生成Native obj67,249,165 bytesを追加整理した。今回処理量4,502,899,685 bytes（再生成を含み、プロジェクト全体の純減とは別）。保全18,011ファイルSHA256と秘密設定のサイズ/更新日時不変。原画/正式差分/セーブ/固定原本/JSON/profdata/実行物/計装DLL/失敗画像・ログ/現行UE Intermediate/DDC保持。監査Saved/StorageAudit-a01898bea5c94415bc8db44bf45c95e6/result.json。過去回の削減は二重計上していない。PLAN/CONTEXTの重複履歴を実績・検証正本へ集約した。
+
+2026-11-06 GS-089後: Native全回帰と48条件/隔離乱数破損の検出成功後、Core/検証コピーの再生成obj68,256,078 bytesを整理。生計測の追加削除0、以前の4.50GBを再計上しない。保全19,158ファイルSHA/秘密設定メタデータ不変。ゲーム/素材/セーブ/実行物/集計/失敗証跡/現行UE Intermediate/DDC保持。監査Saved/StorageAudit-de5f29c91f0e44d4a2430c6396d4926c/result.json。

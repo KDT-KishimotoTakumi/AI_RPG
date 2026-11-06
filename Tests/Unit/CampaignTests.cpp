@@ -12,13 +12,14 @@ struct CampaignResult {
     std::vector<std::string> Trace;
     std::set<int> Days;
     int Battles=0,Actions=0,MidBosses=0,FinalBosses=0;
+    bool Won=false;
 };
 
 // 能力値・地形・HPを上書きせず、出発から最終報酬まで通常APIだけを使う。
 // 主人公の選択は検証用方策。仲間は実際の信頼別抽選、敵は製品の思考を使う。
-CampaignResult PlayCampaign(std::uint64_t seed,bool restoreEveryStep)
+CampaignResult PlayCampaign(std::uint64_t seed,bool restoreEveryStep,Difficulty difficulty=Difficulty::Beginner,HeroRole role=HeroRole::CommandFan,bool requireVictory=true)
 {
-    Run run(seed,Difficulty::Beginner,HeroRole::CommandFan);
+    Run run(seed,difficulty,role);
     CampaignResult result;
     const auto require=[](bool pass){if(!pass)throw std::runtime_error("通し検証の操作または保存が拒否されました");};
     const auto record=[&](Battle* battle=nullptr,CombatControl* control=nullptr) {
@@ -41,12 +42,15 @@ CampaignResult PlayCampaign(std::uint64_t seed,bool restoreEveryStep)
     };
     for(int transition=0;transition<256;++transition) {
         record();const auto state=run.Snapshot();result.Days.insert(state.Day);
+        require(state.Role==role && state.Level==difficulty);
         if(state.Phase==RunPhase::Won){
-            require(state.Day==12 && state.Recruited.size()==4 && run.ProfileState().HighestDifficulty==1);
+            require(state.Day==12 && state.Recruited.size()==4 && run.ProfileState().HighestDifficulty==std::min(2,static_cast<int>(difficulty)+1));
             require(result.MidBosses==1 && result.FinalBosses==1 && result.Days.size()==12);
-            require(run.EpilogueChoices()==std::vector<int>{0});return result;
+            require(run.EpilogueChoices()==std::vector<int>{0});result.Won=true;return result;
         }
-        require(state.Phase!=RunPhase::Lost);
+        if(state.Phase==RunPhase::Lost){
+            require(!requireVictory && result.Battles>0 && result.Days.size()==static_cast<std::size_t>(state.Day));return result;
+        }
         if(state.PendingRescue>=0){require(run.ConverseRescue(state.Revision,ConversationChoice::Warm));continue;}
         if(state.Phase==RunPhase::Reward){
             if(state.RewardRecipient<0)require(run.ChooseRecipient(state.Revision,0));
@@ -88,8 +92,9 @@ CampaignResult PlayCampaign(std::uint64_t seed,bool restoreEveryStep)
             }
             ++result.Actions;record(&battle,&control);
         }
-        require(battle.Snapshot().Outcome==BattleOutcome::Won);
+        require(battle.Snapshot().Outcome==BattleOutcome::Won || (!requireVictory && battle.Snapshot().Outcome==BattleOutcome::Lost));
         require(run.CompleteBattle(state.Revision,battle.Snapshot()));
+        if(battle.Snapshot().Outcome==BattleOutcome::Lost){require(run.Snapshot().Phase==RunPhase::Lost);continue;}
         require(run.Snapshot().Wallet.Coins>state.Wallet.Coins);
         const auto& level=run.Snapshot().Levels[0];
         require(level.Level>state.Levels[0].Level || level.Experience>state.Levels[0].Experience);
@@ -108,6 +113,13 @@ int TestCampaign()
         check(continuous.Battles>=6 && continuous.Actions>continuous.Battles,"救出4戦と中間/最終ボスを戦闘省略なしで完了");
         check(continuous.MidBosses==1 && continuous.FinalBosses==1 && continuous.Days.size()==12,"全12日と6/12日のボスを通過");
         std::cout<<"Campaign seed="<<seed<<": "<<continuous.Battles<<" battles, "<<continuous.Actions<<" actions, "<<continuous.Trace.size()<<" checkpoints\n";
+    }catch(const std::exception& error){check(false,error.what());}
+    for(int difficulty=0;difficulty<3;++difficulty)for(int role=0;role<4;++role)for(std::uint64_t seed=1;seed<=4;++seed)try{
+        const auto continuous=PlayCampaign(seed,false,static_cast<Difficulty>(difficulty),static_cast<HeroRole>(role),false);
+        const auto restored=PlayCampaign(seed,true,static_cast<Difficulty>(difficulty),static_cast<HeroRole>(role),false);
+        check(continuous.Trace==restored.Trace,"全武器/難易度で保存再構築後も終局までの全保存バイトが一致");
+        check(continuous.Won==restored.Won && continuous.Days==restored.Days && continuous.Battles==restored.Battles && continuous.Actions==restored.Actions,"全武器/難易度の勝敗/到達日/戦闘/行動数が一致");
+        std::cout<<"Campaign matrix difficulty="<<difficulty<<" role="<<role<<" seed="<<seed<<": won="<<continuous.Won<<" day="<<*continuous.Days.rbegin()<<" battles="<<continuous.Battles<<" actions="<<continuous.Actions<<" checkpoints="<<continuous.Trace.size()<<'\n';
     }catch(const std::exception& error){check(false,error.what());}
     std::cout<<"Campaign: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }
