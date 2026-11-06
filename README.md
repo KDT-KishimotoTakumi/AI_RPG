@@ -40,6 +40,7 @@ PowerShell 7でプロジェクトルートから実行します。
 ./tools/test-unreal.ps1 -UI -Filter 'GirlsSpire'
 ./tools/test-resume.ps1
 ./tools/test-campaign.ps1 -Matrix
+./tools/test-campaign-process.ps1 -Guards
 ./tools/test-runtime.ps1 -Audio
 ```
 

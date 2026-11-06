@@ -13,6 +13,7 @@
 #include "Presentation/RunScreen.h"
 #include "Infrastructure/DiskSlotFiles.h"
 #include "AI/Intent.h"
+#include "CampaignHandoff.h"
 #include <algorithm>
 #include <set>
 
@@ -71,8 +72,16 @@ void FGirlsSpireCampaignSpec::Define()
     });
     LatentBeforeEach(WaitForSlateLayout);
     const bool matrix=FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireCampaignMatrix"));
-    for(int scenario=0;scenario<(matrix?15:3);++scenario)It(scenario>=3?FString::Printf(TEXT("難易度%d・役割%dの実ディスク12日通し"),(scenario-3)/4,(scenario-3)%4):FString(scenario==2?TEXT("外見選択データを実ディスクへ保持して12日完走する"):scenario==1?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,scenario]{
+    FString stage,processRoot;const bool process=FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireCampaignStage="),stage);
+    FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireCampaignRoot="),processRoot);
+    processRoot=FPaths::ConvertRelativePathToFull(processRoot);
+    for(int scenario=process?2:0;scenario<(process?3:matrix?15:3);++scenario)It(process?FString::Printf(TEXT("別プロセス12日通し%s"),*stage):scenario>=3?FString::Printf(TEXT("難易度%d・役割%dの実ディスク12日通し"),(scenario-3)/4,(scenario-3)%4):FString(scenario==2?TEXT("外見選択データを実ディスクへ保持して12日完走する"):scenario==1?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,scenario,process,stage,processRoot]{
         using namespace GirlsSpire;
+        if(process){
+            const auto prefix=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("Tests/ProcessCampaign"));
+            if(!TestTrue(TEXT("専用のプロセス通し保存先"),processRoot!=prefix && FPaths::IsUnderDirectory(processRoot,prefix)) ||
+               !TestTrue(TEXT("有効な通し段階"),stage==TEXT("Start") || stage==TEXT("Continue") || stage==TEXT("Finish")))return;
+        }
         const bool disk=scenario!=0;
         const auto difficulty=static_cast<Difficulty>(scenario>=3?(scenario-3)/4:0);
         const auto role=scenario>=3?static_cast<HeroRole>((scenario-3)%4):HeroRole::CommandFan;
@@ -86,10 +95,10 @@ void FGirlsSpireCampaignSpec::Define()
         }
         if(scenario>=3)initialProfile.HighestDifficulty=static_cast<int>(difficulty);
         const auto expectedAppearances=initialProfile.SelectedAppearances;
-        const auto run=std::make_shared<Run>(1,difficulty,role,initialProfile);
+        const auto run=process && stage!=TEXT("Start")?std::shared_ptr<Run>{}:std::make_shared<Run>(1,difficulty,role,initialProfile);
         const auto files=std::make_shared<CampaignMemory>();
         std::vector<std::shared_ptr<DiskSlotFiles>> backends;
-        const auto folder=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("Tests/Campaign")/FGuid::NewGuid().ToString(EGuidFormats::Digits));
+        const auto folder=process?processRoot/TEXT("slots"):FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("Tests/Campaign")/FGuid::NewGuid().ToString(EGuidFormats::Digits));
         std::shared_ptr<SaveTransaction> service;
         const auto openDisk=[&]{
             // 各ストアの参照先を、画面破棄まで保持する。個人セーブは使用しない。
@@ -97,12 +106,25 @@ void FGirlsSpireCampaignSpec::Define()
             service=std::make_shared<SaveTransaction>(*backends.back(),*backends.back());
         };
         if(disk){
+            if(process && stage==TEXT("Start") && !TestFalse(TEXT("既存の通し保存を上書きしない"),IFileManager::Get().DirectoryExists(*folder)))return;
             if(!TestTrue(TEXT("隔離した実ディスク保存先を作成"),IFileManager::Get().MakeDirectory(*folder,true)))return;
             openDisk();AddInfo(FString(TEXT("通し検証保存先: "))+folder);
         }else service=std::make_shared<SaveTransaction>(*files,*files);
         Async(EAsyncExecution::TaskGraphMainThread,[this,run,service]{Window->SetContent(SNew(SRunScreen).InitialRun(run).SaveService(service).DevelopmentTools(false).FullField(true));}).Wait();DrainSlateLayout();
         std::set<int> days;int battles=0,midBosses=0,finalBosses=0,playerActions=0;
         bool outsideResumed=false,insideResumed=false;
+        if(process && stage!=TEXT("Start")){
+            const auto transfer=ReadCampaignTransfer(processRoot);const auto saved=service->Load();
+            if(!TestTrue(TEXT("前プロセスの全保存/恒久/確定世代と独立期待記録が一致"),transfer && saved.Issue==SlotIssue::None && saved.Run==transfer->State && saved.Permanent==transfer->Permanent && saved.Generation==transfer->Progress.Generation))return;
+            const bool inside=stage==TEXT("Finish");
+            if(!TestTrue(TEXT("前プロセスは所定の境界で中断済み"),transfer->State.ResumeAvailable && transfer->State.Run.State.Day==(inside?6:5) && transfer->State.Combat.has_value()==inside && transfer->Progress.Days==(inside?63:31)))return;
+            for(int day=1;day<=12;++day)if(transfer->Progress.Days&(1<<(day-1)))days.insert(day);
+            battles=transfer->Progress.Battles;midBosses=transfer->Progress.MidBosses;finalBosses=transfer->Progress.FinalBosses;playerActions=transfer->Progress.PlayerActions;
+            outsideResumed=true;insideResumed=inside;
+            if(!Click("title.resume"))return;
+            auto expected=transfer->State;expected.ResumeAvailable=false;const auto resumed=service->Load();
+            if(!TestTrue(TEXT("別UEプロセスのUI再開で中断権以外の全状態/RNG/恒久を維持"),resumed.Run==expected && resumed.Permanent==transfer->Permanent && resumed.Generation>saved.Generation))return;
+        }
         for(int step=0;step<1024;++step){
             const auto saved=service->Load();
             if(!TestTrue(TEXT("各操作後に確定済み取引を読み取れる"),saved.Issue==SlotIssue::None && saved.Run.has_value()))return;
@@ -113,6 +135,14 @@ void FGirlsSpireCampaignSpec::Define()
             const bool inside=disk && !insideResumed && state.Day==6 && saved.Run->Combat && saved.Run->Combat->Battle.State.Outcome==BattleOutcome::Ongoing;
             if(outside || inside){
                 if(!Click("save.suspend"))return;
+                if(process){
+                    if(!TestTrue(TEXT("段階に対応した中断境界"),(outside && stage==TEXT("Start")) || (inside && stage==TEXT("Continue"))))return;
+                    const auto suspended=service->Load();auto expected=*saved.Run;expected.ResumeAvailable=true;
+                    if(!TestTrue(TEXT("中断時に全状態を保ち再開可能にする"),suspended.Issue==SlotIssue::None && suspended.Run==expected && suspended.Permanent==saved.Permanent && suspended.Generation>=saved.Generation && (saved.Run->ResumeAvailable || suspended.Generation>saved.Generation)))return;
+                    int mask=0;for(int day:days)mask|=1<<(day-1);
+                    if(!TestTrue(TEXT("次プロセス用の独立した全保存と進捗を書出"),WriteCampaignTransfer(processRoot,{*suspended.Run,suspended.Permanent,{mask,battles,midBosses,finalBosses,playerActions,suspended.Generation}})))return;
+                    TestTrue(TEXT("段階完了記録"),FFileHelper::SaveStringToFile(TEXT("pass"),*(processRoot/(stage+TEXT(".done")))));return;
+                }
                 if(!TestTrue(TEXT("中断記録を実ディスクへ保存"),service->Load().Run && service->Load().Run->ResumeAvailable))return;
                 openDisk();
                 Async(EAsyncExecution::TaskGraphMainThread,[this,service]{Window->SetContent(SNew(SRunScreen).SaveService(service).DevelopmentTools(false).FullField(true));}).Wait();DrainSlateLayout();
@@ -177,6 +207,10 @@ void FGirlsSpireCampaignSpec::Define()
                 if(disk){
                     openDisk();const auto finished=service->Load();
                     TestTrue(TEXT("内外の再構築を完了し、新ストアでも後日談/難易度/図鑑/外見選択を保持し周回は終了"),outsideResumed && insideResumed && finished.Issue==SlotIssue::None && !finished.Run && finished.Permanent.Epilogues[0] && finished.Permanent.HighestDifficulty==expectedDifficulty && finished.Permanent.VictoryRecorded && finished.Permanent.SelectedAppearances==expectedAppearances && finished.Permanent.DiscoveredEnemies==saved.Permanent.DiscoveredEnemies && finished.Permanent.DiscoveredCombos==saved.Permanent.DiscoveredCombos);
+                }
+                if(process){
+                    if(!TestTrue(TEXT("最終プロセスでのみ完走する"),stage==TEXT("Finish")))return;
+                    TestTrue(TEXT("別プロセス12日完走の記録"),FFileHelper::SaveStringToFile(TEXT("pass"),*(processRoot/TEXT("Finish.done"))));
                 }
                 AddInfo(FString::Printf(TEXT("難易度%d/役割%d/seed1: %d戦、プレイヤー操作%d、全12日。初期値以外の状態注入なし。"),int(difficulty),int(role),battles,playerActions));return;
             }

@@ -189,3 +189,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 2026-11-06 GS-089後: Native全回帰と48条件/隔離乱数破損の検出成功後、Core/検証コピーの再生成obj68,256,078 bytesを整理。生計測の追加削除0、以前の4.50GBを再計上しない。保全19,158ファイルSHA/秘密設定メタデータ不変。ゲーム/素材/セーブ/実行物/集計/失敗証跡/現行UE Intermediate/DDC保持。監査Saved/StorageAudit-de5f29c91f0e44d4a2430c6396d4926c/result.json。
 
 2026-11-07 GS-090後: 15件UI通し成功後、旧合格aadd0ce54113474487b76a0058e6d238のcoverage.json/coverage.profdata/CoreTests.exe/計装DLL、計4件を同フォルダ.gzへ可逆保管。103,837,900→12,464,117 bytes、対象の論理削減91,373,783 bytes。全展開SHAと保全19,227ファイルSHA、秘密設定メタデータ一致。元パス/時刻/SHAはStorageAudit-8d91a1d504f54726932da037296a5207/archives.json、監査結果はresult.json。使用時だけ展開する。最新b64計測/現行Binaries/Intermediate/DDC/ゲーム/全セーブ/失敗証跡を保持。生計測追加削除0、過去整理量の重複計上なし。
+
+2026-11-07 GS-091後: 過去合格e67de344b2a04c3aa3bb2e8545f6a8bb / 1c37fb16c3624566851da1542ea6dd42のcoverage.json/coverage.profdata/CoreTests.exe、計6件を同フォルダ.gzへ可逆保管。45,734,052→4,663,365 bytes、対象の論理削減41,070,687 bytes。全展開SHA/保全19,296ファイルSHA/秘密設定メタデータ一致。監査StorageAudit-6a0394b8148a4ff2b0f045364add3fc7/result.json、元パス/時刻/SHAはarchives.json。最新b64/ゲーム/全セーブ/実行物/失敗証跡/現行UE Intermediate/DDC保持。使用時のみ展開する。生計測追加削除なし、以前の削減量を重複計上していない。

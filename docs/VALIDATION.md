@@ -608,3 +608,13 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 追加12条件は各5日戦闘外/6日戦闘内で保存中断→新ストア/新画面→再開を行い、中断権以外の全状態・乱数・恒久と世代前進を確認。各主人公/仲間の操作後は戦闘全状態と抽選乱数を照合し、救出4/両ボス/報酬/後日談/終了後の新ストア再読も検証。同一UE内の再構築であり、別UEプロセスでの12日通しではない。
 - 製品Source148ファイルはb64計測時SHA不変。今回の変更はテスト/実行手順のみで、前回の行99.46%/関数98.26%/分岐91.17%・Missing=[]を保持。全UE432やNative48条件の全回帰を今回重複実行してはいない。offscreenの1280×900試験で、実フルスクリーン・全設定・人の45～90分実測は別途。
 - 旧合格aadd0ce54113474487b76a0058e6d238のJSON/profdata/CoreTests.exe/計装DLLを各.gzへ可逆保管。103,837,900→12,464,117 bytes、論理削減91,373,783 bytes。全展開SHA/保全19,227ファイルSHA/秘密設定メタデータ一致。最新b64と現行Binaries/Intermediate/DDC/全セーブ/失敗証跡を保持。監査StorageAudit-8d91a1d504f54726932da037296a5207/result.json、元パス/時刻/SHAはarchives.json。生計測追加削除0で、過去の4.50GBやGS-089のobj整理と重複計上しない。
+
+## GS-091 / T034h 別UEプロセスで12日を完走（2026-11-07）
+- tools/test-campaign-process.ps1を追加。未実装ケースが未検出となるRedをcampaign-process-red-engine.logで確認し、Automationレポートなしを成功扱いにしなかった。
+- 初級/軍配/seed1・全9人配色の既存CampaignSpecをStart（5日戦闘外で中断）→Continue（次のUEでUI再開、6日戦闘内で中断）→Finish（さらに次のUEで再開、12日/後日談/恒久再読）の3段階へ拡張。各プロセスは通常終了する。開始条件だけAPI準備し、その後の状態注入・勝利省略は使わない。
+- CampaignHandoff.hに独立期待Run/Profileと到達日/戦闘/ボス/操作数/確定世代の引継ぎを分離。次プロセスは実セーブと全一致してからUI再開し、中断権以外の全状態/作戦/抽選乱数/固定外見と世代前進を確認する。最後に全12日/救出4/両ボス/6戦/89操作/後日談/終了後の新ストア再読を検証。中断しない既存ケースと戦闘/操作数も一致した。
+- 初回は戦闘外中断で世代の増加を必須にした期待値が失敗。実保存はResumeAvailable=1/Generation35で、PersistStateの同一状態を再保存しない処理と照合。同じ状態の戦闘外自動保存では世代維持を認め、再開権が変わる時は世代増加を必須としてテストだけ修正した。製品処理を変更せず、campaign-process-first-{failure.log,diagnosis.json}と失敗保存を保全。
+- 通常MSVCビルド成功。最終3段階は各1件警告/失敗0（37d0563439e746a5a36a5277bbbe8b8c / 2b5798585bf748269cb6a0730edecec2 / 20dced36648b42db84cb50442080baab）。保存先ProcessCampaign/a7d09d28b0054b68bb7f75d0f5790cfc、各Start/Continue/Finish-engine.logと段階完了マーカーを保全。初回修正後の3段階も成功し、最終再実行はGuards付き。
+- -Guardsでは既存保存先のStartを拒否（e10dbea7f29d49df873d8dc073c7b5ad）、引継ぎのない空保存先のFinishも拒否（ce881a7bd72a4d80b59713dfed3a367a）。各意図した1失敗のメッセージを検証し、前者の全スロットSHA不変/後者の保存ファイル0件を確認。クラッシュや未検出を期待失敗として通さない。両guard-*.json/logは完走保存先に保持。
+- 従来の通常通し3件も警告/失敗0（c3378ec851b24393aef564d66b359f73、campaign-process-regression.log）。製品Source148ファイルはb64計測時SHA不変（campaign-process-final.json）、前回行99.46%/関数98.26%/分岐91.17%、Missing=[]を保持。全UE432/Native48/実UI15件を今回一括再実行したものではない。
+- 過去合格e67de344b2a04c3aa3bb2e8545f6a8bb / 1c37fb16c3624566851da1542ea6dd42のJSON/profdata/CoreTests.exe、計6件を各.gzへ可逆保管。45,734,052→4,663,365 bytes、論理削減41,070,687 bytes。展開SHA/保全19,296ファイルSHA/秘密設定メタデータ一致。最新b64/現行UE Intermediate/DDC/全セーブ/失敗証跡は保持。監査StorageAudit-6a0394b8148a4ff2b0f045364add3fc7/result.json、元パス/時刻/SHAはarchives.json。生計測追加削除なし、過去削減を再計上しない。
