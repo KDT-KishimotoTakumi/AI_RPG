@@ -67,3 +67,5 @@ GS-094/T034i完了（予備値）: tests/E2E/FieldPerformanceSpec.hをFullFieldS
 - GS-098/T035c: 隔離Windowsデスクトップと専用UserDirでShipping本体直接・GirlsSpire.exe経由の起動、タイトル背景と日本語メニュー、通常終了コード0を確認。Saved/Tests/ShippingDesktopの成功画像はVALIDATION参照。撮影原本を可逆圧縮し5,915,596バイト削減、配布48件不変。次はオフライン通しと戦闘・物語の日本語、物理フルスクリーン/性能、演出と総合受け入れ。
 
 - GS-099: 配布版の非アクティブな隔離デスクトップで新規周回へのマウス通知を2経路で試し、画面遷移なし。実機入力は未確認。通常UE戦闘13件・物語9件は警告0で、戦闘の日本語を目視。VALIDATION参照。重複PNGのみ3,886,226バイト削減、撮影原本と配布48件を保全。
+
+- GS-100/T035d: tools/test-windows-distribution.ps1 -WindowsRootで画像21/音声3/起動・Pak/IoStoreを再検査可能。実候補成功、制作メモ・改変PNG・Pak欠落は拒否。試験複製の一時容量423,322,482バイト回収。配布版の隔離UIA経路はボタンを取得できず、実入力とオフライン完走は継続。

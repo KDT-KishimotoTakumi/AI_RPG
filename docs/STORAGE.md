@@ -208,3 +208,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - GS-098: 合格したタイトル撮影のBMP原本2件を可逆圧縮し5,915,596バイト削減。展開SHA一致、目視用PNG・失敗証跡・配布48件を保全。監査Saved/release-candidate-desktop-storage.json。
 
 - GS-099: 配布版入力試験の前後でSHA256が一致した重複PNG2件だけを整理し、3,886,226バイト削減。撮影BMP原本と同一画像を保持。監査Saved/shipping-interaction-storage.json、配布48件不変。
+
+- GS-100: 今回の拒否試験に作成した隔離複製を整理し、改変画像を保全した上で423,322,482バイトの一時容量を回収。元の配布48件はSHA256一致。DistributionVerificationのcleanup.jsonを参照。

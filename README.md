@@ -74,3 +74,9 @@ PowerShell 7でプロジェクトルートから実行します。
 性能スクリプトはEditor/offscreenの基礎計測です。製品版・実戦AI・物理画面・長時間の性能合格とは区別します。
 
 別プロセス12日通しの -Scenario は2が従来の初級/軍配/配色選択、3～6が初級、7～10が中級、11～14が上級です。各4条件は刀・薙刀・軍配・鉄砲の順で、seed1を使います。-Guards は範囲外・条件不一致・上書き・引継ぎ欠落の拒否と保存原本の不変を検証します。選べる条件すべてが検証済みとは限らず、実行実績はVALIDATION.mdを参照してください。
+
+Windows配布候補の同梱物はPowerShell 7で再検査できます。作業ツリーの画像、導入済みUE 5.7のIoStore一覧、必要な実行ファイルを照合します。
+
+```powershell
+./tools/test-windows-distribution.ps1 -WindowsRoot $windowsDistribution
+```

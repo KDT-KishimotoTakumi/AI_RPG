@@ -688,3 +688,9 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 配布版の隔離デスクトップで新規周回ボタンへマウス通知を送信。通常通知とフォーカス通知付きの2回で、入力前後の撮影PNGがSHA256一致し、役割選択への遷移は未確認。両回とも起動用EXEと本体の通常終了コード0。画面・専用UserDir・結果はSaved/Tests/ShippingInteractionのcabad2462f00449997b52f19534155e2とc7ab5c4cb52d49ecaabdbe896a12eeaa。非アクティブな試験デスクトップでの通知結果から、通常入力の製品不具合は確定できない。
 - 通常UE自動化で戦闘フィールド13件（8bc87b0d5530477bb997c486fd74bfef）と物語9件（d0194f1229af452aa409591525d3a6d6）がすべて警告0。戦闘撮影で行動・移動・攻撃・待機の日本語表示を目視。配布版の戦闘・物語操作、オフライン完走は継続。
 - 配布48件のSHA256一致、4536d2bからSource・Tests・Content・管理Configの差分なし。撮影BMP原本を保持し、完全一致の重複PNG2件のみ3,886,226バイト整理。
+
+## GS-100 / T035d Windows配布物の同梱検査（2026-11-07）
+
+- tools/test-windows-distribution.ps1で実候補48ファイル、PNG21点のSHA256、現行音声3点のIoStoreエントリ、起動ファイル・VC再頒布物・PakとIoStore本体を照合。配布対象外の制作メモ・デバッグシンボル・緩いセーブ/秘密設定ファイルを検出。最終レポートはSaved/Tests/DistributionAudit/a4710881b0704a78bbd3223bd0380552。
+- REDは検査コマンド未作成。実候補が成功し、制作資料混入・改変画像・必須Pak欠落の拒否を確認。レビューで必須Pakの検査漏れを指摘されたため補い、同候補で再確認。拒否証跡はSaved/Tests/DistributionVerification/bbc32e94aec647db932b9786c9391a16。
+- 隔離配布版のWindowsアクセシビリティ経由では新規周回ボタンを取得できず、画面遷移は未確認。試験終了コードは起動用EXE・本体とも0。証跡はSaved/Tests/ShippingUia/b5d8147068984e9083adcbc4e19dc292。
