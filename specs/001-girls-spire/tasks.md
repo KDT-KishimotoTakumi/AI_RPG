@@ -141,7 +141,7 @@ GS-024（2026-10-30、絡繰鎧の2回答で生成条件と行動非消費を確
 独立確認: 8候補、4武器、3択、レベル10、追加技3、復帰50%。
 
 - [x] T022 [US4] Tests/Unit の成長・周回・商店のテストで取得上限、装備、回復、負傷、商店を検証
-- [ ] T023 [US4] Source/GirlsSpire/Domain/Growth.cpp と Content/Data/Characters に成長・人物・敵・装備を実装（FR-025～030、044～049）
+- [x] T023 [US4] Domainの成長・人物・敵・装備の共有定義と周回処理を実装（FR-025～030、044～049）
 - [x] T024 [US4] Tests/E2E の成長・救出交流・最終戦で救出分岐と非加入者の再登場を検証
 
   - [x] T022a 追加スキル3種と三択報酬の正常・境界・再現性をTDDで検証（468/1,014/2,652チェック成功）
@@ -168,9 +168,9 @@ GS-017（2026-09-30承認、US4の追加工程）:
 
 独立確認: 各8人の条件解放、複数進行、後日談の本、抑制設定。
 
-- [ ] T025 [US5] Tests/Unit/BondTests.cpp に0～100、永続化、複数恋愛、単独エンドを記述
+- [x] T025 [US5] Tests/Unit/BondTests.cpp に0～100、永続化、複数恋愛、単独エンドを記述
 - [ ] T026 [US5] Source/GirlsSpire/Domain/Bond.cpp と Content/Data/Story に物語・絆・後日談を実装（FR-055～064）
-- [ ] T027 [US5] Tests/E2E/StorySpec.cpp で全人物の結末と文字記録を検証
+- [x] T027 [US5] Tests/E2E/StorySpec.cpp で全人物の結末と文字記録を検証
 
 GS-018（2026-10-02、5回答と継続指示で承認）:
 - [x] T025a Tests/Unit/BondTests.cpp・RunBondTests.cppで初期値、全境界、所属/世代、周回分離をRed→Greenで確認（4,896/100,488チェック成功）
