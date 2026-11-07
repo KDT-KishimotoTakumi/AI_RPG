@@ -250,3 +250,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - GS-114: 旧候補39b8cad8ab3d4c07bc7102d3cd3cfbccとe633ea668c4f46f59ad3ae9e8a36d0a2のクック中間物を計432,050,100バイト整理。各候補の配布48件は前後SHA256一致。各cooked-storage.jsonを参照。
 
 - GS-115: 成功した周回33c2cd44823240a4857119815d727ea5のログ3件をgzip化し、展開SHA256が原本と一致した後に平文複製を整理。397,743バイト削減（log-storage.json）。
+
+- GS-116: 成功した周回a7d09d28b0054b68bb7f75d0f5790cfcのログ3件をgzip化。展開SHA256一致を確認し平文複製356,792バイト分を削減（log-storage.json）。

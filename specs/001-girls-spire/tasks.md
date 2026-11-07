@@ -113,9 +113,9 @@ GS-024（2026-10-30、絡繰鎧の2回答で生成条件と行動非消費を確
 
 独立確認: 2/3/5人の発見、加算、個人/全員必殺、翌周保持。
 
-- [ ] T019 [US3] Tests/Unit/ComboTests.cpp に参加者重複、条件、ゲージ、戦闘不能を検証
-- [ ] T020 [US3] Source/GirlsSpire/Domain/Combo.cpp と Content/Data/Combos に20連携を実装（FR-037～043）
-- [ ] T021 [US3] Tests/E2E/ComboSpec.cpp で発見と必殺をUI検証
+- [x] T019 [US3] Tests/Unit/ComboTests.cpp に参加者重複、条件、ゲージ、戦闘不能を検証
+- [x] T020 [US3] Source/GirlsSpire/Domain の共有カタログと判定処理に通常20連携・専用8連携を実装（FR-037～043）
+- [x] T021 [US3] Tests/E2E の連携・発見・絆・必殺の各SpecでUI検証
 
   2026-09-24 T019/T020一部: ComboLedgerの履歴・中断・成立候補検証・最多人数優先・消費・ゲージをTDDで追加。139チェック成功、UE基盤と既存UI回帰18件成功、全C++各90%以上。構文/位置/対象照合、正式20レシピ、Battle接続・発見・必殺・保存は残るため主タスクは未完了。
   - [x] T019a 連携履歴・中断・候補解決の139チェックをRed→Greenで確認
