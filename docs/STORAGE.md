@@ -246,3 +246,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - GS-112: 配布候補b485945db44e4965953ea22e7796115dの再生成可能なクック中間物216,025,098バイトを整理。配布48件の前後SHA256一致（cooked-storage.json）。入力ZIPは展開先に制作メモがないため保持。
 
 - GS-113: 旧候補e633ea668c4f46f59ad3ae9e8a36d0a2の配布本体と同一の作業用EXEを144,051,200バイト整理。配布48件の前後SHA256一致（exe-storage.json）。
+
+- GS-114: 旧候補39b8cad8ab3d4c07bc7102d3cd3cfbccとe633ea668c4f46f59ad3ae9e8a36d0a2のクック中間物を計432,050,100バイト整理。各候補の配布48件は前後SHA256一致。各cooked-storage.jsonを参照。
