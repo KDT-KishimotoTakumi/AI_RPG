@@ -706,3 +706,5 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - REDは通常表示の変位だけが不足して1件失敗、残り4件は成功（d03edc3fc43544b0a44ef8559b009bc8）。RED画像はSaved/impact-red.png。実装後、表示HPが減ったときだけ駒画像に最大6表示単位、0.45秒の横反応を付ける。初回表示・再開時は静止から開始し、演出軽減では反応を停止。
 - 実UIで確定攻撃の通常反応、軽減、終了後の静止、確定結果と作戦乱数の同一性を検証。Native成功、全UE435件警告0（bd75dcd860824fe589989e773a0175ff）。通常起動、音声付き実戦、別プロセス音声再開、音声単体2件も警告0。Saved/impact-coverage.logに全レポート。
 - 全体d99b4115db764477b1a768650b12258bはPassed=true、Missing=[]。行5352/5380=99.48%、関数680/692=98.27%、分岐5493/6014=91.34%。計装DLL・JSON・profdataを保持し、通常MSVCへ復帰後も被弾・移動5件が警告0（d7e9eb82a0744f98bd0b0823ca8fae98）。独立レビューで必須修正なし。
+
+- 被弾演出を含むb93ea87のWin64 Shipping候補を再生成し、画像21点・現行音声3点・必須ファイルを確認（d1e1598afadd4ad08a1fc9ae7451f802）。候補はSaved/ReleaseCandidates/de19dbb316f64b3281d3d3f5ae2f9fef/Project/Distribution/Windows。新候補の実機操作とオフライン通しは継続。
