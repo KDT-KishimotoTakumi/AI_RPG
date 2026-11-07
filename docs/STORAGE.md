@@ -224,3 +224,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - GS-104配布後に隔離Intermediateと同一ステージ4,946,781,372バイト、旧候補3件のクック中間物648,077,502バイトを整理。候補ごとに配布48件のSHA256一致。今回の総整理量10,211,573,562バイト。新候補のcleanup.jsonとSaved/strike-old-cook-storage.json参照。
 
 - GS-105: 旧配布と同じ作業用EXE144,045,056バイト、展開済み383件と同じZIP54,445,155バイト、合格済みの生計測6件4,475,496,928バイトを整理。配布・集計・実行物を保全。
+
+- GS-105の配布生成後に隔離Intermediateと同一ステージ4,946,952,568バイトを整理。試験と作業用複製を含む今回総量9,620,939,707バイト。新旧候補のSHA256を保全し、新候補48件は起動後にも照合。cleanup.jsonとSaved/ability-strike-shipping-verified.jsonに記録。

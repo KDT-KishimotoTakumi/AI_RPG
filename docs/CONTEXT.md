@@ -83,3 +83,5 @@ GS-094/T034i完了（予備値）: tests/E2E/FieldPerformanceSpec.hをFullFieldS
 - GS-104のWindows Shipping候補は39b8cad8ab3d4c07bc7102d3cd3cfbcc/Project/Distribution/Windows。28d8de3から再生成・同梱検査済み。旧クック中間物と新規中間物の整理を含め今回10,211,573,562バイト整理。
 
 - GS-105/T032f: 攻撃技、個人/全員必殺、敵攻撃技に対象方向の演出を追加。回復のみ・方向ゼロは静止。全UE440件と通常10件警告0、5b5e1d4ec9e346469792f22471330b07は行99.48/関数98.27/分岐91.37%。旧複製と計測生データ計4,673,987,139バイト整理。
+
+- GS-105のWindows候補は6b17a1076e9241de9621afa915aae5e8/Project/Distribution/Windows。bb933b4から生成・同梱・タイトル起動/正常終了を検証。今回の整理総量9,620,939,707バイト。実機戦闘操作とオフライン通しは未完了。
