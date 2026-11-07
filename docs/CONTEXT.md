@@ -89,3 +89,5 @@ GS-094/T034i完了（予備値）: tests/E2E/FieldPerformanceSpec.hをFullFieldS
 - GS-106/T035f: tools/test-windows-shipping-smoke.ps1で隔離Shipping起動、撮影、終了コード0、配布SHA維持を再検査可能。基準画像一致と欠落/不一致拒否を確認。重複ZIP54,446,279バイト整理。実機戦闘操作とオフラインは継続。
 
 - GS-107/T034l: tools/test-field-performance.ps1 -Combat。Editor/offscreen実UIの5対3/5対10は40/35巡。低速時間7.071/6.539秒のうち初期化との重なり7.071/6.467秒。待機は低速0%。製品性能は継続。旧作業EXEと配布本体を照合し144,061,952バイト整理。
+
+- GS-108/T034m: tools/test-field-performance.ps1 -Continuous。Editor/offscreenの一戦継続5対3/5対10で21/17巡、平均103.67/84.32fps相当、低速0/0.262%。実UI/既存ルール、試験HP2000。再生成付き回帰も成功。隔離クック216,026,122バイト整理・配布48件不変。製品の実入力、オフライン、物理フルスクリーンは残る。

@@ -6,6 +6,7 @@
 #include "Misc/ScopeLock.h"
 #include "Domain/CharacterCatalog.h"
 #include "Domain/EnemyCatalog.h"
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -39,14 +40,15 @@ END_DEFINE_SPEC(FGirlsSpireFieldPerformanceSpec)
 void FGirlsSpireFieldPerformanceSpec::Define()
 {
     if(!FParse::Param(FCommandLine::Get(),TEXT("GirlsSpirePerformanceTest")))return;
-    const bool active=FParse::Param(FCommandLine::Get(),TEXT("GirlsSpirePerformanceCombat"));
+    const bool continuous=FParse::Param(FCommandLine::Get(),TEXT("GirlsSpirePerformanceContinuous"));
+    const bool active=continuous || FParse::Param(FCommandLine::Get(),TEXT("GirlsSpirePerformanceCombat"));
     BeforeEach([this,active]{
         if(active){IAutomationDriverModule::Get().Enable();Driver=IAutomationDriverModule::Get().CreateDriver();}
         Window=SNew(SWindow).ClientSize(FVector2D(1920,1080)).AutoCenter(EAutoCenter::None).ScreenPosition(FVector2D::ZeroVector).SaneWindowPlacement(false).AdjustInitialSizeAndPositionForDPIScale(false);
         FSlateApplication::Get().AddWindow(Window.ToSharedRef());
     });
     LatentBeforeEach(WaitForSlateLayout);
-    for(int enemies:{3,10})It(*FString::Printf(TEXT("5対%dの%s描画提出間隔を30秒測定する"),enemies,active?TEXT("実戦操作付き"):TEXT("待機中")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(90),[this,enemies,active]{
+    for(int enemies:{3,10})It(*FString::Printf(TEXT("5対%dの%s描画提出間隔を30秒測定する"),enemies,continuous?TEXT("連続戦闘"):active?TEXT("実戦操作付き"):TEXT("待機中")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(90),[this,enemies,active,continuous]{
 #if defined(GIRLS_SPIRE_COVERAGE) && GIRLS_SPIRE_COVERAGE
         AddError(TEXT("性能検証は計装なしの通常MSVCビルドで実行してください。"));return;
 #endif
@@ -59,11 +61,15 @@ void FGirlsSpireFieldPerformanceSpec::Define()
         for(int id=0;id<5;++id)units.push_back(CreateCharacter(id,{1,id+1}));
         for(int id=0;id<enemies;++id)units.push_back(CreateEnemy(static_cast<EnemyKind>(id+1),100+id,{size-3+id/5,id%5+1}));
         if(active){
-            // 主人公の次に敵の一巡を実行できる固定局面。耐久・技・AIはカタログ値を使う。
+            // 主人公の次に敵の一巡を実行できる固定局面。
             units[0].Speed=100;
             for(int id=1;id<5;++id)units[id].Speed=1;
             for(int i=0;i<enemies;++i)units[5+i].Speed=80-i;
             units[5].At={2,1};
+        }
+        if(continuous){
+            // 一戦を測定窓の間維持する試験用の耐久。攻撃・技・AIはカタログ値と既存規則を使う。
+            for(auto& unit:units)unit.Hp=unit.MaxHp=2000;
         }
         auto battle=MakeShared<Battle>(size,size,std::vector<Tile>(size*size),units,42);const auto original=battle->Checkpoint();
         std::shared_ptr<FieldFrameCollector> collector;
@@ -74,19 +80,53 @@ void FGirlsSpireFieldPerformanceSpec::Define()
             RenderHandle=FSlateApplication::Get().GetRenderer()->OnBackBufferReadyToPresent().AddLambda([collector,target](SWindow& rendered,const FTextureRHIRef&){if(&rendered==target)collector->Record(FPlatformTime::Seconds());});
         }).Wait();
         int cycles=0;
+        int attacks=0,orders=0;
         std::uint64_t enemyRevisions=0;
         std::vector<FieldWorkCycle> work;
         if(active){
             while(FPlatformTime::Seconds()<collector->Begin)FPlatformProcess::Sleep(.02f);
-            const auto click=[this](const char* id){
+            const auto click=[this,continuous](const char* id){
                 auto target=Driver->FindElement(By::Id(id));
                 if(!target->IsVisible()){
                     auto scroll=Driver->FindElement(By::Id("battle.scroll"));
-                    scroll->ScrollToEndUntil(By::Id(id));DrainSlateLayout();
+                    if(continuous){scroll->ScrollToBeginning();DrainSlateLayout();}
+                    if(!target->IsVisible()){scroll->ScrollToEndUntil(By::Id(id));DrainSlateLayout();}
                 }
                 return TestTrue(UTF8_TO_TCHAR(id),ClickAndDrain(target));
             };
-            while(FPlatformTime::Seconds()<collector->End-3.){
+            if(continuous){
+                while(FPlatformTime::Seconds()<collector->End-2.){
+                    const int actor=battle->Snapshot().ActiveId, round=battle->Snapshot().Round;
+                    const auto revision=battle->Snapshot().Revision;
+                    if(!TestTrue(TEXT("同じ戦闘の味方手番を操作"),actor>=0 && actor<5 && battle->Snapshot().Outcome==BattleOutcome::Ongoing))return;
+                    if(actor==0){
+                        const auto& state=battle->Snapshot();
+                        const auto target=std::find_if(state.Units.begin(),state.Units.end(),[&](const auto& unit){
+                            return unit.Side==Faction::Enemy && unit.Hp>0 && battle->PreviewAttack(0,unit.At).Legal;
+                        });
+                        if(target!=state.Units.end()){
+                            const auto tag=FString::Printf(TEXT("battle.unit.select.%d"),target->Id);
+                            if(!click("battle.field.attack") || !click(TCHAR_TO_UTF8(*tag)) || !click("battle.confirm"))return;
+                            if(!TestTrue(TEXT("連続戦闘の攻撃を確定"),battle->Snapshot().Acted))return;
+                            if(FPlatformTime::Seconds()<=collector->End)++attacks;
+                        }
+                        const auto beforeWait=battle->Snapshot().Revision;
+                        if(!click("battle.wait.south"))return;
+                        if(!TestTrue(TEXT("敵一巡の更新を確認"),battle->Snapshot().Revision-beforeWait>=static_cast<std::uint64_t>(enemies+1)))return;
+                        if(FPlatformTime::Seconds()<=collector->End)enemyRevisions+=battle->Snapshot().Revision-beforeWait-1;
+                    }else{
+                        if(!click("intent.execute"))return;
+                        if(!TestTrue(TEXT("仲間指示の確定で状態が進む"),battle->Snapshot().Revision>revision))return;
+                        if(FPlatformTime::Seconds()<=collector->End)++orders;
+                        if(battle->Snapshot().ActiveId==actor && !click("battle.wait.south"))return;
+                    }
+                    if(!TestTrue(TEXT("連続戦闘の操作で確定状態が進む"),battle->Snapshot().Revision>revision))return;
+                    if(FPlatformTime::Seconds()<=collector->End && battle->Snapshot().Round>round)++cycles;
+                }
+                const auto& final=battle->Snapshot();
+                const auto alive=[&](Faction side){return std::count_if(final.Units.begin(),final.Units.end(),[side](const auto& unit){return unit.Side==side && unit.Hp>0;});};
+                if(!TestTrue(TEXT("再生成せず二巡・攻撃・仲間指示・敵更新と編成生存を維持"),cycles>=2 && attacks>=2 && orders>=4 && enemyRevisions>=static_cast<std::uint64_t>(2*enemies) && alive(Faction::Player)==5 && alive(Faction::Enemy)==enemies))return;
+            }else while(FPlatformTime::Seconds()<collector->End-3.){
                 const double setupStart=FPlatformTime::Seconds();
                 auto round=MakeShared<Battle>(size,size,std::vector<Tile>(size*size),units,42);
                 Async(EAsyncExecution::TaskGraphMainThread,[this,round]{Window->SetContent(SNew(SCombatScreen).Combat(round).FullField(true));}).Wait();
@@ -128,7 +168,7 @@ void FGirlsSpireFieldPerformanceSpec::Define()
         if(!TestTrue(TEXT("30秒全体を欠落なく測定"),samples.size()>1 && FMath::Abs(elapsed-30)<.01))return;
         const double fps=frames/elapsed,ratio=slow/elapsed;
         const auto dir=FPaths::ProjectSavedDir()/TEXT("Tests/FieldPerformance")/FGuid::NewGuid().ToString(EGuidFormats::Digits);IFileManager::Get().MakeDirectory(*dir,true);
-        if(active){
+        if(active && !continuous){
             const double accounted=setupSlow+attackSlow+enemySlow;
             TestTrue(TEXT("低速時間の区間配分を重複計上しない"),accounted<=slow+.00001);
             FString phases=TEXT("setup_start_seconds,attack_start_seconds,enemy_start_seconds,cycle_end_seconds\n");
@@ -137,11 +177,11 @@ void FGirlsSpireFieldPerformanceSpec::Define()
             TestTrue(TEXT("操作時刻を保全"),FFileHelper::SaveStringToFile(phases,*(dir/TEXT("workload.csv"))));
             TestTrue(TEXT("低速時間と操作区間の重なりを保全"),FFileHelper::SaveStringToFile(split,*(dir/TEXT("slow-overlap.json"))));
         }
-        const auto summary=FString::Printf(TEXT("{\"scope\":\"editor-offscreen-backbuffer-ready\",\"workload\":\"%s\",\"attackAndEnemyCycles\":%d,\"enemyRevisions\":%llu,\"width\":1920,\"height\":1080,\"allies\":5,\"enemies\":%d,\"warmupSeconds\":5,\"measuredSeconds\":%.6f,\"samples\":%d,\"averageFps\":%.6f,\"below30TimeRatio\":%.9f,\"worstMs\":%.6f,\"normal60TargetMet\":%s}\n"),active?TEXT("attack-and-enemy-turns"):TEXT("idle"),cycles,static_cast<unsigned long long>(enemyRevisions),enemies,elapsed,index,fps,ratio,worst*1000,fps>=60?TEXT("true"):TEXT("false"));
+        const auto summary=FString::Printf(TEXT("{\"scope\":\"editor-offscreen-backbuffer-ready\",\"workload\":\"%s\",\"attackAndEnemyCycles\":%d,\"heroAttacks\":%d,\"allyOrders\":%d,\"enemyRevisions\":%llu,\"width\":1920,\"height\":1080,\"allies\":5,\"enemies\":%d,\"warmupSeconds\":5,\"measuredSeconds\":%.6f,\"samples\":%d,\"averageFps\":%.6f,\"below30TimeRatio\":%.9f,\"worstMs\":%.6f,\"normal60TargetMet\":%s}\n"),continuous?TEXT("continuous-combat"):active?TEXT("attack-and-enemy-turns"):TEXT("idle"),cycles,attacks,orders,static_cast<unsigned long long>(enemyRevisions),enemies,elapsed,index,fps,ratio,worst*1000,fps>=60?TEXT("true"):TEXT("false"));
         TestTrue(TEXT("全フレームCSVを保全"),FFileHelper::SaveStringToFile(csv,*(dir/TEXT("frames.csv"))));
         TestTrue(TEXT("性能集計を保全"),FFileHelper::SaveStringToFile(summary,*(dir/TEXT("summary.json"))));
         AddInfo(FString::Printf(TEXT("5対%d: 平均%.2ffps / 30fps未満の時間%.4f%% / 最大%.2fms / %s"),enemies,fps,ratio*100,worst*1000,*dir));
-        TestTrue(TEXT("描画計測で戦闘/乱数を変更しない"),battle->Checkpoint()==original);
+        if(!continuous)TestTrue(TEXT("基準用の戦闘/乱数を変更しない"),battle->Checkpoint()==original);
         if(enemies==10 && !active)TestTrue(TEXT("最大編成で30fps未満の時間が1%未満"),ratio<.01);
     });
     AfterEach([this,active]{StopSampling();Driver.Reset();if(Window.IsValid()){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}if(active)IAutomationDriverModule::Get().Disable();});

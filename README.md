@@ -104,3 +104,9 @@ Windows配布候補のShipping本体を、専用デスクトップと保存先�
 ```powershell
 ./tools/test-field-performance.ps1 -Combat
 ```
+
+一つの試験戦場で主人公・仲間・敵の手番を継続する場合は、`-Combat`の代わりに`-Continuous`を指定します。試験用HPを使ったEditor画面外計測です。
+
+```powershell
+./tools/test-field-performance.ps1 -Continuous
+```
