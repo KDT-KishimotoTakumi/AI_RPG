@@ -720,3 +720,5 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - Native成功、全UE435件警告0（53962c2fe86c441f8b62db4ca83b8a27）。通常起動、音声付き実戦、別プロセス再開、音声専用2件も警告0。全記録はSaved/strike-coverage.log。
 - 全体29179efae5b6403cb55297683ac72b3aはPassed=true、Missing=[]。行5369/5397=99.48%、関数682/694=98.27%、分岐5498/6020=91.33%。計装DLL、JSON、profdataを保持。
 - 通常MSVCへ復帰後に敵AIの左方向・静止への復帰・AI確定結果と乱数の一致を検証。関連6件は警告0（36830551bc654a7999041b016b800581）。敵方向ケースは計測後に追加したテストのみの変更。右方向の主人公、被弾反応、演出軽減の試験も成功。
+
+- 通常攻撃演出を含む28d8de3のWindows Shipping候補を生成。画像21点・現行音声3点・必須ファイルを照合（a8dc8bba98284841a7687ffa4086eb80）。候補はSaved/ReleaseCandidates/39b8cad8ab3d4c07bc7102d3cd3cfbcc/Project/Distribution/Windows。実機操作は次の検証。
