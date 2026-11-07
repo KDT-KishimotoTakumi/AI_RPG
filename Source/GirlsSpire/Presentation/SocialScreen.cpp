@@ -1,5 +1,11 @@
 #include "RunScreen.h"
 #include "Domain/RelationshipText.h"
+
+namespace {
+constexpr int SpecialWarning=-2;
+constexpr int SpecialSummary=-3;
+constexpr int SpecialFullText=-4;
+}
 FString SRunScreen::ProfileLabel() const
 {
     const auto& profile=CurrentRun?CurrentRun->ProfileState():RetainedProfile;
@@ -27,10 +33,21 @@ void SRunScreen::RefreshSocial()
     TGuardValue<TSharedPtr<SVerticalBox>> target(Body,content);
     AddText(ActorName(SocialActor)+TEXT("「")+UTF8_TO_TCHAR(text->Opening.data())+TEXT("」"),"social.dialogue",18);
     if(CurrentRun->CanSpecialConverse(SocialActor)) {
-        if(SocialChoice==-2) {
+        if(SocialChoice==SpecialWarning) {
+            AddText(TEXT("この先には、成人同士の親密な会話が含まれます。要約を選んでも交流の結果は同じです。"),"social.special.warning",18);
+            AddAction(TEXT("会話を読む"),"social.special.read",[this]{SocialChoice=SpecialFullText;RefreshRun();});
+            AddAction(TEXT("要約を読む"),"social.special.skip",[this]{SocialChoice=SpecialSummary;RefreshRun();});
+            AddAction(TEXT("交流に戻る"),"social.special.cancel",[this]{SocialChoice=-1;RefreshRun();});
+            return;
+        }
+        if(SocialChoice==SpecialSummary || SocialChoice==SpecialFullText) {
             auto preview=*CurrentRun;
             if(preview.SpecialConverse(state.Revision,SocialActor)) {
-                AddText(FString(UTF8_TO_TCHAR(text->Special.data()))+TEXT("\n\n二人の意思を確かめ、城を出た後の約束を交わします。\n1イベントを消費し、専用交流の完了を次周以降も保持します。絆の追加変動はありません。確定後は取り消せません。"),"social.special.preview",18);
+                if(SocialChoice==SpecialSummary) {
+                    AddText(TEXT("要約：二人は互いの意思を確かめ、城を出た後も話し合いながら過ごす約束を交わします。"),"social.special.summary",18);
+                }
+                const FString dialogue=SocialChoice==SpecialFullText ? FString(UTF8_TO_TCHAR(text->Special.data()))+TEXT("\n\n") : FString();
+                AddText(dialogue+TEXT("1イベントを消費し、専用交流の完了を次周以降も保持します。絆の追加変動はありません。確定後は取り消せません。"),"social.special.preview",18);
                 AddAction(TEXT("互いの約束を確定"),"social.special.confirm",[this,revision=state.Revision,actor=SocialActor] {
                     if(CurrentRun->SpecialConverse(revision,actor))SocialMessage=ActorName(actor)+TEXT("との約束を記録しました。専用交流の完了は次周へ引き継ぎます。");
                     SocialActor=-1;SocialChoice=-1;RefreshRun();
@@ -39,7 +56,7 @@ void SRunScreen::RefreshSocial()
             AddAction(TEXT("まだ約束せず戻る"),"social.special.cancel",[this]{SocialChoice=-1;RefreshRun();});
             return;
         }
-        AddAction(TEXT("専用交流：二人の約束"),"social.special",[this]{SocialChoice=-2;RefreshRun();});
+        AddAction(TEXT("専用交流：二人の約束"),"social.special",[this]{SocialChoice=DisplayPreferences.SuppressIntimacy ? SpecialSummary : SpecialWarning;RefreshRun();});
     }
     const TCHAR* effects[]={TEXT("（＋10）"),TEXT("（0）"),TEXT("（−5）")};
     std::array<FString,3> choices;

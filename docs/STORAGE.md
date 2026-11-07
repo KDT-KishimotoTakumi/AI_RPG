@@ -256,3 +256,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - GS-117: 成功した周回47d876d470694616937054b5d123be35のログ3件をgzip化。展開SHA256一致を確認し356,564バイト削減（log-storage.json）。
 
 - GS-118: 成功したcampaign-ui-matrix-final-engine.logをgzip化。展開SHA256一致を確認し1,420,242バイト削減（Saved/campaign-ui-matrix-final-engine-storage.json）。
+
+- GS-119: 合格した生プロファイル6件4,479,250,560バイトを整理。1d205557ec0240ec8de42435690f0c8bのraw-cleanup.jsonを参照。

@@ -131,7 +131,8 @@ void FGirlsSpireBondUiSpec::Define()
         if(!TestTrue(TEXT("絆80で専用交流を選択可能"),Driver->FindElement(By::Id("social.special"))->Exists()))return;
         if(!Click("social.special"))return;
         TestTrue(TEXT("完了の恒久保持とイベント消費を予告"),Driver->FindElement(By::Id("social.special.preview"))->Exists());
-        TestTrue(TEXT("承認済みの専用交流本文"),Driver->FindElement(By::Id("social.special.preview"))->GetText().ToString().Contains(UTF8_TO_TCHAR(GirlsSpire::FindSocialDialogue(actor)->Special.data())));
+        TestTrue(TEXT("抑制時は要約を表示"),Driver->FindElement(By::Id("social.special.summary"))->Exists());
+        TestFalse(TEXT("抑制時は本文を表示しない"),Driver->FindElement(By::Id("social.special.preview"))->GetText().ToString().Contains(UTF8_TO_TCHAR(GirlsSpire::FindSocialDialogue(actor)->Special.data())));
         TestTrue(TEXT("予告は記録しない"),run->Checkpoint()==before && !run->ProfileState().SpecialConversations[actor-1]);
         if(!Click("social.special.cancel"))return;
         TestTrue(TEXT("取消は時間も記録も変えない"),run->Checkpoint()==before && !run->ProfileState().SpecialConversations[actor-1]);

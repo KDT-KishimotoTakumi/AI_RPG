@@ -58,7 +58,7 @@ bool FGirlsSpireNarrativeResolutionSpec::Open(const std::shared_ptr<GirlsSpire::
     if(!TestTrue(TEXT("対象人物の状態を準備"),bool(run)))return false;
     if(!Store){
         Files=std::make_shared<NarrativePreferenceFiles>();Store=std::make_shared<PreferencesStore>(*Files);
-        Preferences prefs;prefs.Text=static_cast<TextSize>(size);prefs.ReducedEffects=true;prefs.BgmVolume=0;prefs.SfxVolume=0;
+        Preferences prefs;prefs.Text=static_cast<TextSize>(size);prefs.ReducedEffects=true;prefs.SuppressIntimacy=false;prefs.BgmVolume=0;prefs.SfxVolume=0;
         if(!TestTrue(TEXT("文字と併用設定を保存・再読込"),Store->Save(prefs)==PreferencesIssue::None && Store->Load().Value==prefs))return false;
     }
     bool dimensions=false;
@@ -115,11 +115,19 @@ void FGirlsSpireNarrativeResolutionSpec::Define()
                 }
                 if(actor==8)Capture("social",width,size);
                 if(!Click("social.special"))return;
+                TestTrue(TEXT("親密表現の事前警告"),Driver->FindElement(By::Id("social.special.warning"))->Exists());
+                TestFalse(TEXT("警告では本文を表示しない"),Driver->FindElement(By::Id("social.special.preview"))->Exists());
+                if(actor==8)Capture("warning",width,size);
+                if(!Click("social.special.read"))return;
                 TestTrue(TEXT("専用交流の全文"),Driver->FindElement(By::Id("social.special.preview"))->GetText().ToString().Contains(UTF8_TO_TCHAR(text->Special.data())));
                 if(actor==8)Capture("special",width,size);
                 if(!Click("social.special.cancel"))return;
                 TestTrue(TEXT("全予告と取消で状態・乱数・恒久記録不変"),run->Checkpoint()==before && run->ProfileState()==profile);
-                if(!Click("social.special") || !Click("social.special.confirm"))return;
+                if(!Click("social.special") || !Click("social.special.skip"))return;
+                TestTrue(TEXT("警告から要約を表示"),Driver->FindElement(By::Id("social.special.summary"))->Exists());
+                TestFalse(TEXT("要約に全文を出さない"),Driver->FindElement(By::Id("social.special.preview"))->GetText().ToString().Contains(UTF8_TO_TCHAR(text->Special.data())));
+                TestTrue(TEXT("要約へ切替後も確定前の状態は同じ"),run->Checkpoint()==before && run->ProfileState()==profile);
+                if(!Click("social.special.confirm"))return;
                 auto expected=*Run::Restore(before,profile);expected.SpecialConverse(before.State.Revision,actor);
                 TestTrue(TEXT("専用交流確定は既存規則と一致"),run->Checkpoint()==expected.Checkpoint() && run->ProfileState()==expected.ProfileState());
                 TestTrue(TEXT("本文操作で独立設定不変"),Files->Bytes==preferences);
