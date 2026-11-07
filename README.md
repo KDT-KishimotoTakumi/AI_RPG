@@ -92,3 +92,9 @@ UE音声デバイスで現行BGMが40秒のループ境界を2回越えること
 ```powershell
 ./tools/test-unreal.ps1 -UI -Audio -Filter GirlsSpire.Audio.Engine -ExtraArgs @('-GirlsSpireAudioTest','-GirlsSpireAudioLongLoop','-AllowCommandletAudio')
 ```
+
+Windows配布候補のShipping本体を、専用デスクトップと保存先で直接起動し、撮影と正常終了を確認できます。出力されたtitle.pngで画面を確認してください。同じ環境で確認済み画像がある場合は、そのPNGのSHA256をExpectedTitleSHA256へ渡して照合できます。
+
+```powershell
+./tools/test-windows-shipping-smoke.ps1 -WindowsRoot $windowsDistribution
+```

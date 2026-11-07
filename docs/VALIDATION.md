@@ -730,3 +730,9 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 全体5b5e1d4ec9e346469792f22471330b07はPassed=true、Missing=[]。行5393/5421=99.48%、関数683/695=98.27%、分岐5506/6026=91.37%。集計・計装DLLを保持。通常MSVCへ復帰後も演出10件が警告0（eadc35f3d938498290d0095340eb1af6）。
 
 - 2026-11-08にbb933b4のWindows Shipping候補を生成し、同梱の画像21点・現行音声3点・必須ファイルを確認（c5dbc7d14d2749babd4d78b9f4c0948c）。候補はSaved/ReleaseCandidates/6b17a1076e9241de9621afa915aae5e8/Project/Distribution/Windows。専用デスクトップで日本語タイトルが既確認画像と同SHA、起動用EXEと本体とも終了コード0。証跡はSaved/Tests/ShippingDesktop/c41a8f4c390847ffb1a4087e34b71495。
+
+## GS-106 / T035f 配布本体の起動検証を再実行（2026-11-08）
+
+- tools/test-windows-shipping-smoke.ps1で隔離デスクトップと専用UserDirを使い、Shipping本体を直接起動。試験プロセスのウィンドウ撮影、通常終了コード0、配布48件の前後SHA256一致を確認。最新候補6b17a1076e9241de9621afa915aae5e8で実行。
+- 起動コマンド未作成をREDとして確認。実候補は合格し、実行ファイル欠落と誤った基準画像SHAは拒否。実画像は既確認日本語タイトルと一致（a62e9decbd43425d966b35fbe26a0dc0）。基準指定がない場合は画像の内容を目視する。レビュー指摘を受け、描画の有無と基準画像照合を分けた。
+- 証跡はSaved/Tests/ShippingSmokeのresult.json・process.json・title.png。配布フォルダ直下のランチャー経由はGS-105の証跡を参照。戦闘操作とオフライン完走は継続。
