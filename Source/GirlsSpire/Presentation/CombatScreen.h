@@ -6,6 +6,7 @@
 #include "AI/Intent.h"
 #include "Application/CombatControl.h"
 #include "Infrastructure/SavePayload.h"
+#include "UnitMotion.h"
 #include <array>
 #include <optional>
 #include <memory>
@@ -53,6 +54,7 @@ private:
     TMap<int,FMovementVisual> Movements;
     TMap<int,int> DisplayedHp;
     TMap<int,TOptional<double>> ImpactTimes;
+    TMap<int,TOptional<FUnitStrikeVisual>> Strikes;
     TSharedPtr<SCanvas> MovingUnits;
     TSharedPtr<SCanvas> BoardObjects;
     TSharedPtr<FBoardSprites> Sprites;
@@ -61,6 +63,7 @@ private:
     void RefreshObjects();
     bool MotionActive(int id) const;
     void RecordMovement(const GirlsSpire::Battle& before);
+    void RecordStrike(int id,GirlsSpire::Position target);
     void RefreshMovingUnits();
     EActiveTimerReturnType AnimateUnits(double now,float delta);
     std::shared_ptr<IGameAudio> Audio;

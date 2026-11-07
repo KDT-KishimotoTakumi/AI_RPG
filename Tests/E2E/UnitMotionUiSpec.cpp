@@ -6,6 +6,7 @@
 #include "Widgets/SWindow.h"
 #include "Widgets/SNullWidget.h"
 #include "Presentation/CombatScreen.h"
+#include "AI/BasicTurn.h"
 #include "Presentation/CharacterPortraits.h"
 #include "Misc/Paths.h"
 #include "ImageUtils.h"
@@ -70,12 +71,33 @@ void FGirlsSpireMotionUiSpec::Define()
         if(!TestTrue(TEXT("攻撃対象を実クリック"),ClickAndDrain(Driver->FindElement(By::Id("battle.cell.2.1")))))return;
         if(!TestTrue(TEXT("通常攻撃を実確定"),ClickAndDrain(Driver->FindElement(By::Id("battle.confirm")))))return;
         MotionWait(.05f);
+        const auto attackShift=Translation().X;
+        TestTrue(TEXT("確定通常攻撃の画像は対象方向へ動き、軽減では静止"),reduced?FMath::IsNearlyZero(attackShift):attackShift>0.1);
         const auto shift=Translation(TEXT("battle.unit.art.100")).X;
         TestTrue(TEXT("通常は被弾で画像が反応し、軽減では横移動しない"),reduced?FMath::IsNearlyZero(shift):shift>0.1);
         if(!reduced)CaptureMotion(TEXT("UnitMotion-Impact.png"));
         MotionWait(.55f);
-        TestTrue(TEXT("反応終了後は横移動なし"),FMath::IsNearlyZero(Translation(TEXT("battle.unit.art.100")).X));
+        TestTrue(TEXT("反応終了後は攻撃側・被弾側とも横移動なし"),FMath::IsNearlyZero(Translation().X) && FMath::IsNearlyZero(Translation(TEXT("battle.unit.art.100")).X));
         TestTrue(TEXT("画像の反応で確定状態と乱数を変更しない"),battle->Checkpoint()==expected.Checkpoint() && Screen->ControlCheckpoint()==control);
+    });
+    It(TEXT("敵の確定通常攻撃で敵画像が左へ動き、状態はAIの結果と一致する"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(90),[this]{
+        using namespace GirlsSpire;
+        BattleUnit hero;hero.At={1,1};hero.Speed=99;hero.Hp=hero.MaxHp=100;
+        BattleUnit enemy;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={2,1};enemy.Speed=0;enemy.Accuracy=200;
+        auto battle=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);
+        Async(EAsyncExecution::TaskGraphMainThread,[this,battle]{Window->SetContent(SAssignNew(Screen,SCombatScreen).Combat(battle));}).Wait();
+        DrainSlateLayout();
+        auto expected=*battle;
+        if(!TestTrue(TEXT("主人公の待機から敵手番を準備"),expected.EndTurn(expected.Snapshot().Revision,0,Facing::South)))return;
+        const auto attack=ChooseBasicAction(expected);
+        if(!TestTrue(TEXT("隣接する左の主人公を通常攻撃"),attack.Kind==BasicActionKind::Attack && attack.Target==Position{1,1} && ApplyBasicAction(expected,attack)))return;
+        if(!TestTrue(TEXT("攻撃後に敵手番を終了"),ApplyBasicAction(expected,ChooseBasicAction(expected)) && expected.Snapshot().ActiveId==0))return;
+        if(!TestTrue(TEXT("主人公の待機を実クリック"),ClickAndDrain(Driver->FindElement(By::Id("battle.wait.south")))))return;
+        MotionWait(.05f);
+        TestTrue(TEXT("敵の駒画像が対象方向の左へ動く"),Translation(TEXT("battle.unit.art.100")).X<-.1);
+        MotionWait(.55f);
+        TestTrue(TEXT("敵の画像が確定位置へ戻る"),FMath::IsNearlyZero(Translation(TEXT("battle.unit.art.100")).X));
+        TestTrue(TEXT("敵の表示で確定結果と乱数を変更しない"),battle->Checkpoint()==expected.Checkpoint());
     });
     AfterEach([this]{Driver.Reset();Screen.Reset();if(Window){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}IAutomationDriverModule::Get().Disable();});
 }

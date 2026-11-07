@@ -48,6 +48,7 @@ void SCombatScreen::RefreshObjects()
         BoardObjects->AddSlot().Position(at).Size(size)
             [SNew(SBoardPawn).Id(id).Side(unit->Side).Image(image).Active(state.ActiveId==id || (FullField && FieldFocus==id) || (Selected && *Selected==unit->At))
                 .Reduced(DisplayPreferences.ReducedEffects).Scale(FontSize(100)/100.f).ImpactTime(ImpactTimes.FindRef(id))
+                .Strike(Strikes.FindRef(id))
                 .Visibility_Lambda([this,id]{return MotionActive(id)?EVisibility::Collapsed:EVisibility::HitTestInvisible;})
                 .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.pawn.%d"),id)))];
         if(FullField){

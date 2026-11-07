@@ -33,6 +33,15 @@ EActiveTimerReturnType SCombatScreen::AnimateUnits(double,float)
 {
     Invalidate(EInvalidateWidgetReason::Paint);return EActiveTimerReturnType::Continue;
 }
+void SCombatScreen::RecordStrike(int id,GirlsSpire::Position target)
+{
+    const auto& units=Combat->Snapshot().Units;
+    const auto actor=std::find_if(units.begin(),units.end(),[id](const auto& unit){return unit.Id==id;});
+    if(actor==units.end())return;
+    // 確定済みのマスから描画方向だけを求め、座標と当たり判定は動かさない。
+    const FVector2D direction(target.X-actor->At.X,target.Y-actor->At.Y);
+    Strikes.Add(id,FUnitStrikeVisual{direction.GetSafeNormal(),FSlateApplication::Get().GetCurrentTime()});
+}
 void SCombatScreen::RefreshMovingUnits()
 {
     MovingUnits->ClearChildren();
@@ -45,7 +54,8 @@ void SCombatScreen::RefreshMovingUnits()
         const auto art=UnitSprite(*unit);
         // 文字と入力は確定位置に残し、画像だけを盤面より上の非入力レイヤーで動かす。
         TSharedPtr<SWidget> sprite=SNew(SBoardPawn).Id(id).Side(unit->Side).Image(art).Moving(true)
-            .Active(state.ActiveId==id).Reduced(DisplayPreferences.ReducedEffects).Scale(FontSize(100)/100.f).ImpactTime(ImpactTimes.FindRef(id));
+            .Active(state.ActiveId==id).Reduced(DisplayPreferences.ReducedEffects).Scale(FontSize(100)/100.f)
+            .ImpactTime(ImpactTimes.FindRef(id)).Strike(Strikes.FindRef(id));
         sprite->AddMetadata(FDriverMetaData::Id(*FString::Printf(TEXT("battle.motion.unit.%d"),id)));
         sprite->SetVisibility(TAttribute<EVisibility>::CreateLambda([this,id]{return MotionActive(id)?EVisibility::HitTestInvisible:EVisibility::Collapsed;}));
         sprite->SetRenderTransform(TAttribute<TOptional<FSlateRenderTransform>>::CreateLambda([this,motion,destination,pitch]{

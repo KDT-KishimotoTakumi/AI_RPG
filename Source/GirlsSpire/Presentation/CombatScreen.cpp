@@ -341,7 +341,9 @@ void SCombatScreen::ConfirmAttack(std::uint64_t revision)
     const auto& state=Combat->Snapshot();
     const int tileIndex=Selected->Y*state.Width+Selected->X;
     const bool obstacle=state.Tiles[tileIndex].ObstacleHp>0;
-    if(Combat->Attack(revision,state.ActiveId,*Selected)) {
+    const int actorId=state.ActiveId;
+    if(Combat->Attack(revision,actorId,*Selected)) {
+        RecordStrike(actorId,*Selected);
         if(obstacle) {
             const int hp=Combat->Snapshot().Tiles[tileIndex].ObstacleHp;
             Message=hp==0?TEXT("障害物を破壊しました"):FString::Printf(TEXT("障害物の残り耐久%d"),hp);
@@ -378,6 +380,7 @@ void SCombatScreen::AdvanceEnemies()
         const auto before=*Combat;
         if(!ApplyBasicAction(*Combat,action)) return;
         RecordMovement(before);
+        if(action.Kind==BasicActionKind::Attack)RecordStrike(before.Snapshot().ActiveId,action.Target);
         if(!PersistCheckpoint()) return;
         if(recovery.Healing>0)Message=FString::Printf(TEXT("応急手当で人物%dを%d回復しました。"),recovery.TargetId,recovery.Healing);
         else if(action.Kind==BasicActionKind::Attack || action.Kind==BasicActionKind::UseSkill) DescribeHits();

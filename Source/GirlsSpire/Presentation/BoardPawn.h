@@ -1,6 +1,7 @@
 #pragma once
 #include "Widgets/SCompoundWidget.h"
 #include "Domain/CombatTypes.h"
+#include "UnitMotion.h"
 
 class SBoardPawn : public SCompoundWidget {
 public:
@@ -13,6 +14,7 @@ public:
         SLATE_ARGUMENT(bool,Moving)
         SLATE_ARGUMENT(float,Scale)
         SLATE_ARGUMENT(TOptional<double>,ImpactTime)
+        SLATE_ARGUMENT(TOptional<FUnitStrikeVisual>,Strike)
     SLATE_END_ARGS()
     void Construct(const FArguments& args);
 };
