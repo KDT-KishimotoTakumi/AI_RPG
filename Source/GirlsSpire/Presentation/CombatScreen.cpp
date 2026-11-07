@@ -381,6 +381,7 @@ void SCombatScreen::AdvanceEnemies()
         if(!ApplyBasicAction(*Combat,action)) return;
         RecordMovement(before);
         if(action.Kind==BasicActionKind::Attack)RecordStrike(before.Snapshot().ActiveId,action.Target);
+        else if(action.Kind==BasicActionKind::UseSkill)RecordOffensiveStrike(before.Snapshot().ActiveId,action.Target,recovery.Attack);
         if(!PersistCheckpoint()) return;
         if(recovery.Healing>0)Message=FString::Printf(TEXT("応急手当で人物%dを%d回復しました。"),recovery.TargetId,recovery.Healing);
         else if(action.Kind==BasicActionKind::Attack || action.Kind==BasicActionKind::UseSkill) DescribeHits();

@@ -25,7 +25,11 @@ void SCombatScreen::RefreshTeamUltimate()
     }
     Text(label,"battle.teamultimate.preview",16);
     Action(TEXT("全員必殺を確定"),"battle.teamultimate.confirm",[this,revision=state.Revision,actor=state.ActiveId,target=*Selected] {
-        if(Combat->UseTeamUltimate(revision,actor,target)) { DescribeHits();Message=TEXT("全員必殺 / ゲージ100消費。")+Message; }
+        if(Combat->UseTeamUltimate(revision,actor,target)) {
+            RecordStrike(actor,target);
+            DescribeHits();
+            Message=TEXT("全員必殺 / ゲージ100消費。")+Message;
+        }
         else Message=TEXT("盤面が変わったため全員必殺を再確認してください");
         SelectingUltimate=false;SelectingTeamUltimate=false;Selected.reset();Refresh();
     },preview.Legal);

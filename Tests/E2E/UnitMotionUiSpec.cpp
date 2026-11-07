@@ -7,6 +7,7 @@
 #include "Widgets/SNullWidget.h"
 #include "Presentation/CombatScreen.h"
 #include "AI/BasicTurn.h"
+#include "../Fixtures/TeamUltimateBattle.h"
 #include "Presentation/CharacterPortraits.h"
 #include "Misc/Paths.h"
 #include "ImageUtils.h"
@@ -98,6 +99,52 @@ void FGirlsSpireMotionUiSpec::Define()
         MotionWait(.55f);
         TestTrue(TEXT("敵の画像が確定位置へ戻る"),FMath::IsNearlyZero(Translation(TEXT("battle.unit.art.100")).X));
         TestTrue(TEXT("敵の表示で確定結果と乱数を変更しない"),battle->Checkpoint()==expected.Checkpoint());
+    });
+    const TCHAR* abilityCases[]={TEXT("攻撃技の確定で駒が対象へ動く"),TEXT("個人必殺の確定で駒が対象へ動く"),TEXT("全員必殺で発動者が対象へ動く"),TEXT("味方への回復で攻撃方向へ動かない")};
+    for(int mode=0;mode<4;++mode)It(abilityCases[mode],EAsyncExecution::ThreadPool,FTimespan::FromSeconds(90),[this,mode]{
+        const bool team=mode==2, heal=mode==3;
+        using namespace GirlsSpire;
+        BattleUnit hero;hero.At={1,1};hero.Attack=20;hero.Accuracy=200;hero.Speed=20;hero.Hp=hero.MaxHp=100;hero.Skills={true,true};
+        auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={2,1};enemy.Speed=10;enemy.Hp=enemy.MaxHp=200;
+        std::vector<BattleUnit> units{hero,enemy};
+        if(heal) {
+            units[1].At={4,1};
+            BattleUnit ally;ally.Id=1;ally.At={2,1};ally.Hp=10;ally.MaxHp=40;ally.Speed=1;
+            units.push_back(ally);
+        }
+        auto initial=team?Test::TeamUltimateBattle(0,100):Battle(8,8,std::vector<Tile>(64),units,42);
+        auto checkpoint=initial.Checkpoint();
+        if(!team && !heal){checkpoint.State.AbilityRules=AbilityRuleSet::Character;checkpoint.State.Combos.Gauge=50;}
+        const auto restored=Battle::Restore(checkpoint);
+        if(!TestTrue(TEXT("技と必殺を使える戦闘"),restored.has_value()))return;
+        auto battle=MakeShared<Battle>(*restored);
+        Async(EAsyncExecution::TaskGraphMainThread,[this,battle]{Window->SetContent(SAssignNew(Screen,SCombatScreen).Combat(battle).BondProfile(Profile{}));}).Wait();
+        DrainSlateLayout();
+        const auto click=[&](const char* id){
+            auto target=Driver->FindElement(By::Id(id));
+            if(!target->IsVisible()){
+                auto scroll=Driver->FindElement(By::Id("battle.scroll"));
+                scroll->ScrollToBeginning();DrainSlateLayout();
+                if(!target->IsVisible()){scroll->ScrollToEndUntil(By::Id(id));DrainSlateLayout();}
+            }
+            return TestTrue(UTF8_TO_TCHAR(id),ClickAndDrain(target));
+        };
+        auto expected=*battle;
+        const auto revision=expected.Snapshot().Revision;
+        const Position target=team?Position{6,1}:Position{2,1};
+        const auto skill=heal?Skill::FirstAid:Skill::PowerStrike;
+        const bool applied=mode==1?expected.UseUltimate(revision,0,target):team?expected.UseTeamUltimate(revision,0,target):expected.UseSkill(revision,0,skill,target);
+        if(!TestTrue(TEXT("同じ技または必殺を準備"),applied))return;
+        const char* selectIds[]={"battle.skill.0","battle.ultimate.select","battle.teamultimate.select","battle.skill.1"};
+        const char* confirmIds[]={"battle.skill.confirm","battle.ultimate.confirm","battle.teamultimate.confirm","battle.skill.confirm"};
+        if(!click(selectIds[mode]) || !click(team?"battle.cell.6.1":"battle.cell.2.1"))return;
+        TestTrue(TEXT("予告段階で画像と戦闘はそのまま"),FMath::IsNearlyZero(Translation().X) && battle->Checkpoint()==checkpoint);
+        if(!click(confirmIds[mode]))return;
+        MotionWait(.05f);
+        const auto shift=Translation().X;
+        TestTrue(TEXT("確定した攻撃技・必殺は対象方向へ動き、回復では静止"),heal?FMath::IsNearlyZero(shift):shift>.1);
+        MotionWait(.55f);
+        TestTrue(TEXT("演出終了後の静止と確定状態・乱数の一致"),FMath::IsNearlyZero(Translation().X) && battle->Checkpoint()==expected.Checkpoint());
     });
     AfterEach([this]{Driver.Reset();Screen.Reset();if(Window){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}IAutomationDriverModule::Get().Disable();});
 }

@@ -42,6 +42,11 @@ void SCombatScreen::RecordStrike(int id,GirlsSpire::Position target)
     const FVector2D direction(target.X-actor->At.X,target.Y-actor->At.Y);
     Strikes.Add(id,FUnitStrikeVisual{direction.GetSafeNormal(),FSlateApplication::Get().GetCurrentTime()});
 }
+void SCombatScreen::RecordOffensiveStrike(int id,GirlsSpire::Position target,const GirlsSpire::AttackPreview& preview)
+{
+    // 回復・支援だけの行動には攻撃方向の表示を付けない。
+    if(!preview.Hits.empty() || preview.TerrainDamage>0)RecordStrike(id,target);
+}
 void SCombatScreen::RefreshMovingUnits()
 {
     MovingUnits->ClearChildren();

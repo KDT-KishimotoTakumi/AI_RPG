@@ -35,7 +35,12 @@ void SCombatScreen::RefreshUltimate()
     }
     Text(label,"battle.ultimate.preview",16);
     Action(TEXT("必殺を確定"),"battle.ultimate.confirm",[this,revision=state.Revision,actor=state.ActiveId,target=*Selected,preview] {
-        if(Combat->UseUltimate(revision,actor,target)) { DescribeHits();if(!preview.Aid.empty())Message=TEXT("味方への回復・強化・解除を解決しました。");Message=TEXT("個人必殺 / ゲージ50消費。")+Message; }
+        if(Combat->UseUltimate(revision,actor,target)) {
+            RecordOffensiveStrike(actor,target,preview);
+            DescribeHits();
+            if(!preview.Aid.empty())Message=TEXT("味方への回復・強化・解除を解決しました。");
+            Message=TEXT("個人必殺 / ゲージ50消費。")+Message;
+        }
         else Message=TEXT("盤面が変わったため必殺を再確認してください");
         SelectingUltimate=false;Selected.reset();Refresh();
     },preview.Legal);

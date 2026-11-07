@@ -64,6 +64,7 @@ private:
     bool MotionActive(int id) const;
     void RecordMovement(const GirlsSpire::Battle& before);
     void RecordStrike(int id,GirlsSpire::Position target);
+    void RecordOffensiveStrike(int id,GirlsSpire::Position target,const GirlsSpire::AttackPreview& preview);
     void RefreshMovingUnits();
     EActiveTimerReturnType AnimateUnits(double now,float delta);
     std::shared_ptr<IGameAudio> Audio;

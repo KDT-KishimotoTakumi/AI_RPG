@@ -57,6 +57,7 @@ void SCombatScreen::RefreshSkills()
     Text(label,"battle.skill.preview",15);
     Action(TEXT("技を確定"),"battle.skill.confirm",[this,revision=state.Revision,actorId=state.ActiveId,skill=*SelectedSkill,target=*Selected,preview] {
         if(Combat->UseSkill(revision,actorId,skill,target)) {
+            RecordOffensiveStrike(actorId,target,preview.Attack);
             if(preview.Support)Message=FString::Printf(TEXT("対象%dへの支援を確定しました"),preview.TargetId);
             else if(preview.Healing>0) Message=FString::Printf(TEXT("対象%dを%d回復しました"),preview.TargetId,preview.Healing);
             else if(preview.Attack.TerrainDamage>0) Message=TEXT("障害物へ")+OwnedSkillLabel(actorId,skill)+TEXT("しました");
