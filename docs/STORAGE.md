@@ -204,3 +204,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - 隔離した配布作業領域だけのIntermediate、旧梱包、同一ステージ複製を整理し5,653,113,374バイト削減。共通の実行時ファイルを照合し、旧マニフェスト・制作メモ・ログ・元のデバッグシンボルを保全。最終候補48件は整理前後でSHA256一致。合計5,711,297,241バイト。証跡はSavedのrelease-candidate-{storage,build-storage}.jsonとcampaign-matrix-storage.json。
 
 - GS-097: 隔離作業用のShipping実行ファイルが配布候補と同じSHA256であることを確認して整理。144,044,032バイト削減、配布48件のSHA256一致。元のデバッグシンボル・失敗証跡を保持。Saved/release-candidate-exe-storage.json。
+
+- GS-098: 合格したタイトル撮影のBMP原本2件を可逆圧縮し5,915,596バイト削減。展開SHA一致、目視用PNG・失敗証跡・配布48件を保全。監査Saved/release-candidate-desktop-storage.json。
