@@ -16,6 +16,10 @@ FVector2D SCombatScreen::BoardCellSize() const
     const bool large=Combat->Snapshot().Width>8 || Combat->Snapshot().Height>8;
     return FullField?FVector2D(large?48:64,large?48:60):FVector2D(FontSize(large?48:64),FontSize(large?48:60));
 }
+float SCombatScreen::BoardCellPadding() const
+{
+    return FullField && !MonochromeBoard ? 0.f : 2.f;
+}
 const FSlateBrush* SCombatScreen::UnitSprite(const GirlsSpire::BattleUnit& unit) const
 {
     if(MonochromeBoard)return nullptr;
@@ -24,7 +28,9 @@ const FSlateBrush* SCombatScreen::UnitSprite(const GirlsSpire::BattleUnit& unit)
 }
 void SCombatScreen::RefreshObjects()
 {
-    BoardObjects->ClearChildren();const auto& state=Combat->Snapshot();const auto cell=BoardCellSize(),pitch=cell+FVector2D(4,4);
+    BoardObjects->ClearChildren();const auto& state=Combat->Snapshot();const auto cell=BoardCellSize();
+    const float padding=BoardCellPadding();
+    const auto pitch=cell+FVector2D(2*padding,2*padding);
     // 描画の差分だけを記録し、再開時の最初の盤面では被弾を再生しない。
     const auto now=FSlateApplication::Get().GetCurrentTime();
     for(const auto& unit:state.Units) {
@@ -37,7 +43,7 @@ void SCombatScreen::RefreshObjects()
     for(int y=0;y<state.Height;++y)for(int x=0;x<state.Width;++x) {
         const auto sprite=FBoardSprites::ObjectFor(state.Tiles[y*state.Width+x],x+y);
         const auto art=MonochromeBoard?nullptr:Sprites->Terrain(sprite);
-        const FVector2D at(x*pitch.X+2,y*pitch.Y+2-lift);
+        const FVector2D at(x*pitch.X+padding,y*pitch.Y+padding-lift);
         if(art)BoardObjects->AddSlot().Position(at).Size(size)
             [SNew(SBox).Padding(FMargin(0,0,0,FontSize(30))).Visibility(EVisibility::HitTestInvisible)
                 [SNew(SScaleBox).Stretch(EStretch::ScaleToFit).VAlign(VAlign_Bottom)

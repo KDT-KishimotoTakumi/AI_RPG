@@ -56,6 +56,15 @@ void FGirlsSpireFullFieldSpec::Define()
         auto combat=MakeShared<Battle>(size,size,std::vector<Tile>(size*size),std::vector<BattleUnit>{hero,ally,enemy},42);auto expected=*combat;
         Async(EAsyncExecution::TaskGraphMainThread,[this,combat,prefs]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true).DisplayPreferences(prefs));}).Wait();DrainSlateLayout();
         if(!TestTrue(TEXT("戦場が全画面レイヤー"),Driver->FindElement(By::Id("battle.field.root"))->Exists()))return;
+        Async(EAsyncExecution::TaskGraphMainThread,[this]{
+            const auto left=FieldCaptionTarget(Window.ToSharedRef(),"battle.cell.2.2");
+            const auto right=FieldCaptionTarget(Window.ToSharedRef(),"battle.cell.3.2");
+            if(!TestTrue(TEXT("隣接する地面のマスを描画する"),left.IsValid() && right.IsValid()))return;
+            const auto& geometry=left->GetCachedGeometry();
+            const auto edge=geometry.LocalToAbsolute(FVector2D(geometry.GetLocalSize().X,0));
+            const auto start=right->GetCachedGeometry().LocalToAbsolute(FVector2D::ZeroVector);
+            TestTrue(TEXT("地続きのマスの間に隙間がない"),FMath::IsNearlyEqual(edge.X,start.X,0.5));
+        }).Wait();
         TestEqual(TEXT("通常表示では空きマスの座標を省く"),Driver->FindElement(By::Id("battle.celllabel.2.2"))->GetText().ToString(),FString());
         TestEqual(TEXT("行動名は短くする"),Driver->FindElement(By::Id("battle.field.move"))->GetText().ToString(),FString(TEXT("移動")));
         TestFalse(TEXT("常時の長い説明を省く"),Driver->FindElement(By::Id("battle.help"))->Exists());

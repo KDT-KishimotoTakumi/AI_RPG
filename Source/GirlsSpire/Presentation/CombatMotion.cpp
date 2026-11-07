@@ -50,7 +50,9 @@ void SCombatScreen::RecordOffensiveStrike(int id,GirlsSpire::Position target,con
 void SCombatScreen::RefreshMovingUnits()
 {
     MovingUnits->ClearChildren();
-    const auto& state=Combat->Snapshot();const auto size=BoardCellSize(),pitch=size+FVector2D(4,4);
+    const auto& state=Combat->Snapshot();const auto size=BoardCellSize();
+    const float padding=BoardCellPadding();
+    const auto pitch=size+FVector2D(2*padding,2*padding);
     for(const auto& entry:Movements) {
         const auto id=entry.Key;if(!MotionActive(id))continue;
         const auto motion=entry.Value;const auto destination=motion.Path.back();
@@ -70,6 +72,6 @@ void SCombatScreen::RefreshMovingUnits()
             const FVector2D offset((at.X-destination.X)*pitch.X,(at.Y-destination.Y)*pitch.Y);
             return TOptional<FSlateRenderTransform>(FSlateRenderTransform(offset));
         }));
-        MovingUnits->AddSlot().Position(FVector2D(destination.X*pitch.X+2,destination.Y*pitch.Y+2-FontSize(36))).Size(size+FVector2D(0,FontSize(36)))[sprite.ToSharedRef()];
+        MovingUnits->AddSlot().Position(FVector2D(destination.X*pitch.X+padding,destination.Y*pitch.Y+padding-FontSize(36))).Size(size+FVector2D(0,FontSize(36)))[sprite.ToSharedRef()];
     }
 }

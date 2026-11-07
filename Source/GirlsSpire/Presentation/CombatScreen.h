@@ -59,6 +59,7 @@ private:
     TSharedPtr<SCanvas> BoardObjects;
     TSharedPtr<FBoardSprites> Sprites;
     FVector2D BoardCellSize() const;
+    float BoardCellPadding() const;
     const FSlateBrush* UnitSprite(const GirlsSpire::BattleUnit& unit) const;
     void RefreshObjects();
     bool MotionActive(int id) const;

@@ -17,6 +17,9 @@
 void SCombatScreen::BuildField()
 {
     const auto label=[this](const TCHAR* text){return SNew(STextBlock).Text(FText::FromString(text)).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16)));};
+    const auto* frame=FCoreStyle::Get().GetBrush("WhiteBrush");
+    const FLinearColor brass(.42f,.29f,.12f);
+    const FLinearColor ink(.048f,.034f,.022f);
     ChildSlot[SNew(SBorder).Padding(0).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(FLinearColor(.025f,.065f,.05f))
         .AddMetaData(FDriverMetaData::Id("battle.field.root"))
         [SNew(SOverlay)
@@ -24,7 +27,7 @@ void SCombatScreen::BuildField()
             [SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
                 [SNew(SBox).Padding(FMargin(0,FontSize(36),0,0))
                     [SNew(SOverlay)
-                        +SOverlay::Slot()[SAssignNew(Grid,SUniformGridPanel).SlotPadding(2)]
+                        +SOverlay::Slot()[SAssignNew(Grid,SUniformGridPanel).SlotPadding_Lambda([this]{return FMargin(BoardCellPadding());})]
                         +SOverlay::Slot()[SAssignNew(BoardObjects,SCanvas).Visibility(EVisibility::SelfHitTestInvisible)]
                         +SOverlay::Slot()[SAssignNew(MovingUnits,SCanvas).Visibility(EVisibility::HitTestInvisible)]]]]
             +SOverlay::Slot().HAlign(HAlign_Right).VAlign(VAlign_Top).Padding(16)
@@ -33,7 +36,8 @@ void SCombatScreen::BuildField()
             +SOverlay::Slot().HAlign(HAlign_Right).Padding(12,62,12,12)
             [SNew(SBox).WidthOverride(346).AddMetaData(FDriverMetaData::Id("battle.field.menu"))
                 .Visibility_Lambda([this]{return FieldMenuOpen || SavingBlocked || Combat->Snapshot().Outcome!=GirlsSpire::BattleOutcome::Ongoing?EVisibility::Visible:EVisibility::Collapsed;})
-                [SNew(SBorder).Padding(12).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(FLinearColor(.025f,.045f,.08f,.97f))
+                [SNew(SBorder).Padding(2).BorderImage(frame).BorderBackgroundColor(brass)
+                    [SNew(SBorder).Padding(12).BorderImage(frame).BorderBackgroundColor(ink)
                     [SNew(SVerticalBox)
                         +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,10)
                         [SNew(STextBlock).Text_Lambda([this]{return FText::FromString(FieldSelectionLabel());}).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Bold",FontSize(16))).AddMetaData(FDriverMetaData::Id("battle.field.selection"))]
@@ -59,7 +63,7 @@ void SCombatScreen::BuildField()
                                 +SVerticalBox::Slot().AutoHeight()[SAssignNew(Panel,SVerticalBox)]
                                 +SVerticalBox::Slot().AutoHeight()[SAssignNew(ComboResult,STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(12))).AddMetaData(FDriverMetaData::Id("battle.combo.result"))
                                     .Visibility_Lambda([this]{return FieldDetails || Combat->Snapshot().LastCombo?EVisibility::Visible:EVisibility::Collapsed;})]
-                                +SVerticalBox::Slot().AutoHeight()[SNew(SBox).HeightOverride(FontSize(156))[SNew(SScrollBox).Orientation(Orient_Horizontal)+SScrollBox::Slot()[SAssignNew(PortraitPanel,SHorizontalBox)]]]]]]]]
+                                +SVerticalBox::Slot().AutoHeight()[SNew(SBox).HeightOverride(FontSize(156))[SNew(SScrollBox).Orientation(Orient_Horizontal)+SScrollBox::Slot()[SAssignNew(PortraitPanel,SHorizontalBox)]]]]]]]]]
             +SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Top).Padding(16)
             [SNew(STextBlock).Text(FText::FromString(TEXT("音声を利用できません。音なしでも続けられます。"))).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(14)))
                 .Visibility_Lambda([this]{return Audio && !Audio->Ready()?EVisibility::HitTestInvisible:EVisibility::Collapsed;}).AddMetaData(FDriverMetaData::Id("battle.field.audio"))]]];
