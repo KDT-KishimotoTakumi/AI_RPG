@@ -772,3 +772,9 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - GS-110の通常ビルドで tools/test-campaign-process.ps1 -SkipBuild -Scenario 14 を実行。上級・鉄砲・seed1で6戦、プレイヤー操作140、全12日。戦闘外と戦闘内の中断を経て3プロセスで完走。初期値の準備以外に状態注入なし。
 - Start 6882487436374b94b61460def130a8c1、Continue 03933c0d9408403cbb13d4f1136d4558、Finish bbb2eede61d24ad99721e9f16962a37c は各1件、警告0。独立試験保存はSaved/Tests/ProcessCampaign/33c2cd44823240a4857119815d727ea5。
 - エディターの実UIと実ファイルによる回帰。配布版の実機戦闘、オフライン完走、物理フルスクリーン性能は引き続きT034/T035で確認する。
+
+## GS-112 / T034 現行戦場の連続描画計測（2026-11-08）
+
+- 通常MSVC・Editor/offscreen、1920×1080。tools/test-field-performance.ps1 -SkipBuild -Continuous でGS-110の戦場を計測。暖機5秒、同じ戦場を30秒継続。2件警告0（1b29f5f61ca342d9a2edf7394aa95e5a）。
+- 5対3は平均106.23fps相当、30fps相当未満0.0000%、最大23.93ms（2B5BBE5F414AF418B5821CBDA2A9DD3F）。5対10は平均90.85fps相当、30fps相当未満0.3425%、最大59.73ms（8E369ECE45A018D35C3FA9905AA93599）。
+- Editorの描画提出間隔であり、製品SC-013は物理画面とShipping実戦で継続する。ゲームコード・素材・仕様の差分なし。
