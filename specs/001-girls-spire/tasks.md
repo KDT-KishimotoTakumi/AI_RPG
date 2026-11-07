@@ -232,9 +232,9 @@ GS-020（保存5回答後の「実装を進めてください」で承認、2026
 
 独立確認: 戦闘内外各10地点再開、破損、重複適用防止。
 
-- [ ] T028 [US6] Tests/Integration/SaveTests.cpp に消費・破損復旧・周回分離テストを作成
-- [ ] T029 [US6] Source/GirlsSpire/Infrastructure/Save.cpp に原子的保存と再開を実装（FR-065～070）
-- [ ] T030 [US6] Tests/E2E/ResumeSpec.cpp にプロセス終了を伴う再開・二度目拒否を実装
+- [x] T028 [US6] Tests/Unit の DiskSlotFilesTests.cpp、SaveTransactionTests.cpp、ResumeConsumeTests.cpp などで、実ファイル・消費・破損復旧・周回分離を検証
+- [x] T029 [US6] Source/GirlsSpire/Infrastructure の SaveTransaction.cpp、SaveSlot.cpp、DiskSlotFiles.cpp などに原子的保存と再開を実装（FR-065～070）
+- [x] T030 [US6] Tests/E2E/ResumeProcessSpec.cpp と ResumeSpec.cpp でプロセス終了を伴う再開・二度目拒否を検証
 
 ## Phase 9: US7 表示・設定 (P3)
 
