@@ -18,5 +18,8 @@ bool FGirlsSpireUnitMotionTest::RunTest(const FString&)
     TestTrue(TEXT("待機中も画像が揺れる"),FMath::Abs(FUnitMotion::IdleLift(.3,false))>.5);
     TestTrue(TEXT("揺れは小さく周期的"),FMath::Abs(FUnitMotion::IdleLift(.3,false))<=1.5 && FMath::IsNearlyZero(FUnitMotion::IdleLift(1.2,false)));
     TestEqual(TEXT("演出軽減は揺れなし"),FUnitMotion::IdleLift(.3,true),0.);
+    TestEqual(TEXT("被弾反応は開始前・終了後ともゼロ"),FUnitMotion::ImpactShift(-1.,false)+FUnitMotion::ImpactShift(.5,false),0.);
+    TestEqual(TEXT("被弾反応の最大移動は6px"),FUnitMotion::ImpactShift(.225,false),6.);
+    TestEqual(TEXT("演出軽減は被弾反応も静止"),FUnitMotion::ImpactShift(.225,true),0.);
     return true;
 }

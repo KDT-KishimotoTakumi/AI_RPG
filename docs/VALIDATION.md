@@ -700,3 +700,9 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - tools/package-windows.ps1でefbe7c3のGit許可リストを隔離して展開し、制作メモを退避。短いジャンクションを用いてUE5.7.4のEditor Development、Win64 Shipping、クック、Pak/IoStore、アーカイブを一度で完了。元の秘密設定・個人セーブを入力から除外。
 - 候補はSaved/ReleaseCandidates/c4e81085b41c40a686f32d21f39d2bcd/Project/Distribution/Windows。ビルドと同じ抽出画像を照合元に指定し、21点の画像・3点の現行音声と必須ファイルを確認（90c789bdbe2c4ea9b4eb95346c1392ba）。レビュー後、作業ツリーに依存しない画像照合を追加。セーブと対象外設定の拒否はダミーファイルで確認。
 - 実入力試験は配布候補を専用UserDirで起動したが、Computer Useのアプリ承認タイムアウトと対象画面未取得で入力せず中断。親PID、実行パス、UserDirを照合した試験プロセスは通常の終了要求で終了。証跡はSaved/Tests/ShippingInteractive/8c52cdc3f2dc4176aaae209bc3df324e/result.json。
+
+## GS-102 / T032d 被弾時の2D駒表示（2026-11-07）
+
+- REDは通常表示の変位だけが不足して1件失敗、残り4件は成功（d03edc3fc43544b0a44ef8559b009bc8）。RED画像はSaved/impact-red.png。実装後、表示HPが減ったときだけ駒画像に最大6表示単位、0.45秒の横反応を付ける。初回表示・再開時は静止から開始し、演出軽減では反応を停止。
+- 実UIで確定攻撃の通常反応、軽減、終了後の静止、確定結果と作戦乱数の同一性を検証。Native成功、全UE435件警告0（bd75dcd860824fe589989e773a0175ff）。通常起動、音声付き実戦、別プロセス音声再開、音声単体2件も警告0。Saved/impact-coverage.logに全レポート。
+- 全体d99b4115db764477b1a768650b12258bはPassed=true、Missing=[]。行5352/5380=99.48%、関数680/692=98.27%、分岐5493/6014=91.34%。計装DLL・JSON・profdataを保持し、通常MSVCへ復帰後も被弾・移動5件が警告0（d7e9eb82a0744f98bd0b0823ca8fae98）。独立レビューで必須修正なし。

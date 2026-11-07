@@ -71,3 +71,5 @@ GS-094/T034i完了（予備値）: tests/E2E/FieldPerformanceSpec.hをFullFieldS
 - GS-100/T035d: tools/test-windows-distribution.ps1 -WindowsRootで画像21/音声3/起動・Pak/IoStoreを再検査可能。実候補成功、制作メモ・改変PNG・Pak欠落は拒否。試験複製の一時容量423,322,482バイト回収。配布版の隔離UIA経路はボタンを取得できず、実入力とオフライン完走は継続。
 
 - GS-101/T035e: tools/package-windows.ps1でGitの許可リストからWin64 Shippingを短縮パスで再生成。候補c4e81085b41c40a686f32d21f39d2bcd、画像21・音声3を隔離入力で照合。中間物4,943,186,322バイト整理。専用UserDirでの実入力はComputer Use承認タイムアウトで入力せず終了。配布版の戦闘/物語操作とオフライン通しは継続。
+
+- GS-102/T032d: 確定表示のHP減少から駒画像の0.45秒の被弾反応を追加。軽減で静止、表示専用。RED1件から全UE435件・音声/再開・通常復帰の関連5件が警告0。カバレッジd99b4115db764477b1a768650b12258bは行99.48/関数98.27/分岐91.34%。生データと重複ZIP計4,520,044,626バイト整理。

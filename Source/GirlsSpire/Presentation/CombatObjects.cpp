@@ -7,6 +7,7 @@
 #include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Input/SButton.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Styling/CoreStyle.h"
 #include "Framework/MetaData/DriverMetaData.h"
 #include <algorithm>
@@ -24,6 +25,13 @@ const FSlateBrush* SCombatScreen::UnitSprite(const GirlsSpire::BattleUnit& unit)
 void SCombatScreen::RefreshObjects()
 {
     BoardObjects->ClearChildren();const auto& state=Combat->Snapshot();const auto cell=BoardCellSize(),pitch=cell+FVector2D(4,4);
+    // 描画の差分だけを記録し、再開時の最初の盤面では被弾を再生しない。
+    const auto now=FSlateApplication::Get().GetCurrentTime();
+    for(const auto& unit:state.Units) {
+        const auto* previous=DisplayedHp.Find(unit.Id);
+        if(previous && unit.Hp<*previous)ImpactTimes.Add(unit.Id,now);
+        DisplayedHp.Add(unit.Id,unit.Hp);
+    }
     const float lift=FontSize(36);const auto size=cell+FVector2D(0,lift);
     // 奥の行から描き、足元が手前の物体を前面にする。全体が非入力レイヤー。
     for(int y=0;y<state.Height;++y)for(int x=0;x<state.Width;++x) {
@@ -39,7 +47,7 @@ void SCombatScreen::RefreshObjects()
         const int id=unit->Id;const auto image=UnitSprite(*unit);
         BoardObjects->AddSlot().Position(at).Size(size)
             [SNew(SBoardPawn).Id(id).Side(unit->Side).Image(image).Active(state.ActiveId==id || (FullField && FieldFocus==id) || (Selected && *Selected==unit->At))
-                .Reduced(DisplayPreferences.ReducedEffects).Scale(FontSize(100)/100.f)
+                .Reduced(DisplayPreferences.ReducedEffects).Scale(FontSize(100)/100.f).ImpactTime(ImpactTimes.FindRef(id))
                 .Visibility_Lambda([this,id]{return MotionActive(id)?EVisibility::Collapsed:EVisibility::HitTestInvisible;})
                 .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.pawn.%d"),id)))];
         if(FullField){

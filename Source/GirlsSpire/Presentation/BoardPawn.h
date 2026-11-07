@@ -12,6 +12,7 @@ public:
         SLATE_ARGUMENT(bool,Reduced)
         SLATE_ARGUMENT(bool,Moving)
         SLATE_ARGUMENT(float,Scale)
+        SLATE_ARGUMENT(TOptional<double>,ImpactTime)
     SLATE_END_ARGS()
     void Construct(const FArguments& args);
 };

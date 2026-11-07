@@ -66,7 +66,7 @@
   },
   {
     "path": "Source/GirlsSpire/Presentation/UnitMotion.h",
-    "sha256": "A2A72C86424720533009B6005E38E15DD4026C2491656A6526DDD2A761E002D5",
+    "sha256": "3EE6AC169ADECC4CA63DFD1A143A455F86C5944145A00F2BCF451B83F75F92DF",
     "reason": "静的関数の宣言のみ。補間と揺れはUnitMotion.cppで計測する。"
   },
   {

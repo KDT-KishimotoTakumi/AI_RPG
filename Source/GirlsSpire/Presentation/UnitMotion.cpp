@@ -16,3 +16,9 @@ double FUnitMotion::IdleLift(double age,bool reduced)
 {
     return reduced?0:FMath::Sin(age*2*UE_DOUBLE_PI/1.2)*1.2;
 }
+double FUnitMotion::ImpactShift(double age,bool reduced)
+{
+    if(reduced)return 0;
+    const auto phase=FMath::Clamp(age/.45,0.,1.);
+    return 6.*(1.-FMath::Abs(2.*phase-1.));
+}

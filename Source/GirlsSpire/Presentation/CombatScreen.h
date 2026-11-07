@@ -51,6 +51,8 @@ private:
     EFieldAction FieldAim=EFieldAction::None;
     struct FMovementVisual {std::vector<GirlsSpire::Position> Path;double Started=0;};
     TMap<int,FMovementVisual> Movements;
+    TMap<int,int> DisplayedHp;
+    TMap<int,TOptional<double>> ImpactTimes;
     TSharedPtr<SCanvas> MovingUnits;
     TSharedPtr<SCanvas> BoardObjects;
     TSharedPtr<FBoardSprites> Sprites;

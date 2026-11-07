@@ -27,7 +27,7 @@ void MotionWait(float seconds)
 BEGIN_DEFINE_SPEC(FGirlsSpireMotionUiSpec,"GirlsSpire.UI.UnitMotion",EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
     TSharedPtr<SWindow> Window;TSharedPtr<SCombatScreen> Screen;FAutomationDriverPtr Driver;
     void CaptureMotion(const TCHAR* name){Async(EAsyncExecution::TaskGraphMainThread,[this,name]{TArray<FColor> pixels;FIntVector size;if(!TestTrue(TEXT("2D画面の撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,size)))return;TArray64<uint8> png;FImageUtils::PNGCompressImageArray(size.X,size.Y,pixels,png);const auto folder=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*folder,true);TestTrue(TEXT("2D表示の証跡を保持"),FFileHelper::SaveArrayToFile(png,*(folder/name)));}).Wait();}
-    FVector2D Translation(){FVector2D result=FVector2D::ZeroVector;Async(EAsyncExecution::TaskGraphMainThread,[this,&result]{const auto widget=MotionFindTag(Window.ToSharedRef(),"battle.unit.art.0");if(widget && widget->GetRenderTransform().IsSet())result=FVector2D(widget->GetRenderTransform()->GetTranslation());}).Wait();return result;}
+    FVector2D Translation(const TCHAR* tag=TEXT("battle.unit.art.0")){FVector2D result=FVector2D::ZeroVector;Async(EAsyncExecution::TaskGraphMainThread,[this,&result,tag]{const auto widget=MotionFindTag(Window.ToSharedRef(),tag);if(widget && widget->GetRenderTransform().IsSet())result=FVector2D(widget->GetRenderTransform()->GetTranslation());}).Wait();return result;}
 END_DEFINE_SPEC(FGirlsSpireMotionUiSpec)
 void FGirlsSpireMotionUiSpec::Define()
 {
@@ -56,6 +56,26 @@ void FGirlsSpireMotionUiSpec::Define()
         Async(EAsyncExecution::TaskGraphMainThread,[this,battle,prefs,portraits,control]{Window->SetContent(SAssignNew(Screen,SCombatScreen).Combat(battle).DisplayPreferences(prefs).Portraits(portraits).SavedControl(control));}).Wait();DrainSlateLayout();
         TestFalse(TEXT("画面再生成で移動を再生し直さない"),Driver->FindElement(By::Id("battle.motion.unit.0"))->Exists());
         TestTrue(TEXT("再開で確定位置/全状態不変"),battle->Checkpoint()==settled);
+    });
+    for(const bool reduced:{false,true})It(reduced?TEXT("被弾時も演出軽減で駒を揺らさない"):TEXT("確定した被弾で駒だけ反応し、確定位置へ戻る"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(90),[this,reduced]{
+        using namespace GirlsSpire;
+        BattleUnit hero;hero.At={1,1};hero.Speed=99;hero.Attack=12;hero.Accuracy=200;
+        BattleUnit enemy;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={2,1};enemy.Hp=enemy.MaxHp=100;enemy.Speed=0;
+        auto battle=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);
+        Preferences prefs;prefs.ReducedEffects=reduced;
+        Async(EAsyncExecution::TaskGraphMainThread,[this,battle,prefs]{Window->SetContent(SAssignNew(Screen,SCombatScreen).Combat(battle).DisplayPreferences(prefs));}).Wait();DrainSlateLayout();
+        auto expected=*battle;
+        if(!TestTrue(TEXT("同じ規則で被害を確定"),expected.Attack(expected.Snapshot().Revision,0,{2,1}) && !expected.LastHits().empty() && expected.LastHits().front().Damage>0))return;
+        const auto control=Screen->ControlCheckpoint();
+        if(!TestTrue(TEXT("攻撃対象を実クリック"),ClickAndDrain(Driver->FindElement(By::Id("battle.cell.2.1")))))return;
+        if(!TestTrue(TEXT("通常攻撃を実確定"),ClickAndDrain(Driver->FindElement(By::Id("battle.confirm")))))return;
+        MotionWait(.05f);
+        const auto shift=Translation(TEXT("battle.unit.art.100")).X;
+        TestTrue(TEXT("通常は被弾で画像が反応し、軽減では横移動しない"),reduced?FMath::IsNearlyZero(shift):shift>0.1);
+        if(!reduced)CaptureMotion(TEXT("UnitMotion-Impact.png"));
+        MotionWait(.55f);
+        TestTrue(TEXT("反応終了後は横移動なし"),FMath::IsNearlyZero(Translation(TEXT("battle.unit.art.100")).X));
+        TestTrue(TEXT("画像の反応で確定状態と乱数を変更しない"),battle->Checkpoint()==expected.Checkpoint() && Screen->ControlCheckpoint()==control);
     });
     AfterEach([this]{Driver.Reset();Screen.Reset();if(Window){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}IAutomationDriverModule::Get().Disable();});
 }

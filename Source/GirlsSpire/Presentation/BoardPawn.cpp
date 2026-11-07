@@ -30,7 +30,11 @@ void SBoardPawn::Construct(const FArguments& args)
         +SOverlay::Slot().Padding(2*scale,0,2*scale,30*scale)
             [SNew(SScaleBox).Stretch(EStretch::ScaleToFit).VAlign(VAlign_Bottom)
                 .Visibility(args._Image?EVisibility::HitTestInvisible:EVisibility::Collapsed)
-                .RenderTransform_Lambda([id=args._Id,reduced=args._Reduced]{return TOptional<FSlateRenderTransform>(FSlateRenderTransform(FVector2D(0,-FUnitMotion::IdleLift(FSlateApplication::Get().GetCurrentTime()+id*.11,reduced))));})
+                .RenderTransform_Lambda([id=args._Id,reduced=args._Reduced,impact=args._ImpactTime]{
+                    const auto now=FSlateApplication::Get().GetCurrentTime();
+                    const auto shift=impact.IsSet()?FUnitMotion::ImpactShift(now-impact.GetValue(),reduced):0.;
+                    return TOptional<FSlateRenderTransform>(FSlateRenderTransform(FVector2D(shift,-FUnitMotion::IdleLift(now+id*.11,reduced))));
+                })
                 .AddMetaData(FDriverMetaData::Id(*imageTag))
                 [SNew(SImage).Image(args._Image)]]
         +SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Bottom).Padding(0,0,0,30*scale)
