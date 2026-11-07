@@ -258,3 +258,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - GS-118: 成功したcampaign-ui-matrix-final-engine.logをgzip化。展開SHA256一致を確認し1,420,242バイト削減（Saved/campaign-ui-matrix-final-engine-storage.json）。
 
 - GS-119: 合格した生プロファイル6件4,479,250,560バイトを整理。1d205557ec0240ec8de42435690f0c8bのraw-cleanup.jsonを参照。
+
+- GS-119のWindows候補は隔離中間物と重複ステージ4,947,487,542バイトを整理。配布48件のSHA256一致。今回の総整理量9,426,738,102バイト。候補のcleanup.jsonに記録。
