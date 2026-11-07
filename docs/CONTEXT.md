@@ -87,3 +87,5 @@ GS-094/T034i完了（予備値）: tests/E2E/FieldPerformanceSpec.hをFullFieldS
 - GS-105のWindows候補は6b17a1076e9241de9621afa915aae5e8/Project/Distribution/Windows。bb933b4から生成・同梱・タイトル起動/正常終了を検証。今回の整理総量9,620,939,707バイト。実機戦闘操作とオフライン通しは未完了。
 
 - GS-106/T035f: tools/test-windows-shipping-smoke.ps1で隔離Shipping起動、撮影、終了コード0、配布SHA維持を再検査可能。基準画像一致と欠落/不一致拒否を確認。重複ZIP54,446,279バイト整理。実機戦闘操作とオフラインは継続。
+
+- GS-107/T034l: tools/test-field-performance.ps1 -Combat。Editor/offscreen実UIの5対3/5対10は40/35巡。低速時間7.071/6.539秒のうち初期化との重なり7.071/6.467秒。待機は低速0%。製品性能は継続。旧作業EXEと配布本体を照合し144,061,952バイト整理。

@@ -98,3 +98,9 @@ Windows配布候補のShipping本体を、専用デスクトップと保存先�
 ```powershell
 ./tools/test-windows-shipping-smoke.ps1 -WindowsRoot $windowsDistribution
 ```
+
+実UIで攻撃確定と敵手番を繰り返す描画計測は次のコマンドで実行できます。集計と操作区間はSaved/Tests/FieldPerformanceに記録します。
+
+```powershell
+./tools/test-field-performance.ps1 -Combat
+```
