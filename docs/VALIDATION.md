@@ -778,3 +778,9 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 通常MSVC・Editor/offscreen、1920×1080。tools/test-field-performance.ps1 -SkipBuild -Continuous でGS-110の戦場を計測。暖機5秒、同じ戦場を30秒継続。2件警告0（1b29f5f61ca342d9a2edf7394aa95e5a）。
 - 5対3は平均106.23fps相当、30fps相当未満0.0000%、最大23.93ms（2B5BBE5F414AF418B5821CBDA2A9DD3F）。5対10は平均90.85fps相当、30fps相当未満0.3425%、最大59.73ms（8E369ECE45A018D35C3FA9905AA93599）。
 - Editorの描画提出間隔であり、製品SC-013は物理画面とShipping実戦で継続する。ゲームコード・素材・仕様の差分なし。
+
+## GS-113 / T031i・SC-012 現行戦場の設定併用回帰（2026-11-08）
+
+- GS-110の通常ビルドで tools/test-campaign-accessibility.ps1 -SkipBuild。1920×1080と2560×1440で初級・軍配・seed1が各6戦、89操作で全12日完走。各1件警告0（8f9ef821b84d470d8f8807702d968c90 / a23fc282175546e58cd5a9cebd9e01ab）。
+- 最大文字、字幕、演出軽減、親密表現抑制、消音を設定画面から保存し、戦場で単色と危険予測を併用。HP、危険域の説明、陣営記号と、表示切替時の保存・乱数・世代の一致を確認。エディター実クライアント寸法での検証。
+- 撮影はSaved/Screenshots/CampaignAccessibilityの7CA5D3814319B75D3A1B84A06368A071とAB009DFB457DFEC8C3B8C9970D0ACB02。配布版の物理画面と全設定条件の受け入れは継続。
