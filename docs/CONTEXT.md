@@ -61,3 +61,5 @@ GS-094/T034i完了（予備値）: tests/E2E/FieldPerformanceSpec.hをFullFieldS
 - GS-095/T034j: tools/test-campaign-process.ps1 -Scenario 2～14。seed1の2（初級・軍配・配色）、7（中級・刀）、14（上級・鉄砲）の3段階ずつ成功、拒否12件で原本不変、通常433件警告0（51d79917608f4dffb637051d53c1d947）。Saved/campaign-scenario-*.log参照。合格ログ9件を可逆圧縮し1,119,736バイト削減。製品Source差分なし。他条件・製品受け入れは未完了。
 
 - GS-096/T034k・T035a完了。seed1の全4役割×3難易度を別プロセスで完走。追加10条件・30段階・60戦・1,184操作、警告0。短縮パスでWindows Shipping候補を生成し、48件・PNG21点原本SHA一致・現行音声3点同梱を確認。Saved/release-candidate-final.jsonに候補、VALIDATIONに証跡。重複と隔離中間生成物等を計5,711,297,241バイト整理。次は候補の実機/オフライン/日本語/性能、演出と総合受け入れ。
+
+- GS-097/T035b: 配布候補のx64 15件、直接依存292件の静的照合完了。画面外Shippingは秒数終了がビルド条件で無効。終了要求後も残った隔離試験PIDだけを停止し、実機起動は未合格。配布と同SHAの作業用EXEを整理し144,044,032バイト削減。

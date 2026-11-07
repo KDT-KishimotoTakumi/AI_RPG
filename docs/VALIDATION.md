@@ -669,3 +669,9 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 再現条件はインストール済みUEのRunUAT BuildCookRun、対象GirlsSpire、Win64、Shipping、マップ/Engine/Maps/Entry、build/cook/stage/pak/archive/prereqs、短い隔離プロジェクトパス。二度目の梱包は同じクック結果でskipbuild/skipcook/stage/pak/archive/nodebuginfo/prereqs。隔離Content/Artの制作メモ11件は梱包前に証跡へ退避（package-clean.log）。
 - 起動ファイルとWin64 Shipping実行ファイル、VC x64再頒布物を確認。PNG21点はSHA256一致。IoStore一覧で現行BGM・確認・打撃のV2音声3点を確認。再梱包前後で共通の実行時ファイルは同一。候補は48件、425,528,172バイト。
 - 証跡はSaved/ReleaseCandidates/e308e84741f9454ca82cfe688c029f28とSaved/release-candidate-final.json。候補は同ディレクトリのProject/DistributionClean/Windows。実機起動・日本語表示・オフライン完走・製品性能は次の検証。
+
+## GS-097 / T035b 配布候補の静的依存と画面外起動（2026-11-07）
+
+- Windows候補の起動用EXE、Shipping本体、同梱DLL13件をMSVC dumpbinで検査。15件すべてx64。直接依存292件をWindows API Set 189件、同梱10件、検証端末のSystem32 93件として照合し、未分類0件。証跡はSaved/release-candidate-dependencies.jsonと対応するShippingDependencyディレクトリ。
+- Shipping本体を画面外・専用UserDirで起動。UEの秒数による終了はShippingで無効なため90秒で待機を打ち切り、所有ウィンドウへの終了要求もプロセス終了に至らなかった。実行パスとPIDを照合して今回の試験プロセスだけを停止。Saved/release-candidate-boot-{close,stop}.jsonとShippingBootの生成物を保全。
+- 画面外試験はタイトル表示と通常終了の合格証跡が不足。T035の実機タイトル表示、日本語確認、オフライン通しは継続する。候補48件とゲーム本体の入力は照合済み。
