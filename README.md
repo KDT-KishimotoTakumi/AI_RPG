@@ -41,6 +41,7 @@ PowerShell 7でプロジェクトルートから実行します。
 ./tools/test-resume.ps1
 ./tools/test-campaign.ps1 -Matrix
 ./tools/test-campaign-process.ps1 -Guards
+./tools/test-campaign-process.ps1 -Scenario 14 -Guards
 ./tools/test-campaign-accessibility.ps1
 ./tools/test-field-performance.ps1
 ./tools/test-runtime.ps1 -Audio
@@ -71,3 +72,5 @@ PowerShell 7でプロジェクトルートから実行します。
 秘密設定Config/DefaultEngine.ini、個人セーブ、生成物はGit管理しません。原画・固定テスト原本・検証結果を保全し、再生成可能な不要物だけを整理します。
 
 性能スクリプトはEditor/offscreenの基礎計測です。製品版・実戦AI・物理画面・長時間の性能合格とは区別します。
+
+別プロセス12日通しの -Scenario は2が従来の初級/軍配/配色選択、3～6が初級、7～10が中級、11～14が上級です。各4条件は刀・薙刀・軍配・鉄砲の順で、seed1を使います。-Guards は範囲外・条件不一致・上書き・引継ぎ欠落の拒否と保存原本の不変を検証します。選べる条件すべてが検証済みとは限らず、実行実績はVALIDATION.mdを参照してください。

@@ -78,10 +78,14 @@ void FGirlsSpireCampaignSpec::Define()
     FString stage,processRoot;const bool process=FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireCampaignStage="),stage);
     FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireCampaignRoot="),processRoot);
     processRoot=FPaths::ConvertRelativePathToFull(processRoot);
-    for(int scenario=process || accessibility?2:0;scenario<(process || accessibility?3:matrix?15:3);++scenario)It(accessibility?FString::Printf(TEXT("併用設定%dの12日通し"),width):process?FString::Printf(TEXT("別プロセス12日通し%s"),*stage):scenario>=3?FString::Printf(TEXT("難易度%d・役割%dの実ディスク12日通し"),(scenario-3)/4,(scenario-3)%4):FString(scenario==2?TEXT("外見選択データを実ディスクへ保持して12日完走する"):scenario==1?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,scenario,process,stage,processRoot,accessibility,width]{
+    int processScenario=2;FParse::Value(FCommandLine::Get(),TEXT("GirlsSpireCampaignScenario="),processScenario);
+    const int firstScenario=process?FMath::Clamp(processScenario,2,14):accessibility?2:0;
+    const int lastScenario=process?firstScenario+1:accessibility?3:matrix?15:3;
+    for(int scenario=firstScenario;scenario<lastScenario;++scenario)It(accessibility?FString::Printf(TEXT("併用設定%dの12日通し"),width):process?FString::Printf(TEXT("別プロセス12日通し%d-%s"),processScenario,*stage):scenario>=3?FString::Printf(TEXT("難易度%d・役割%dの実ディスク12日通し"),(scenario-3)/4,(scenario-3)%4):FString(scenario==2?TEXT("外見選択データを実ディスクへ保持して12日完走する"):scenario==1?TEXT("実ディスク保存と戦闘内外の再構築を通して12日完走する"):TEXT("通常能力の12日を実戦とマウス操作で完走する")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(900),[this,scenario,process,stage,processRoot,accessibility,width,processScenario]{
         using namespace GirlsSpire;
         if(accessibility && !TestTrue(TEXT("併用設定の検証寸法"),(width==1920 || width==2560) && !process))return;
         if(process){
+            if(!TestTrue(TEXT("有効な通しシナリオ2～14"),processScenario>=2 && processScenario<=14))return;
             const auto prefix=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("Tests/ProcessCampaign"));
             if(!TestTrue(TEXT("専用のプロセス通し保存先"),processRoot!=prefix && FPaths::IsUnderDirectory(processRoot,prefix)) ||
                !TestTrue(TEXT("有効な通し段階"),stage==TEXT("Start") || stage==TEXT("Continue") || stage==TEXT("Finish")))return;
@@ -129,6 +133,7 @@ void FGirlsSpireCampaignSpec::Define()
         if(process && stage!=TEXT("Start")){
             const auto transfer=ReadCampaignTransfer(processRoot);const auto saved=service->Load();
             if(!TestTrue(TEXT("前プロセスの全保存/恒久/確定世代と独立期待記録が一致"),transfer && saved.Issue==SlotIssue::None && saved.Run==transfer->State && saved.Permanent==transfer->Permanent && saved.Generation==transfer->Progress.Generation))return;
+            if(!TestTrue(TEXT("引継ぎの難易度・役割・外見が指定シナリオと一致"),transfer->State.Run.State.Level==difficulty && transfer->State.Run.State.Role==role && transfer->Permanent.SelectedAppearances==expectedAppearances))return;
             const bool inside=stage==TEXT("Finish");
             if(!TestTrue(TEXT("前プロセスは所定の境界で中断済み"),transfer->State.ResumeAvailable && transfer->State.Run.State.Day==(inside?6:5) && transfer->State.Combat.has_value()==inside && transfer->Progress.Days==(inside?63:31)))return;
             for(int day=1;day<=12;++day)if(transfer->Progress.Days&(1<<(day-1)))days.insert(day);
