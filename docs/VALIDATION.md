@@ -708,3 +708,8 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 全体d99b4115db764477b1a768650b12258bはPassed=true、Missing=[]。行5352/5380=99.48%、関数680/692=98.27%、分岐5493/6014=91.34%。計装DLL・JSON・profdataを保持し、通常MSVCへ復帰後も被弾・移動5件が警告0（d7e9eb82a0744f98bd0b0823ca8fae98）。独立レビューで必須修正なし。
 
 - 被弾演出を含むb93ea87のWin64 Shipping候補を再生成し、画像21点・現行音声3点・必須ファイルを確認（d1e1598afadd4ad08a1fc9ae7451f802）。候補はSaved/ReleaseCandidates/de19dbb316f64b3281d3d3f5ae2f9fef/Project/Distribution/Windows。新候補の実機操作とオフライン通しは継続。
+
+## GS-103 / T033a BGM長時間ループと新配布候補の起動（2026-11-07）
+
+- 現行40秒BGMをUE音声デバイスで1%音量・効果音消音で一度だけ開始。AudioMixerの累積再生フレーム比が82.13秒で2.053、進捗通知9,822件となり、停止や再開始なしで40秒境界を2回通過。音声3件が警告0（0a5b4fda082545109bf7b5a9195b46e5）。新試験はGirlsSpireAudioLongLoop指定時だけ追加。独立レビューで必須指摘なし。ループ接続の聴感評価は別途。
+- b93ea87を含むWindows候補を隔離デスクトップと専用UserDirでGirlsSpire.exeから起動。起動用EXEと本体は通常終了コード0。撮影PNGは以前に目視確認した日本語タイトルとSHA256一致。証跡はSaved/Tests/ShippingDesktop/4ca5788038b84b838443b5ba3ca35ba7。配布版の戦闘操作・オフライン完走は継続。

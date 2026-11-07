@@ -86,3 +86,9 @@ Gitの現在のHEADからWindows Shipping候補を再生成するには、PowerS
 ```powershell
 ./tools/package-windows.ps1
 ```
+
+UE音声デバイスで現行BGMが40秒のループ境界を2回越えることを確認する場合は、通常ビルド後に次を実行します。
+
+```powershell
+./tools/test-unreal.ps1 -UI -Audio -Filter GirlsSpire.Audio.Engine -ExtraArgs @('-GirlsSpireAudioTest','-GirlsSpireAudioLongLoop','-AllowCommandletAudio')
+```

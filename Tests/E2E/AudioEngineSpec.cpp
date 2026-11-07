@@ -68,6 +68,45 @@ void FGirlsSpireAudioEngineSpec::Define()
             during->Stop();Audio->Stop();
         }).Wait();
     });
+    if(FParse::Param(FCommandLine::Get(),TEXT("GirlsSpireAudioLongLoop"))) {
+        It(TEXT("実音声のBGMが40秒境界を二度越えて再生を続ける"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+            struct FLoopResult {float Percent=0;int Samples=0;double Elapsed=0;bool Playing=false;};
+            auto done=MakeShared<TPromise<FLoopResult>,ESPMode::ThreadSafe>();
+            auto ready=done->GetFuture();
+            Async(EAsyncExecution::TaskGraphMainThread,[this,done]{
+                Audio=std::make_shared<FGameAudio>();
+                const auto wave=Cast<USoundWave>(Audio->Music()->GetSound());
+                if(!TestTrue(TEXT("現行40秒BGMと音声デバイス"),Audio->Ready() && wave && wave->GetName()==TEXT("BGM_Castle_V2") && wave->bLooping && FMath::IsNearlyEqual(wave->Duration,40.f))){
+                    done->SetValue(FLoopResult{});
+                    return;
+                }
+                GirlsSpire::Preferences prefs;
+                prefs.BgmVolume=1;
+                prefs.SfxVolume=0;
+                Audio->Apply(prefs);
+                auto result=MakeShared<FLoopResult>();
+                const auto handle=Audio->Music()->OnAudioPlaybackPercentNative.AddLambda([result,wave](const UAudioComponent*,const USoundWave* source,float percent){
+                    if(source!=wave || !FMath::IsFinite(percent))return;
+                    result->Percent=FMath::Max(result->Percent,percent);
+                    ++result->Samples;
+                });
+                const auto start=FPlatformTime::Seconds();
+                Audio->Start();
+                FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([audio=Audio,result,done,handle,start](float){
+                    result->Elapsed=FPlatformTime::Seconds()-start;
+                    result->Playing=audio->Music()->IsPlaying();
+                    if(result->Playing && result->Percent<2.05f && result->Elapsed<100.)return true;
+                    audio->Music()->OnAudioPlaybackPercentNative.Remove(handle);
+                    audio->Stop();
+                    done->SetValue(*result);
+                    return false;
+                }),.25f);
+            }).Wait();
+            const auto result=ready.Get();
+            AddInfo(FString::Printf(TEXT("BGM実時間%.2f秒、再生フレーム比%.3f、通知%d件"),result.Elapsed,result.Percent,result.Samples));
+            TestTrue(TEXT("停止や再開始なしで40秒境界を二度通過"),result.Playing && result.Percent>=2.05f && result.Samples>2);
+        });
+    }
     AfterEach([this]{Audio.reset();
 #if defined(GIRLS_SPIRE_COVERAGE)
         // 短い専用試験も強制終了前に記録し、0バイトの原本を成功扱いにしない。
