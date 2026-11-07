@@ -694,3 +694,9 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - tools/test-windows-distribution.ps1で実候補48ファイル、PNG21点のSHA256、現行音声3点のIoStoreエントリ、起動ファイル・VC再頒布物・PakとIoStore本体を照合。配布対象外の制作メモ・デバッグシンボル・緩いセーブ/秘密設定ファイルを検出。最終レポートはSaved/Tests/DistributionAudit/a4710881b0704a78bbd3223bd0380552。
 - REDは検査コマンド未作成。実候補が成功し、制作資料混入・改変画像・必須Pak欠落の拒否を確認。レビューで必須Pakの検査漏れを指摘されたため補い、同候補で再確認。拒否証跡はSaved/Tests/DistributionVerification/bbc32e94aec647db932b9786c9391a16。
 - 隔離配布版のWindowsアクセシビリティ経由では新規周回ボタンを取得できず、画面遷移は未確認。試験終了コードは起動用EXE・本体とも0。証跡はSaved/Tests/ShippingUia/b5d8147068984e9083adcbc4e19dc292。
+
+## GS-101 / T035e Windows Shippingの再生成（2026-11-07）
+
+- tools/package-windows.ps1でefbe7c3のGit許可リストを隔離して展開し、制作メモを退避。短いジャンクションを用いてUE5.7.4のEditor Development、Win64 Shipping、クック、Pak/IoStore、アーカイブを一度で完了。元の秘密設定・個人セーブを入力から除外。
+- 候補はSaved/ReleaseCandidates/c4e81085b41c40a686f32d21f39d2bcd/Project/Distribution/Windows。ビルドと同じ抽出画像を照合元に指定し、21点の画像・3点の現行音声と必須ファイルを確認（90c789bdbe2c4ea9b4eb95346c1392ba）。レビュー後、作業ツリーに依存しない画像照合を追加。セーブと対象外設定の拒否はダミーファイルで確認。
+- 実入力試験は配布候補を専用UserDirで起動したが、Computer Useのアプリ承認タイムアウトと対象画面未取得で入力せず中断。親PID、実行パス、UserDirを照合した試験プロセスは通常の終了要求で終了。証跡はSaved/Tests/ShippingInteractive/8c52cdc3f2dc4176aaae209bc3df324e/result.json。

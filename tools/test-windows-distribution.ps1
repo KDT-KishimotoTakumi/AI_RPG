@@ -1,6 +1,9 @@
 #requires -Version 7.0
 [CmdletBinding()]
-param([Parameter(Mandatory)][string] $WindowsRoot)
+param(
+    [Parameter(Mandatory)][string] $WindowsRoot,
+    [string] $ArtRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) 'Content/Art')
+)
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -31,7 +34,7 @@ foreach ($relative in @(
     }
 }
 
-$art = Join-Path $projectRoot 'Content/Art'
+$art = (Resolve-Path -LiteralPath $ArtRoot).Path
 $packagedArt = Join-Path $package.FullName 'GirlsSpire/Content/Art'
 $images = @(Get-ChildItem -LiteralPath $art -Filter '*.png' -File -Recurse)
 if (-not $images.Count) { throw '照合元のゲーム画像がありません。' }

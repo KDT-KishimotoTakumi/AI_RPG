@@ -69,3 +69,5 @@ GS-094/T034i完了（予備値）: tests/E2E/FieldPerformanceSpec.hをFullFieldS
 - GS-099: 配布版の非アクティブな隔離デスクトップで新規周回へのマウス通知を2経路で試し、画面遷移なし。実機入力は未確認。通常UE戦闘13件・物語9件は警告0で、戦闘の日本語を目視。VALIDATION参照。重複PNGのみ3,886,226バイト削減、撮影原本と配布48件を保全。
 
 - GS-100/T035d: tools/test-windows-distribution.ps1 -WindowsRootで画像21/音声3/起動・Pak/IoStoreを再検査可能。実候補成功、制作メモ・改変PNG・Pak欠落は拒否。試験複製の一時容量423,322,482バイト回収。配布版の隔離UIA経路はボタンを取得できず、実入力とオフライン完走は継続。
+
+- GS-101/T035e: tools/package-windows.ps1でGitの許可リストからWin64 Shippingを短縮パスで再生成。候補c4e81085b41c40a686f32d21f39d2bcd、画像21・音声3を隔離入力で照合。中間物4,943,186,322バイト整理。専用UserDirでの実入力はComputer Use承認タイムアウトで入力せず終了。配布版の戦闘/物語操作とオフライン通しは継続。

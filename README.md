@@ -80,3 +80,9 @@ Windows配布候補の同梱物はPowerShell 7で再検査できます。作業�
 ```powershell
 ./tools/test-windows-distribution.ps1 -WindowsRoot $windowsDistribution
 ```
+
+Gitの現在のHEADからWindows Shipping候補を再生成するには、PowerShell 7で次を実行します。候補とログはSaved/ReleaseCandidatesに作成され、同梱検査も続けて実行されます。
+
+```powershell
+./tools/package-windows.ps1
+```
