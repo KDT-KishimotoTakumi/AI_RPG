@@ -21,5 +21,7 @@ bool FGirlsSpireUnitMotionTest::RunTest(const FString&)
     TestEqual(TEXT("被弾反応は開始前・終了後ともゼロ"),FUnitMotion::ImpactShift(-1.,false)+FUnitMotion::ImpactShift(.5,false),0.);
     TestEqual(TEXT("被弾反応の最大移動は6px"),FUnitMotion::ImpactShift(.225,false),6.);
     TestEqual(TEXT("演出軽減は被弾反応も静止"),FUnitMotion::ImpactShift(.225,true),0.);
+    TestTrue(TEXT("足運びは辺の中間で上がり、マス境界で元の高さ"),FMath::IsNearlyEqual(FUnitMotion::StepLift(.05,.5,5),2.5) && FMath::IsNearlyZero(FUnitMotion::StepLift(.1,.5,5)));
+    TestTrue(TEXT("開始前・終了後と不正な経路では静止"),FUnitMotion::StepLift(-1.,.5,5)==0. && FUnitMotion::StepLift(.5,.5,5)==0. && FUnitMotion::StepLift(.05,0.,5)==0. && FUnitMotion::StepLift(.05,.5,0)==0.);
     return true;
 }

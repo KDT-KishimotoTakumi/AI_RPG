@@ -50,7 +50,15 @@ void FGirlsSpireMotionUiSpec::Define()
         if(!TestTrue(TEXT("移動を実確定"),ClickAndDrain(Driver->FindElement(By::Id("battle.move.confirm")))))return;
         TestTrue(TEXT("確定結果と乱数は既存規則と一致"),battle->Checkpoint()==expected.Checkpoint());
         TestEqual(TEXT("通常は移動用2Dレイヤー、軽減は即時表示"),Driver->FindElement(By::Id("battle.motion.unit.0"))->Exists(),mode!=1);
-        if(mode==0)CaptureMotion(TEXT("UnitMotion-Moving.png"));
+        if(mode==0) {
+            double lift=0;
+            for(int frame=0;frame<8 && lift<=1.25;++frame){
+                lift=FMath::Max(lift,-Translation(TEXT("battle.motion.art.0")).Y);
+                if(lift<=1.25)MotionWait(.02f);
+            }
+            TestTrue(TEXT("移動画像に待機時より大きい足運びがある"),lift>1.25);
+            CaptureMotion(TEXT("UnitMotion-Moving.png"));
+        }
         const auto control=Screen->ControlCheckpoint();const auto settled=battle->Checkpoint();MotionWait(.8f);DrainSlateLayout();
         Async(EAsyncExecution::TaskGraphMainThread,[this]{const auto ghost=MotionFindTag(Window.ToSharedRef(),"battle.motion.unit.0");TestTrue(TEXT("移動演出は有限時間で終了"),!ghost || !ghost->GetVisibility().IsVisible());}).Wait();
         TestTrue(TEXT("演出完了でも戦闘/作戦乱数不変"),battle->Checkpoint()==settled && Screen->ControlCheckpoint()==control);

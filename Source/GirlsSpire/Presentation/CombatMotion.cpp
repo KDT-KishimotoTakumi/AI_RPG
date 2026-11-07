@@ -60,7 +60,8 @@ void SCombatScreen::RefreshMovingUnits()
         // 文字と入力は確定位置に残し、画像だけを盤面より上の非入力レイヤーで動かす。
         TSharedPtr<SWidget> sprite=SNew(SBoardPawn).Id(id).Side(unit->Side).Image(art).Moving(true)
             .Active(state.ActiveId==id).Reduced(DisplayPreferences.ReducedEffects).Scale(FontSize(100)/100.f)
-            .ImpactTime(ImpactTimes.FindRef(id)).Strike(Strikes.FindRef(id));
+            .ImpactTime(ImpactTimes.FindRef(id)).Strike(Strikes.FindRef(id))
+            .Walk(FUnitWalkVisual{motion.Started,FUnitMotion::Duration(motion.Path),static_cast<int>(motion.Path.size()-1)});
         sprite->AddMetadata(FDriverMetaData::Id(*FString::Printf(TEXT("battle.motion.unit.%d"),id)));
         sprite->SetVisibility(TAttribute<EVisibility>::CreateLambda([this,id]{return MotionActive(id)?EVisibility::HitTestInvisible:EVisibility::Collapsed;}));
         sprite->SetRenderTransform(TAttribute<TOptional<FSlateRenderTransform>>::CreateLambda([this,motion,destination,pitch]{

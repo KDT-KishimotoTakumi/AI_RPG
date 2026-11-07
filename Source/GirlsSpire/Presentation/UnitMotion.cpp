@@ -22,3 +22,9 @@ double FUnitMotion::ImpactShift(double age,bool reduced)
     const auto phase=FMath::Clamp(age/.45,0.,1.);
     return 6.*(1.-FMath::Abs(2.*phase-1.));
 }
+double FUnitMotion::StepLift(double age,double duration,int steps)
+{
+    if(duration<=0. || steps<=0 || age<=0. || age>=duration)return 0.;
+    const double phase=age/duration*steps;
+    return 2.5*FMath::Abs(FMath::Sin(UE_DOUBLE_PI*phase));
+}

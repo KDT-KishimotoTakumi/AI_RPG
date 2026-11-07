@@ -15,6 +15,7 @@ public:
         SLATE_ARGUMENT(float,Scale)
         SLATE_ARGUMENT(TOptional<double>,ImpactTime)
         SLATE_ARGUMENT(TOptional<FUnitStrikeVisual>,Strike)
+        SLATE_ARGUMENT(TOptional<FUnitWalkVisual>,Walk)
     SLATE_END_ARGS()
     void Construct(const FArguments& args);
 };

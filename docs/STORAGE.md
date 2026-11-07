@@ -232,3 +232,5 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - GS-107: 最新候補の作業用Shipping EXEが配布本体と同じSHA256であることを確認して144,061,952バイト整理。配布48件を保全し、候補のexe-storage.jsonに記録。
 
 - GS-108: 隔離配布候補の再生成可能なクック作業データだけを216,026,122バイト整理。配布48件を整理前後にSHA256照合。候補のcooked-storage.json参照。
+
+- GS-109: 旧候補39b8cad8ab3d4c07bc7102d3cd3cfbccの配布本体とSHA256が一致する作業用EXEを144,046,080バイト整理（exe-storage.json）。合格後に生プロファイル6件4,476,693,472バイトを整理（raw-cleanup.json）。合計4,620,739,552バイト。
