@@ -65,3 +65,5 @@ GS-084補強後もlocal-06で主人公の同一PNGを再生成し、正式差分
 |鈴鹿 小夜|Content/Art/Characters/sayo-dye1.png|334,830|188,193|
 
 全SHA/設定/目視記録はtools/appearance/reviewed-portraits.json、原画照合はSaved/appearance-roster-adoption.json、候補/マスク/再現検証はSaved/ArtPrototypes/Appearance/<人物>-final-01。未採用01候補も保全。個人外見の選択UI/保存戦闘固定/ゲーム表示は未接続。
+
+- 2026-11-07のWindows Shipping候補で、配布画像21点のSHA256が原本と一致し、現行V2のBGM・確認・打撃音がIoStoreコンテナに入ることを確認。隔離した梱包元から制作メモ11件を退避。最終聴感・演出・実機表示は継続。

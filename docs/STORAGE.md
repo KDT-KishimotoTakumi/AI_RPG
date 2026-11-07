@@ -199,3 +199,6 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 2026-11-07 GS-094後: 旧合格b64ecb5862414bbda7aad993cf2ba278 / 0c4eb3278a0e4cab9367d4e2b02ad5e2のcoverage.json/coverage.profdata/CoreTests.exe/計装DLL、8件を同フォルダ.gzへ可逆保管。212,718,374→25,483,333 bytes、対象の論理削減187,235,041 bytes。全展開SHAと保全19,587ファイルSHA/秘密設定メタデータ一致。最新d221/通常Binaries/ゲーム/全セーブ/失敗証跡/現行UE Intermediate/DDC保持。監査StorageAudit-1c656012be0948b0a56ecacf9416b6e7/result.json、元パス/時刻/SHAはarchives.json。使用時のみ展開。生計測追加削除0、以前の削減を重複計上しない。
 
 - GS-095: 隔離した完走試験3条件の合格ログ9件をgzipへ置換し、1,119,736バイト削減。全展開SHA256一致、管理対象Source/Contentと対象セーブ計209件および秘密設定メタデータは不変。拒否・REDの原本と集計を保持。証跡はSaved/campaign-scenario-storage.json。
+
+- GS-096: 展開済み383件とSHA256一致の重複ZIPを54,442,864バイト整理。別プロセスの合格ログ30件を可逆圧縮し3,741,003バイト削減（保護244件不変）。
+- 隔離した配布作業領域だけのIntermediate、旧梱包、同一ステージ複製を整理し5,653,113,374バイト削減。共通の実行時ファイルを照合し、旧マニフェスト・制作メモ・ログ・元のデバッグシンボルを保全。最終候補48件は整理前後でSHA256一致。合計5,711,297,241バイト。証跡はSavedのrelease-candidate-{storage,build-storage}.jsonとcampaign-matrix-storage.json。

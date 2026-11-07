@@ -655,3 +655,17 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 2と7で各6件の拒否を確認。条件違い、−1・15・最大整数、既存保存の上書き、引継ぎ欠落を拒否し、保存原本SHA256を維持した。各保存先にguardのレポートIDとログを保持。
 - 通常UE回帰433件が警告0で成功（51d79917608f4dffb637051d53c1d947）。製品Source・管理対象Contentは既存基準と一致し、製品カバレッジは直近d221の行99.48%・関数98.26%・分岐91.36%を参照。今回の再計測はなし。独立レビューで必須指摘なし。
 - 実行した3条件以外の別プロセス通しと、配布版の総合受け入れは未完了。
+
+## GS-096 / T034k seed1の別プロセス通し全組合せ（2026-11-07）
+
+- 既検証7・14に追加3～6、8～13を実行し、seed1のシナリオ3～14（全4役割×3難易度）を完走。既定の配色付きシナリオ2も前回検証済み。
+- 追加10条件は各Start/Continue/Finishの30段階が警告0で成功。60戦、1,184操作。各段階で保存と独立期待値を比較し、Finishで難易度・役割・12日完走を確認。
+- 証跡はSaved/Tests/ProcessCampaignMatrix/ae1c53b2ebbd4432bdc95e05d472a48d/summary.jsonおよび各scenarioログ。7ae7351から製品Source、Content、Tests、管理対象Configの差分なし。カバレッジの再計測なし。
+
+## GS-096 / T035a Windows Shipping候補と同梱検査（2026-11-07）
+
+- 7ae7351のGit管理対象383ファイルを隔離。内訳はプロジェクト、管理対象Config、Content、Sourceの198件と、クック用EditorビルドのTests185件。元の秘密設定・個人セーブは入力外。
+- UE5.7.4とMSVCでEditor Development・Win64 Shippingをコンパイル。初回クックは260文字制限で停止（package.log）。隔離プロジェクトへ短いジャンクションを作り、同じバイナリでクック・ステージ・アーカイブに成功（package-short-path.log）。初回に隔離領域へ生成された設定は証跡として退避。
+- 再現条件はインストール済みUEのRunUAT BuildCookRun、対象GirlsSpire、Win64、Shipping、マップ/Engine/Maps/Entry、build/cook/stage/pak/archive/prereqs、短い隔離プロジェクトパス。二度目の梱包は同じクック結果でskipbuild/skipcook/stage/pak/archive/nodebuginfo/prereqs。隔離Content/Artの制作メモ11件は梱包前に証跡へ退避（package-clean.log）。
+- 起動ファイルとWin64 Shipping実行ファイル、VC x64再頒布物を確認。PNG21点はSHA256一致。IoStore一覧で現行BGM・確認・打撃のV2音声3点を確認。再梱包前後で共通の実行時ファイルは同一。候補は48件、425,528,172バイト。
+- 証跡はSaved/ReleaseCandidates/e308e84741f9454ca82cfe688c029f28とSaved/release-candidate-final.json。候補は同ディレクトリのProject/DistributionClean/Windows。実機起動・日本語表示・オフライン完走・製品性能は次の検証。
