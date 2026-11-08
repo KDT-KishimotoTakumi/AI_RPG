@@ -203,6 +203,8 @@ int main()
     failed += TestRescueDialogue();
     extern int TestRelationshipText();
     failed += TestRelationshipText();
+    extern int TestNarrationText();
+    failed += TestNarrationText();
     extern int TestRecoverySelection();
     failed += TestRecoverySelection();
     extern int TestGenerationRecovery();

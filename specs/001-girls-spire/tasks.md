@@ -169,7 +169,7 @@ GS-017（2026-09-30承認、US4の追加工程）:
 独立確認: 各8人の条件解放、複数進行、後日談の本、抑制設定。
 
 - [x] T025 [US5] Tests/Unit/BondTests.cpp に0～100、永続化、複数恋愛、単独エンドを記述
-- [ ] T026 [US5] Source/GirlsSpire/Domain/Bond.cpp と Content/Data/Story に物語・絆・後日談を実装（FR-055～064）
+- [x] T026 [US5] Source/GirlsSpire/Domain/Bond.cpp と Content/Data/Story に物語・絆・後日談を実装（FR-055～064）
 - [x] T027 [US5] Tests/E2E/StorySpec.cpp で全人物の結末と文字記録を検証
 
 GS-018（2026-10-02、5回答と継続指示で承認）:

@@ -11,7 +11,7 @@
   },
   {
     "path": "Source/GirlsSpire/RunAutomation.cpp",
-    "sha256": "3D3B614AB6476190DB432AC88D3C48DB317A43DAD2C5DD6C1A45E70DECF5500D",
+    "sha256": "783F320E2DCB53EE21310E817A2EB7F0DC716FFC334062C71035D5C744052988",
     "reason": "条件付きincludeのみ。UIテスト定義はTests/E2E/にあり、製品コードの分母外。"
   },
   {
@@ -60,8 +60,13 @@
     "sha256": "82116DBD3E87B20E51169A1A2A1E6D46F1FDD0E784EC5B2A7B56544135614418"
   },
   {
+    "path": "Source/GirlsSpire/Domain/NarrationText.h",
+    "sha256": "45BBB54861255E6845E5E3A7130B06A14B6C5A668AD97302AA95B9DF7E974871",
+    "reason": "関数宣言のみ。本文と関数定義はNarrationText.cppで計測。"
+  },
+  {
     "path": "Source/GirlsSpire/Presentation/SpireStyle.h",
-    "sha256": "DD24A4D05304FEE814891E9306C607C1A1FECD6EF137D4F7C8806859906ADFE3",
+    "sha256": "2898D172C6BF8C238666FDB69B28720F539EC0443895081AE49D07338DAFF211",
     "reason": "関数宣言のみ。実装はSpireStyle.cppで計測する。"
   },
   {

@@ -46,6 +46,23 @@ void FGirlsSpirePresentationSpec::Define()
         TestTrue(TEXT("開始操作を維持"),ClickAndDrain(Driver->FindElement(By::Id("title.start"))));
         TestTrue(TEXT("従来の編成へ進む"),Driver->FindElement(By::Id("role.confirm"))->Exists());
     });
+    It(TEXT("HP割合で色が段階的に変わり範囲外でも安全"),[this]{
+        TestEqual(TEXT("半分超は安全色"),FSpireStyle::HpColor(0.51f),FSpireStyle::HpSafe());
+        TestEqual(TEXT("半分ちょうどは注意色"),FSpireStyle::HpColor(0.5f),FSpireStyle::HpWarn());
+        TestEqual(TEXT("4分の1ちょうどは危険色"),FSpireStyle::HpColor(0.25f),FSpireStyle::HpDanger());
+        TestEqual(TEXT("負値は危険色"),FSpireStyle::HpColor(-1.f),FSpireStyle::HpDanger());
+        TestEqual(TEXT("1超は安全色"),FSpireStyle::HpColor(2.f),FSpireStyle::HpSafe());
+    });
+    It(TEXT("見出しの大きさ判定と無効ボタンの見分け"),[this]{
+        TestTrue(TEXT("大きい文字は見出し"),FSpireStyle::IsHeading(FSpireStyle::HeadingMinSize));
+        TestFalse(TEXT("本文は見出しにしない"),FSpireStyle::IsHeading(FSpireStyle::HeadingMinSize-1));
+        const auto& style=FSpireStyle::Command();
+        TestTrue(TEXT("無効時は通常と違う枠"),style.Disabled.OutlineSettings.Color!=style.Normal.OutlineSettings.Color);
+    });
+    It(TEXT("雰囲気背景と区切り線はクリックを通す"),[this]{
+        TestEqual(TEXT("背景は入力を奪わない"),FSpireStyle::Atmosphere(FLinearColor::Black,FLinearColor::Black)->GetVisibility(),EVisibility::HitTestInvisible);
+        TestEqual(TEXT("区切り線は入力を奪わない"),FSpireStyle::Rule()->GetVisibility(),EVisibility::HitTestInvisible);
+    });
     It(TEXT("未配置の背景は安全に退避する"),[this]{TestFalse(TEXT("背景なしで不正なブラシを返さない"),FSpireStyle::Backdrop(FPaths::ProjectSavedDir()/TEXT("Tests/missing-title-art.png")).IsValid());});
     It(TEXT("盤面の人物駒とHP表示を追加して状態を変えない"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
         using namespace GirlsSpire;BattleUnit hero;hero.At={1,1};hero.Hp=20;hero.MaxHp=40;hero.Speed=99;BattleUnit enemy;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={3,1};enemy.Hp=enemy.MaxHp=40;

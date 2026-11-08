@@ -10,6 +10,7 @@
 #include "ComboLabels.h"
 #include "CharacterPortraits.h"
 #include "Domain/CharacterCatalog.h"
+#include "Domain/NarrationText.h"
 #include "CombatScreen.h"
 #include "Application/Encounter.h"
 #include "Framework/MetaData/DriverMetaData.h"
@@ -58,6 +59,9 @@ void SRunScreen::Construct(const FArguments& Args)
             .ColorAndOpacity_Lambda([this]{return FLinearColor(1,1,1,CurrentRun?0.12f:1.f);})
             .Visibility(TitleBackdrop?EVisibility::HitTestInvisible:EVisibility::Collapsed)]
         +SOverlay::Slot()
+        [SNew(SBox).Visibility_Lambda([this]{return CurrentRun?EVisibility::HitTestInvisible:EVisibility::Collapsed;})
+            [FSpireStyle::Atmosphere(FLinearColor(0.03f,0.035f,0.07f,0.9f),FLinearColor(0.06f,0.02f,0.03f,0.9f))]]
+        +SOverlay::Slot()
         [
         SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
         .Visibility_Lambda([this]{return FullFieldActive?EVisibility::Collapsed:EVisibility::Visible;})
@@ -67,9 +71,10 @@ void SRunScreen::Construct(const FArguments& Args)
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
             [ SNew(STextBlock).Text(FText::FromString(TEXT("死者の城 — 十二日間の戦記")))
                 .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Bold",FontSize(18));}).ColorAndOpacity(FLinearColor(0.94f, 0.79f, 0.58f)) ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 24)
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 8)
             [ SNew(STextBlock).Text(FText::FromString(DevelopmentTools?TEXT("開発版 — 戦闘・作戦予告・三択報酬 / 正式素材は開発中"):TEXT("十二日後、死者の城が歴史を書き換える。")))
                 .Font_Lambda([this]{return FCoreStyle::GetDefaultFontStyle("Regular",FontSize(16));}).ColorAndOpacity(FLinearColor(0.8f, 0.65f, 0.65f)) ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 16)[ FSpireStyle::Rule() ]
             + SVerticalBox::Slot().FillHeight(1)
             [ SAssignNew(RunScroll,SScrollBox).AddMetaData(FDriverMetaData::Id("run.scroll")) + SScrollBox::Slot() [ SAssignNew(Body, SVerticalBox) ] ]
             + SVerticalBox::Slot().AutoHeight().Padding(0,8,0,0)
@@ -89,7 +94,8 @@ void SRunScreen::AddText(const FString& Text, const FName& Id, int Size)
     Body->AddSlot().AutoHeight().Padding(0, 0, 0, 16)
     [ SNew(STextBlock).Text(FText::FromString(Text)).AutoWrapText(true).WrapTextAt(CurrentRun?0.f:620.f)
         .Font(FCoreStyle::GetDefaultFontStyle("Regular", FontSize(Size)))
-        .ColorAndOpacity(FLinearColor(0.92f, 0.89f, 0.83f)).AddMetaData(FDriverMetaData::Id(Id)) ];
+        .ColorAndOpacity(FSpireStyle::IsHeading(Size)?FSpireStyle::HeadingColor():FLinearColor(0.92f, 0.89f, 0.83f))
+        .ShadowOffset(FVector2D(1,1)).ShadowColorAndOpacity(FLinearColor::Black).AddMetaData(FDriverMetaData::Id(Id)) ];
 }
 
 void SRunScreen::AddAction(const FString& Text, const FName& Id, TFunction<void()> Action, TSharedPtr<SHorizontalBox> Row)
@@ -181,6 +187,7 @@ void SRunScreen::ShowSetup()
             Role = static_cast<GirlsSpire::HeroRole>(Index); ShowSetup();
         }, RoleRow);
     }
+    AddText(UTF8_TO_TCHAR(GirlsSpire::SetupNarration().data()),"run.narration.setup",17);
     AddAction(TEXT("この編成で出発する"), "role.confirm", [this] { StartRun(); });
     AddAction(TEXT("タイトルへ戻る"), "setup.back", [this] { ShowTitle(); });
 }
@@ -223,6 +230,8 @@ void SRunScreen::RefreshRun()
         AddText(ProfileLabel(),"run.profile",14);
     } else if (State.Phase == RunPhase::Event) {
         AddText(NodeLabel(State.Active), "event.kind", 26);
+        if(State.Active.Kind==NodeKind::MidBoss || State.Active.Kind==NodeKind::FinalBoss)
+            AddText(UTF8_TO_TCHAR(DayNarration(State.Day).data()),State.Day==6?"run.narration.day6":"run.narration.day12",17);
         if(State.Active.Kind==NodeKind::Rest) {RefreshRest();return;}
         if(State.Active.Kind==NodeKind::Shop) {RefreshShop();return;}
         if(State.Active.Kind==NodeKind::Social) {RefreshSocial();return;}

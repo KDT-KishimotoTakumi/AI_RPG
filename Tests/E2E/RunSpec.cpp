@@ -84,6 +84,11 @@ void FGirlsSpireRunUiSpec::Define()
     });
     It(TEXT("全滅の検証入力で敗北し再出発できる"), EAsyncExecution::ThreadPool, [this] {
         if (!TestTrue(TEXT("開始"), ClickAndDrain(Driver->FindElement(By::Id("title.start"))))) return;
+        // 出陣の地の文で支度画面が長くなるため、戻る操作が画面外ならスクロールして押す。
+        if(!Driver->FindElement(By::Id("setup.back"))->IsVisible()) {
+            Driver->FindElement(By::Id("run.scroll"))->ScrollToEndUntil(By::Id("setup.back"));
+            DrainSlateLayout();
+        }
         TestTrue(TEXT("選択を取り消す"), ClickAndDrain(Driver->FindElement(By::Id("setup.back"))));
         TestTrue(TEXT("再び開始"), ClickAndDrain(Driver->FindElement(By::Id("title.start"))));
         TestTrue(TEXT("初期設定で出発"), ClickAndDrain(Driver->FindElement(By::Id("role.confirm"))));

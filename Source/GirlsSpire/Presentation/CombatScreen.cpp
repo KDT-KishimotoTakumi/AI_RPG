@@ -24,6 +24,11 @@
 #include "Widgets/Text/STextBlock.h"
 #include <algorithm>
 
+namespace {
+// 駒のHPバーの高さ。数値でも表示するため色以外でも読める。
+constexpr float HpBarHeight=5.f;
+}
+
 void SCombatScreen::Construct(const FArguments& Args)
 {
     Audio=Args._Audio;DisplayPreferences=Args._DisplayPreferences;Combat=Args._Combat; OnFinished=Args._OnFinished;
@@ -86,7 +91,8 @@ void SCombatScreen::Text(const FString& label,const FName& id,int size)
     if(FullField && !FieldDetails && (id=="battle.generation" || id=="battle.help" || id=="battle.cues.legend" || id=="battle.cues.scope" || id=="intent.help" || id=="intent.notice"))return;
     Panel->AddSlot().AutoHeight().Padding(0,0,0,10)
     [ SNew(STextBlock).Text(FText::FromString(label)).AutoWrapText(true)
-        .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(size))).AddMetaData(FDriverMetaData::Id(id)) ];
+        .Font(FCoreStyle::GetDefaultFontStyle(FSpireStyle::IsHeading(size)?"Bold":"Regular",FontSize(size)))
+        .ColorAndOpacity(FSpireStyle::IsHeading(size)?FSlateColor(FSpireStyle::HeadingColor()):FSlateColor::UseForeground()).AddMetaData(FDriverMetaData::Id(id)) ];
 }
 
 void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()> callback,bool enabled,TSharedPtr<SHorizontalBox> row,TSharedPtr<SWrapBox> wrap)
@@ -181,8 +187,8 @@ void SCombatScreen::Refresh(bool persist)
                     .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(large?8:11))).ColorAndOpacity(FLinearColor::White)
                     .ShadowOffset(FVector2D(1,1)).ShadowColorAndOpacity(FLinearColor::Black) ]
                   +SOverlay::Slot().VAlign(VAlign_Bottom).Padding(2)
-                  [SNew(SBox).HeightOverride(3).Visibility(unitId>=0?EVisibility::HitTestInvisible:EVisibility::Collapsed)
-                    [SNew(SProgressBar).Percent(hp).FillColorAndOpacity(MonochromeBoard?FLinearColor::White:FLinearColor(0.55f,0.9f,0.55f))
+                  [SNew(SBox).HeightOverride(HpBarHeight).Visibility(unitId>=0?EVisibility::HitTestInvisible:EVisibility::Collapsed)
+                    [SNew(SProgressBar).Percent(hp).FillColorAndOpacity(MonochromeBoard?FLinearColor::White:FSpireStyle::HpColor(hp))
                       .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.unit.hpbar.%d"),unitId)))]] ] ] ];
     }
     RefreshObjects();
