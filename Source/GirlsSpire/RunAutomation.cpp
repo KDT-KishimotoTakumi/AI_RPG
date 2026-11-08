@@ -56,4 +56,5 @@
 #include "../../Tests/E2E/BoardObjectsSpec.cpp"
 #include "../../Tests/E2E/AppearanceMenuSpec.cpp"
 #include "../../Tests/E2E/NarrationSpec.cpp"
+#include "../../Tests/E2E/AccessibilitySpec.cpp"
 #endif

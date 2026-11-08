@@ -25,7 +25,7 @@ T002が前提。UEを必要としない基盤はT001のインストール待ち�
 
 - [x] T009 [US1] Tests/Unit/RunTests.cpp に日1～12、救出最大4、ボス日、敗北テストを作成
 - [x] T010 [US1] Source/GirlsSpire/Application/Run.cpp に経路・救出・周回状態を実装（FR-001～014）
-- [ ] T011 [US1] Tests/E2E/RunSpec.cpp でUIから開始、経路、12日完走を検証
+- [x] T011 [US1] Tests/E2E/RunSpec.cpp でUIから開始、経路、12日完走を検証（GS-123: 開発用の勝利入力でなく通常ゲームの実戦で完走）
 
   進捗: 周回プレビューのマウス操作試験3件は成功。戦闘を検証入力で代用しているため、実戦・Gauntlet接続まで完了にしない。
 
@@ -90,7 +90,7 @@ GS-024（2026-10-30、絡繰鎧の2回答で生成条件と行動非消費を確
 - [x] T012 [US2] Tests/Unit/BattleTests.cpp に移動、射線、範囲、順番、目的達成のテストを作成
 - [ ] T013 [US2] Source/GirlsSpire/Domain/Battle.cpp に戦闘と役割別移動を実装（FR-015～024）
 - [x] T014 [US2] Tests/Unit/IntentTests.cpp に予告一致、候補なし、安全性を記述
-- [ ] T015 [US2] Source/GirlsSpire/AI/Intent.cpp と Enemy.cpp に仲間解釈・3難易度AIを実装（FR-031～036、050～054）
+- [ ] T015 [US2] Source/GirlsSpire/AI/Intent.cpp・Personality.cpp・EnemyTactics.cpp・EnemyCharacterSkills.cpp に仲間解釈・3難易度AIを実装（FR-031～036、050～054）
 - [x] T015q 承認済みenemy-character-skills-proposal.mdの未救出者8人の敵技能AIを、新旧保存の判断分離と支援込み安全予測を検証して接続する
 - [x] T016 [US2] Tests/Unit/GenerationTests.cpp に100シードと固定戦場退避のテストを記述
 - [ ] T017 [US2] Source/GirlsSpire/Generation/Battlefield.cpp に戦場生成と検証を実装
@@ -246,7 +246,7 @@ GS-020（保存5回答後の「実装を進めてください」で承認、2026
 独立確認: マウスのみ、全設定併用、1080p/1440p。
 
 - [ ] T031 [US7] Tests/E2E/AccessibilitySpec.cpp に文字・色・抑制・演出・音の操作テストを作成
-- [ ] T032 [US7] Source/GirlsSpire/Presentation と Content/UI に画面と設定を実装（FR-071～077）
+- [ ] T032 [US7] Source/GirlsSpire/Presentation に画面と設定を実装（FR-071～077）
 
 ## Phase 10: 横断検証
 
@@ -371,6 +371,7 @@ GS-038（2026-11-01、既存人物データの共用と救出前の役割表示�
 
 - [x] T031i 最大文字/字幕/軽減/抑制/消音と単色/危険域を併用し、実寸1920/2560の12日UI/IOを検証。仲間手番の表示操作欠落をTDD修正し、全体各90%・全UE432・通常MSVC2実寸を確認（T031j/全SC-012は別途）
 - [x] T031j 最大文字の長い戦闘ボタン文言が欠けず全文読めるレイアウトをTDDで検証・修正する（文言/効果は維持）
+- [x] T031k Tests/E2E/AccessibilitySpec.cpp で文字3段階・字幕/演出軽減/抑制・BGM/SFX個別消音・最大文字併用の盤面/結果取得を既存試験を束ねて検証（GS-123。字幕の表示先とSC-012全体は未完了のためT031は継続）
 
 - [x] T034i Editor/offscreenの通常5対3/最大5対10の実描画提出間隔を基礎計測し、暖機/終端境界・CSV/集計・変異検出/原本復帰/実寸/通常回帰を検証（製品SC-013は別途）
 
