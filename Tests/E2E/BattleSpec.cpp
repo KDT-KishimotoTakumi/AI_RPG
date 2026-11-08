@@ -133,6 +133,41 @@ void FGirlsSpireBattleUiSpec::Define()
         TestTrue(TEXT("次ラウンドの主人公を待機"),ClickAndDrain(Driver->FindElement(By::Id("battle.wait.south"))));
         TestTrue(TEXT("仲間の次手も予告"),Driver->FindElement(By::Id("intent.forecast"))->Exists());
     });
+    // 信頼段階の境界(24/25, 49/50, 74/75)で候補数・確率値・危険度の表示が変わることを、絆Profile経由の実画面で検証する。
+    for(const int trust : {0,24,25,49,50,74,75,99,100})
+    It(*FString::Printf(TEXT("仲間の作戦予告は信頼%dの段階どおり候補・確率・危険度を表示する"),trust), EAsyncExecution::ThreadPool,
+        FTimespan::FromSeconds(120), [this,trust] {
+        Async(EAsyncExecution::TaskGraphMainThread,[this,trust] {
+            using namespace GirlsSpire;
+            BattleUnit hero; hero.At={0,0}; hero.Speed=10;
+            BattleUnit ally; ally.Id=1; ally.At={2,2}; ally.Speed=20; ally.Movement=3;
+            BattleUnit enemy; enemy.Id=100; enemy.Side=Faction::Enemy; enemy.At={5,2}; enemy.Movement=0;
+            Profile profile; profile.Bonds[0]=trust;
+            Window->SetContent(SNew(SCombatScreen).Combat(MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,ally,enemy},42)).BondProfile(profile));
+        }).Wait();
+        TestTrue(TEXT("実際の信頼"),Driver->FindElement(By::Id("intent.trust"))->GetText().ToString().Contains(FString::Printf(TEXT("絆（信頼）: %d"),trust)));
+        const auto label=Driver->FindElement(By::Id("intent.forecast"))->GetText().ToString();
+        // 仕様: 0～49は3候補50/30/20、50～74は2候補70/30、75以上は1候補で確定予定。25未満は確率を隠す。危険度(被害上限)は常に表示する。
+        const int32 limit=trust>=75?1:trust>=50?2:3;
+        const bool showsPercent=trust>=25 && trust<75;
+        TArray<FString> lines; label.ParseIntoArrayLines(lines);
+        TArray<FString> candidates; for(const auto& line:lines) if(line.Contains(TEXT("被害上限"))) candidates.Add(line);
+        TestEqual(TEXT("信頼段階の候補数"),candidates.Num(),limit);
+        TestEqual(TEXT("確定予定の境界(75)"),label.StartsWith(TEXT("確定予定")),trust>=75);
+        TestEqual(TEXT("行動候補の見出し"),label.StartsWith(TEXT("行動候補")),trust<75);
+        const int32 dangers[]={10,0,0};
+        const int32 percents[]={trust>=50?70:50,30,20};
+        int32 percentCount=0;
+        for(int32 i=0;i<candidates.Num() && i<3;++i) {
+            TestTrue(TEXT("全候補に危険度を表示"),candidates[i].Contains(FString::Printf(TEXT("被害上限%d"),dangers[i])));
+            TestEqual(TEXT("確率表示の境界(25)"),candidates[i].Contains(TEXT("%")),showsPercent);
+            if(candidates[i].Contains(TEXT("%"))) {
+                ++percentCount;
+                TestTrue(TEXT("段階別の確率値"),candidates[i].EndsWith(FString::Printf(TEXT("%d%%"),percents[i])));
+            }
+        }
+        TestEqual(TEXT("確率を出す候補数"),percentCount,showsPercent?limit:0);
+    });
     It(TEXT("生成を8回失敗させ固定戦場で移動と攻撃を継続する"), EAsyncExecution::ThreadPool,
         FTimespan::FromSeconds(180), [this] {
         if (!TestTrue(TEXT("開始"),ClickAndDrain(Driver->FindElement(By::Id("title.start"))))) return;
