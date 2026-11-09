@@ -8,6 +8,10 @@
 
 namespace {
 using namespace GirlsSpire;
+constexpr std::uint64_t SurviveSeedCount=12;
+constexpr int MaxBattleSteps=500;
+// 実際の周回で現れる編成（空、2人、4人）を回す。
+const std::vector<std::vector<int>> EliteParty={{},{0,2},{1,3},{0,2,4,6}};
 struct CampaignResult {
     std::vector<std::string> Trace;
     std::set<int> Days;
@@ -121,5 +125,44 @@ int TestCampaign()
         check(continuous.Won==restored.Won && continuous.Days==restored.Days && continuous.Battles==restored.Battles && continuous.Actions==restored.Actions,"全武器/難易度の勝敗/到達日/戦闘/行動数が一致");
         std::cout<<"Campaign matrix difficulty="<<difficulty<<" role="<<role<<" seed="<<seed<<": won="<<continuous.Won<<" day="<<*continuous.Days.rbegin()<<" battles="<<continuous.Battles<<" actions="<<continuous.Actions<<" checkpoints="<<continuous.Trace.size()<<'\n';
     }catch(const std::exception& error){check(false,error.what());}
+    // 精鋭戦（偶数日=生存戦、奇数日=全滅戦）を行列の経路選択（常に休息）では通らないため直接戦わせ、目的別の勝敗を集計する。
+    // 周回の成長は反映せず初期能力のままなので、実際の周回より厳しい下限の測定になる。
+    int stalled[3]={};
+    for(int difficulty=0;difficulty<3;++difficulty){
+        int survive[3]={},eliminate[3]={};
+        for(int role=0;role<4;++role)for(std::uint64_t seed=1;seed<=SurviveSeedCount;++seed)for(int day=1;day<=11;++day)try{
+            Run base(seed,static_cast<Difficulty>(difficulty),static_cast<HeroRole>(role));
+            RunSnapshot state=base.Snapshot();state.Phase=RunPhase::Event;state.Day=day;state.Active={NodeKind::Elite,-1};
+            state.Recruited=EliteParty[seed%EliteParty.size()];
+            auto battle=Encounter::Create(state,seed,base.ProfileState());
+            const bool isSurvive=battle.Checkpoint().Goal==BattleGoal::Survive;
+            check(isSurvive==(day%2==0),"精鋭戦の目的が偶数日だけ生存");
+            CombatControl control;control.ProfileDriven=true;control.ChoiceRandom=Random(battle.RandomState());
+            for(int id=1;id<=8;++id)control.Trust[id]=base.ProfileState().Bonds[id-1];
+            int step=0;
+            for(;battle.Snapshot().Outcome==BattleOutcome::Ongoing && step<MaxBattleSteps;++step){
+                const auto& current=battle.Snapshot();
+                const auto actor=std::find_if(current.Units.begin(),current.Units.end(),[&](const auto& unit){return unit.Id==current.ActiveId;});
+                if(actor==current.Units.end())throw std::runtime_error("手番の参加者がいません");
+                if(actor->Side==Faction::Enemy)ApplyBasicAction(battle,ChooseBasicAction(battle));
+                else if(actor->Id==0){const auto ranked=RankIntentActions(battle,{});if(ranked.empty())throw std::runtime_error("主人公の候補がありません");ApplyBasicAction(battle,ranked.front());}
+                else{const auto forecast=IntentForecast::Build(battle,RankIntentActions(battle,control.Orders[actor->Id]),control.Trust[actor->Id]);forecast.Execute(battle,control.ChoiceRandom);}
+            }
+            const auto outcome=battle.Snapshot().Outcome;
+            // 生存戦は必ず終局する。全滅戦の膠着（敵1体が残り500手超）は既存の挙動で原因未特定のため、失敗にせず件数と条件を出力する。
+            if(isSurvive)check(outcome!=BattleOutcome::Ongoing,"生存戦が有限手数で終局する");
+            if(outcome==BattleOutcome::Ongoing){
+                if(!isSurvive)++stalled[difficulty];
+                std::cerr<<"  未終局: difficulty="<<difficulty<<" role="<<role<<" seed="<<seed<<" day="<<day<<" party="<<state.Recruited.size()<<" round="<<battle.Snapshot().Round<<" units:";
+                for(const auto& unit:battle.Snapshot().Units)if(unit.Hp>0)std::cerr<<' '<<unit.Id<<(unit.Side==Faction::Enemy?"E":"P")<<'('<<unit.At.X<<','<<unit.At.Y<<")hp"<<unit.Hp;
+                std::cerr<<'\n';
+            }
+            auto& tally=isSurvive?survive:eliminate;
+            ++tally[0];if(outcome==BattleOutcome::Won)++tally[1];else if(outcome==BattleOutcome::Lost)++tally[2];
+        }catch(const std::exception& error){check(false,error.what());}
+        std::cout<<"EliteOutcome difficulty="<<difficulty<<" survive: won="<<survive[1]<<" lost="<<survive[2]<<" of "<<survive[0]
+            <<" / eliminate: won="<<eliminate[1]<<" lost="<<eliminate[2]<<" stalled="<<stalled[difficulty]<<" of "<<eliminate[0]<<'\n';
+        check(survive[0]==survive[1]+survive[2],"生存戦はすべて勝敗が付く");
+    }
     std::cout<<"Campaign: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }
