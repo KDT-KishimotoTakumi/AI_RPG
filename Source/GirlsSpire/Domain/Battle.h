@@ -156,6 +156,8 @@ public:
     int PotentialEnemyDamage(int targetId) const;
     int PotentialHostileDamage(int targetId) const;
     std::vector<Position> ConnectedTerrain(Position from, bool avoidTraps=false) const;
+    // 壁・障害物・段差を迂回した歩数。到達できなければ-1。ユニットの位置は考慮しない。
+    int RouteDistance(Position from, Position to) const;
 private:
     bool ProjectEnemySupport(int actorId,const Battle& timeline);
     AttackPreview PreviewCharacterUltimate(int actorId,Position target) const;

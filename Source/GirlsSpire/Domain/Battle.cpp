@@ -39,6 +39,28 @@ std::vector<Position> Battle::ConnectedTerrain(Position from,bool avoidTraps) co
     }
     return result;
 }
+int Battle::RouteDistance(Position from,Position to) const
+{
+    if(!Inside(from) || !Inside(to)) return -1;
+    if(from==to) return 0;
+    std::vector<int> steps(state_.Tiles.size(),-1);
+    std::vector<Position> frontier{from};
+    steps[from.Y*state_.Width+from.X]=0;
+    const Position directions[]={{0,-1},{1,0},{0,1},{-1,0}};
+    for(std::size_t index=0;index<frontier.size();++index) {
+        const auto current=frontier[index];
+        for(const auto step:directions) {
+            const Position next{current.X+step.X,current.Y+step.Y};
+            if(!TerrainStep(current,next)) continue;
+            const auto tileIndex=next.Y*state_.Width+next.X;
+            if(steps[tileIndex]>=0) continue;
+            steps[tileIndex]=steps[current.Y*state_.Width+current.X]+1;
+            if(next==to) return steps[tileIndex];
+            frontier.push_back(next);
+        }
+    }
+    return -1;
+}
 int Battle::PotentialEnemyDamage(int targetId) const
 {
     const auto target=Find(targetId);

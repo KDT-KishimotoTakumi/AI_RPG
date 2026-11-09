@@ -6,6 +6,30 @@
 #include <cstdlib>
 #include <limits>
 namespace GirlsSpire {
+BasicAction ChooseRouteApproach(const Battle& battle)
+{
+    const auto& state=battle.Snapshot();
+    const auto actor=std::find_if(state.Units.begin(),state.Units.end(),
+        [&](const BattleUnit& unit) { return unit.Id==state.ActiveId; });
+    const auto route=[&](Position at) {
+        int shortest=std::numeric_limits<int>::max();
+        for(const auto& target:state.Units) {
+            if(target.Hp<=0 || target.Side==actor->Side || (actor->Side==Faction::Player && target.Side==Faction::Neutral)) continue;
+            const int steps=battle.RouteDistance(at,target.At);
+            if(steps>=0) shortest=std::min(shortest,steps);
+        }
+        return shortest;
+    };
+    BasicAction best;
+    int shortest=route(actor->At);
+    for(const auto destination:battle.Reachable(actor->Id)) {
+        const auto move=battle.PreviewMove(actor->Id,destination);
+        if(!move.Legal || move.KnockedOut) continue;
+        const int steps=route(destination);
+        if(steps<shortest) { shortest=steps; best={BasicActionKind::Move,destination}; }
+    }
+    return best;
+}
 BasicAction ChooseBasicAction(const Battle& battle)
 {
     const auto& state = battle.Snapshot();
@@ -86,6 +110,7 @@ BasicAction ChooseBasicAction(const Battle& battle)
         const int distance = nearest(destination);
         if (distance < shortest) { shortest = distance; best = {BasicActionKind::Move,destination}; }
     }
+    if(best.Kind==BasicActionKind::Wait) return ChooseRouteApproach(battle);
     return best;
 }
 

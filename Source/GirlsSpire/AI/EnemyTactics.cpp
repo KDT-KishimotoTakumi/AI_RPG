@@ -1,4 +1,5 @@
 #include "EnemyTactics.h"
+#include "BasicTurn.h"
 #include "EnemyCharacterSkills.h"
 #include <algorithm>
 #include <cstdlib>
@@ -83,6 +84,7 @@ BasicAction ChooseTacticalMove(const Battle& battle)
         const MoveScore score{attack->Score,-(move.Damage+projection.PotentialHostileDamage(actor.Id)),-distance,-destination.Y,-destination.X};
         if(!best || score>*best){best=score;firing={BasicActionKind::Move,destination};}
     }
-    return best?firing:approach;
+    if(!best) return approach.Kind==BasicActionKind::Wait?ChooseRouteApproach(battle):approach;
+    return firing;
 }
 }
