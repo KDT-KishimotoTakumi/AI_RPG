@@ -65,6 +65,30 @@ int TestSavePayload()
         check(!DecodeProfilePayload(*bytes),"周回を恒久として拒否");
         auto corrupt=*bytes;corrupt[0]=99;check(!DecodeRunPayload(corrupt),"不明形式拒否");
     }
+    // FR-022: 精鋭戦の生存戦（偶数日）と全滅戦（奇数日・旧保存）はどちらも往復でき、他の種別への生存目的は拒否する。
+    {
+        auto eliteRun=run.Checkpoint();eliteRun.State.Active={NodeKind::Elite,-1};
+        for(int day:{5,6}) {
+            eliteRun.State.Day=day;
+            auto elite=Encounter::Create(eliteRun.State,7);
+            check(elite.Checkpoint().Goal==(day%2==0?BattleGoal::Survive:BattleGoal::Eliminate),"精鋭戦の目的が日で決まる");
+            CombatControl control;control.ProfileDriven=true;control.ChoiceRandom=Random(day+33);
+            for(int action=0;action<4;++action) {
+                verify({eliteRun,SavedCombat{elite.Checkpoint(),control.Checkpoint()}});
+                if(elite.Snapshot().Outcome!=BattleOutcome::Ongoing) break;
+                ApplyBasicAction(elite,ChooseBasicAction(elite));
+            }
+        }
+        eliteRun.State.Day=6;
+        const RunSaveState surviveState{eliteRun,SavedCombat{Encounter::Create(eliteRun.State,7).Checkpoint(),CombatControl{}.Checkpoint()}};
+        check(EncodeRunPayload(surviveState).has_value(),"精鋭戦の生存戦を保存できる");
+        for(auto kind:{NodeKind::Battle,NodeKind::Rescue,NodeKind::MidBoss,NodeKind::FinalBoss}) {
+            auto wrong=surviveState;wrong.Run.State.Active={kind,kind==NodeKind::Rescue?1:-1};
+            check(!EncodeRunPayload(wrong),"精鋭戦以外への生存目的は拒否");
+        }
+        auto wrongRounds=surviveState;wrongRounds.Combat->Battle.SurvivalRounds=0;
+        check(!EncodeRunPayload(wrongRounds),"生存ラウンド数の不正は拒否");
+    }
     auto richRun=run.Checkpoint();richRun.State.Day=5;richRun.State.Active={NodeKind::Battle};
     richRun.State.Recruited={0,1,2,3};richRun.State.Wallet.Medicines=5;
     for(int id=0;id<9;++id) {

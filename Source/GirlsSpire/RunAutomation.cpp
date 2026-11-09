@@ -15,6 +15,7 @@
 #include "../../Tests/E2E/StorySpec.cpp"
 #include "../../Tests/E2E/NarrativeResolutionSpec.cpp"
 #include "../../Tests/E2E/EnemyCoverSpec.cpp"
+#include "../../Tests/E2E/EliteSurviveSpec.cpp"
 #include "../../Tests/E2E/RangedEnemySpec.cpp"
 #include "../../Tests/E2E/CavalrySpec.cpp"
 #include "../../Tests/E2E/NinjaEnemySpec.cpp"

@@ -195,6 +195,8 @@ void SCombatScreen::Refresh(bool persist)
     RefreshMovingUnits();
     Text(FString::Printf(TEXT("第%dラウンド"),state.Round),"battle.round",23);
     Text(GenerationSummary,"battle.generation",13);
+    if(const auto saved=Combat->Checkpoint();saved.Goal==BattleGoal::Survive)
+        Text(FString::Printf(TEXT("生存戦：第%dラウンドを耐え抜けば勝利（現在第%dラウンド）。味方が全員戦闘不能で敗北。"),saved.SurvivalRounds,state.Round),"battle.goal.survive",14);
     for(const auto& unit:state.Units)if(unit.Hp>0 && unit.Role==BattleRole::CastleLord) {
         const auto summoned=std::count_if(state.Units.begin(),state.Units.end(),[id=unit.Id](const BattleUnit& other){return other.SummonerId==id && other.Hp>0;});
         Text(FString::Printf(TEXT("歴史喰らいの城主：HP%d/%d / 3の倍数ラウンドの手番開始に足軽1体召喚（存命%d/3）。召喚後も通常行動。城主撃破で勝利。"),unit.Hp,unit.MaxHp,static_cast<int>(summoned)),*FString::Printf(TEXT("battle.finalboss.%d"),unit.Id),14);

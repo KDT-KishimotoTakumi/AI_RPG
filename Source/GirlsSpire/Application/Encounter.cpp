@@ -106,7 +106,10 @@ Battle Encounter::CreateConfigured(const RunSnapshot& run,std::uint64_t seed,con
             unit.At.X=std::min(11,std::max(7,range+unit.Movement+2));
         }
     }
-    const auto goal=kind==NodeKind::Rescue?BattleGoal::Rescue:kind==NodeKind::FinalBoss?BattleGoal::DefeatLord:BattleGoal::Eliminate;
+    // 精鋭戦のうち偶数日は一定ラウンド生存で勝利する（FR-022）。乱数を消費せず日で決め、5日目など奇数日の既存戦闘は変えない。
+    const bool surviveElite=kind==NodeKind::Elite && run.Day%2==0;
+    const auto goal=kind==NodeKind::Rescue?BattleGoal::Rescue:kind==NodeKind::FinalBoss?BattleGoal::DefeatLord:
+        surviveElite?BattleGoal::Survive:BattleGoal::Eliminate;
     const auto factory=forceGenerationFailure?
         Battlefield::DraftFactory{[](Random&) { return TerrainLayout{}; }}:Battlefield::DraftFactory{};
     auto field=Battlefield::Generate(seed,units,goal,8,factory,profile!=nullptr);

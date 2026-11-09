@@ -151,7 +151,9 @@ bool ValidState(const RunSaveState& saved)
     if(checkpoint.State.EnemyAI!=EnemyThinking::Legacy && static_cast<int>(checkpoint.State.EnemyAI)!=1+static_cast<int>(run.Level))return false;
     const auto expectedGoal=kind==NodeKind::Rescue?BattleGoal::Rescue:
         kind==NodeKind::FinalBoss && std::any_of(checkpoint.State.Units.begin(),checkpoint.State.Units.end(),[](const BattleUnit& unit){return unit.Role==BattleRole::CastleLord;})?BattleGoal::DefeatLord:BattleGoal::Eliminate;
-    if(checkpoint.Goal!=expectedGoal ||
+    // 精鋭戦は全滅か生存のどちらでも有効（旧保存は全滅のまま読める）。
+    const bool eliteSurvive=kind==NodeKind::Elite && checkpoint.Goal==BattleGoal::Survive;
+    if((checkpoint.Goal!=expectedGoal && !eliteSurvive) ||
         checkpoint.State.Medicines>run.Wallet.Medicines) return false;
     std::set<int> expected{0},actual;
     for(int id:run.Recruited) expected.insert(id+1);

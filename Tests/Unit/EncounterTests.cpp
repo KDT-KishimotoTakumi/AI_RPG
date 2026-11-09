@@ -59,6 +59,25 @@ int TestEncounter()
                 if(u.Side==Faction::Player) check(first.PotentialEnemyDamage(u.Id)<u.Hp,"全編成員の初期安全性");
         }
     }
+    // FR-022: 精鋭戦の一部は「一定ターン生存」で勝利する。他の種別は従来の目的を保つ。
+    {
+        int surviveCount=0,eliminateCount=0;
+        for(int seed=0;seed<100;++seed) for(int day=1;day<=11;++day) {
+            auto elite=run; elite.Day=day; elite.Recruited={0,1,2,4}; elite.Active={NodeKind::Elite};
+            const auto battle=Encounter::Create(elite,seed);
+            const auto goal=battle.Checkpoint().Goal;
+            check(goal==BattleGoal::Survive || goal==BattleGoal::Eliminate,"精鋭戦の目的は生存か全滅");
+            check((goal==BattleGoal::Survive)==(day%2==0),"精鋭戦の生存化は偶数日で決まる");
+            check(battle.Checkpoint().SurvivalRounds==3,"生存戦は既定の3ラウンド");
+            (goal==BattleGoal::Survive?surviveCount:eliminateCount)++;
+            check(Encounter::Create(elite,seed).Checkpoint()==battle.Checkpoint(),"精鋭戦の目的決定が再現");
+            for(auto kind:{NodeKind::Battle,NodeKind::MidBoss,NodeKind::FinalBoss}) {
+                auto other=elite; other.Active={kind}; if(kind==NodeKind::MidBoss)other.Day=6; if(kind==NodeKind::FinalBoss)other.Day=12;
+                check(Encounter::Create(other,seed).Checkpoint().Goal!=BattleGoal::Survive,"精鋭以外は生存戦にならない");
+            }
+        }
+        check(surviveCount>0 && eliminateCount>0,"精鋭戦に生存と全滅の両方が出る");
+    }
     std::cout<<"Encounter: "<<checks<<" checks, "<<failed<<" failed\n";
     return failed;
 }

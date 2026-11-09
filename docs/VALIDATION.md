@@ -2,6 +2,30 @@
 
 更新: 2026-11-05。製品全体は未完成、出荷条件未達。
 
+## GS-126 Surviveの本編接続（2026-11-09）
+
+- 利用者選択「既存の精鋭戦の一部をSurvive化」。Encounter.cppで精鋭戦の偶数日をSurvive（3ラウンド）にし、乱数は消費しない。SavePayload.cppは精鋭戦で全滅/生存の両方を有効とし、CombatScreen.cppに勝利条件を表示。
+- 初回はシードの偶奇で実装し、EnemyCodexの「生成1200戦場の全保存バイト」指紋が変化したため、指紋が使う5日目（奇数日）を変えない偶数日方式へ変更。指紋は維持。
+- 結果: `pwsh -File tools/test-core.ps1` 終了コード0、FAILなし。Encounter 9,818チェック（精鋭戦×100シード×11日の目的検査を追加）、EnemyCodex・SavePayload・Campaign 108・GenerationSafety 5,158,311は0失敗。
+- UE: `tools/build-unreal.ps1` は Result: Succeeded（既存のRuntimeSpec.cpp C4701警告1件のみ）。`test-unreal.ps1` 既定のFoundationは1件成功/0失敗。`-UI -Filter GirlsSpire.UI.Battle`（オフスクリーン）は26件成功/0失敗・Error行0。
+- 追加: Tests/E2E/EliteSurviveSpec.cpp（RunAutomation.cppへ登録。初回は登録漏れで「No automation tests matched」となり、追記後に再ビルド）。`-UI -Filter GirlsSpire.UI.EliteSurvive` は2件成功/0失敗。偶数日（6日目）の精鋭戦で battle.goal.survive に「生存戦」「第3ラウンド」「現在第1ラウンド」が出ること、奇数日（5日目）は全滅戦のまま表示が出ないことを実UIで確認。
+- 保存往復: SavePayloadTests.cppに、精鋭戦の偶数日（Survive）・奇数日（旧保存相当のEliminate）の往復一致、通常戦/救出/中ボス/最終戦への生存目的の付け替え拒否、生存ラウンド数0の拒否を追加。`tools/test-core.ps1` 終了コード0、全86スイート0失敗（SavePayload 675,126、Encounter 9,818、EnemyCodex 319＝1200戦場指紋不変、Campaign 108、GenerationSafety 5,158,311）。
+- 限界: 実装を先に入れたため赤→緑の確認はしていない（表示を外した場合に失敗することは未確認）。実際の見た目・文字3段階・1080/1440での収まりは未確認。
+- 未実行/未検証:生存戦の保存往復の専用試験と、AI通し勝敗の再計測（Campaign行列は精鋭戦の偶数日を通るが生存戦の結果を個別集計していない）。各90%カバレッジも未計測。
+
+## GS-125 味方HP境界の連続走査（2026-11-09）
+
+- GenerationSafetyTests.cpp にHP1～40×8シード（全8仲間を回転した4人編成）×全4役割×全3難易度×全5種別×通常/正式/退避を追加。製品コードは不変、不具合は検出なし。初回は5人以上の編成が周回状態として無効で自作誤りを検出し、試験側を4人編成へ修正した。
+- 結果: `pwsh -File tools/test-core.ps1` 終了コード0、GenerationSafety 5,158,311チェック0失敗。所要は10分前後。
+- 未実行: UE試験・カバレッジ全体計測・実機検証。Surviveの期限内可能性・本編接続は未着手。
+
+## GS-124 生成の安全検査の項目化（2026-11-09）
+
+- 項目表（検証済み/不足/証跡）は specs/001-girls-spire/generation-rules.md に一本化。重複記載しない。
+- 追加: Tests/Unit/GenerationSafetyTests.cpp（RulesTests.cppへ登録）。既存挙動の検証のみで製品コードは変更しておらず、赤→緑の差分はない。試験の有効性確認として途中の自作誤りを2件検出（救出候補が加入済みで例外、敵役割の出現条件に合わない日数設定）し、いずれも試験側を修正した。製品の不具合は検出なし。
+- 結果: tools/test-core.ps1 が終了コード0、全85スイートが0失敗。GenerationSafety 1,103,271チェック（自動採用11,856／退避144の通常生成、寸法25種）、FormalEncounter 54,019・Encounter 2,117・Generation 1,825は従来通り。
+- 未実行: tools/test-coverage.ps1 の全体計測（UE計装ビルドと通常ゲーム起動を含むため、通常ゲーム起動禁止の指示に従い開始後に中止）。-CoreOnly は実行を開始したが完了を確認できていない。2026-11-09に `pwsh -File tools/test-core.ps1` を再実行し、終了コード0・Campaign 108/Appearance 2,608チェック0失敗を確認（Windows PowerShell 5では#requires 7.0と実行ポリシーで起動不可）。UE試験・build-unreal も未実行（Source/GirlsSpireとE2Eは未変更で、Tests/Unitのみ追加）。各90%以上の合否は未確認。
+
 ## GS-072 未救出者の敵技能AI（2026-11-04）
 
 - 利用者承認の8人表を新規正式戦闘へ接続。回復優先、通常攻撃/技能の期待被害比較、攻撃不能時の有効な強化を共通予告APIで選ぶ。既存10敵/ボス・能力値・必殺/共有ゲージ・乱数消費を維持。
