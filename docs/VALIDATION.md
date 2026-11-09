@@ -10,7 +10,8 @@
 - UE: `tools/build-unreal.ps1` は Result: Succeeded（既存のRuntimeSpec.cpp C4701警告1件のみ）。`test-unreal.ps1` 既定のFoundationは1件成功/0失敗。`-UI -Filter GirlsSpire.UI.Battle`（オフスクリーン）は26件成功/0失敗・Error行0。
 - 追加: Tests/E2E/EliteSurviveSpec.cpp（RunAutomation.cppへ登録。初回は登録漏れで「No automation tests matched」となり、追記後に再ビルド）。`-UI -Filter GirlsSpire.UI.EliteSurvive` は2件成功/0失敗。偶数日（6日目）の精鋭戦で battle.goal.survive に「生存戦」「第3ラウンド」「現在第1ラウンド」が出ること、奇数日（5日目）は全滅戦のまま表示が出ないことを実UIで確認。
 - 保存往復: SavePayloadTests.cppに、精鋭戦の偶数日（Survive）・奇数日（旧保存相当のEliminate）の往復一致、通常戦/救出/中ボス/最終戦への生存目的の付け替え拒否、生存ラウンド数0の拒否を追加。`tools/test-core.ps1` 終了コード0、全86スイート0失敗（SavePayload 675,126、Encounter 9,818、EnemyCodex 319＝1200戦場指紋不変、Campaign 108、GenerationSafety 5,158,311）。
-- 限界: 実装を先に入れたため赤→緑の確認はしていない（表示を外した場合に失敗することは未確認）。実際の見た目・文字3段階・1080/1440での収まりは未確認。
+- 試験の有効性: 表示（battle.goal.survive）を一時的に外して再ビルドすると、偶数日の試験が Fail（Expected '勝利条件を表示' to be true）、奇数日の試験は Success のままになることを確認。元に戻して2件成功に復帰（git restoreで復元、差分なし）。
+- 限界: 実装を先に入れたため、試験を先に書く順の赤→緑ではない。実際の見た目・文字3段階・1080/1440での収まりは未確認。
 - 未実行/未検証:生存戦の保存往復の専用試験と、AI通し勝敗の再計測（Campaign行列は精鋭戦の偶数日を通るが生存戦の結果を個別集計していない）。各90%カバレッジも未計測。
 
 ## GS-125 味方HP境界の連続走査（2026-11-09）
