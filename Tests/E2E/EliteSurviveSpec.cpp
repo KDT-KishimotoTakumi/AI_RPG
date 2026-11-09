@@ -6,11 +6,16 @@
 #include "Widgets/SNullWidget.h"
 #include "Presentation/CombatScreen.h"
 #include "Application/Encounter.h"
+#include "ImageUtils.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "HAL/FileManager.h"
 // FR-022: 精鋭戦の偶数日は生存戦になり、勝利条件を画面に示す。奇数日は従来どおり表示しない。
 BEGIN_DEFINE_SPEC(FGirlsSpireEliteSurviveSpec,"GirlsSpire.UI.EliteSurvive",EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
     FAutomationDriverPtr Driver;
     TSharedPtr<SWindow> Window;
     TSharedRef<GirlsSpire::Battle> ShowElite(int day);
+    void Capture(const TCHAR* name);
 END_DEFINE_SPEC(FGirlsSpireEliteSurviveSpec)
 TSharedRef<GirlsSpire::Battle> FGirlsSpireEliteSurviveSpec::ShowElite(int day)
 {
@@ -20,6 +25,17 @@ TSharedRef<GirlsSpire::Battle> FGirlsSpireEliteSurviveSpec::ShowElite(int day)
     auto combat=MakeShared<Battle>(Encounter::Create(run,0));
     Async(EAsyncExecution::TaskGraphMainThread,[this,combat]{Window->SetContent(SNew(SCombatScreen).Combat(combat));}).Wait();
     return combat;
+}
+// 見た目の確認用に現在の画面をPNGで保存する（Saved/Screenshots）。
+void FGirlsSpireEliteSurviveSpec::Capture(const TCHAR* name)
+{
+    TArray<FColor> pixels;FIntVector size;bool taken=false;
+    // Slateはゲームスレッドからしか触れないため、試験スレッドからは主スレッドへ依頼して待つ。
+    Async(EAsyncExecution::TaskGraphMainThread,[&]{taken=FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,size);}).Wait();
+    if(!TestTrue(TEXT("撮影"),taken))return;
+    TArray64<uint8> png;FImageUtils::PNGCompressImageArray(size.X,size.Y,pixels,png);
+    const auto folder=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*folder,true);
+    TestTrue(TEXT("画像保存"),FFileHelper::SaveArrayToFile(png,*(folder/name)));
 }
 void FGirlsSpireEliteSurviveSpec::Define()
 {
@@ -38,6 +54,7 @@ void FGirlsSpireEliteSurviveSpec::Define()
         const auto text=goal->GetText().ToString();
         TestTrue(TEXT("文言に生存戦と耐える回数を含む"),text.Contains(TEXT("生存戦")) && text.Contains(TEXT("第3ラウンド")));
         TestTrue(TEXT("現在ラウンドを示す"),text.Contains(TEXT("現在第1ラウンド")));
+        Capture(TEXT("EliteSurvive-Day6.png"));
     });
     It(TEXT("奇数日の精鋭戦は全滅戦のままで生存の表示を出さない"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this] {
         using namespace GirlsSpire;
@@ -45,6 +62,7 @@ void FGirlsSpireEliteSurviveSpec::Define()
         TestTrue(TEXT("目的は全滅"),combat->Checkpoint().Goal==BattleGoal::Eliminate);
         TestFalse(TEXT("生存の表示なし"),Driver->FindElement(By::Id("battle.goal.survive"))->Exists());
         TestTrue(TEXT("通常の戦闘画面は表示"),Driver->FindElement(By::Id("battle.round"))->Exists());
+        Capture(TEXT("EliteSurvive-Day5.png"));
     });
     AfterEach([this] {
         Driver.Reset();if(Window.IsValid()){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}
