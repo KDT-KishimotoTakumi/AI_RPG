@@ -858,3 +858,11 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - 注意: 同じ `-Filter GirlsSpire` を `-UI` なし（NullRHI）で実行すると25件成功/435件失敗になる。UI試験は描画が必要なため（「Element found but not visible」）で、製品の不具合ではなく実行方法の誤り。UI試験は必ず `-UI` を付ける。
 - 画面確認: `GirlsSpire.UI.EliteSurvive` が戦闘画面を `Saved/Screenshots/EliteSurvive-Day5.png` / `-Day6.png` に保存する（2件成功）。6日目に生存戦の勝利条件が表示されることを目視で確認。1100×760では条件文の末尾（「味方が全員戦闘不能で敗北」）が右端で切れる。折り返しは既存表示にもない仕様で未対応。文字3段階・1080/1440の見た目確認は未実施。
 - 未実施: 各自作C++の90%カバレッジ計測、味方自動接近（`AI/Intent.cpp`）の同種の局所最小の調査。
+
+### GS-129 味方の自動接近の経路迂回とタイトル変更
+- 変更: `RankIntentActions`（Intent.cpp）で、直線距離が縮む移動先がないときだけ`RouteDistance`で評価して迂回する。既存の挙動は不変。タイトル表示を「Spiral RPG」へ変更。
+- 試験: BasicTurnTests（味方が壁の裏で迂回、経路なしは待機、状態不変）。変更前はRed（28件中1件失敗）、変更後は`tools/test-core.ps1`で全グループ0失敗（BasicTurn 28件、Intent 527件）。
+- 結果: 精鋭戦の全滅戦の膠着は0件のまま。難易度0: 282勝6敗、1: 262勝26敗、2: 253勝35敗（各288戦）。GS-128から難易度1・2で各1戦が敗北から勝利へ。生存戦は全難易度240勝0敗で変化なし。
+- UE確認（コミット94e202a時点）: `tools/build-unreal.ps1`成功（終了コード0）の後、`tools/test-unreal.ps1 -UI -Filter GirlsSpire`が460件成功/失敗0/警告0。撮影Saved/Screenshots/Presentation-Title.pngで「Spiral RPG」を目視、EliteSurvive-Day6.pngで説明文の折り返しを目視。
+- 注意: test-unreal.ps1はビルドしない。変更後にbuild-unreal.ps1を実行しないと旧DLLで試験が通る。ゲームが起動したままだとDLLを掴みリンクに失敗する（終了コード6）。
+- 未確認: 各90%の計測、配布版（Windows Shipping）への反映、物理フルスクリーンでの実機操作。
