@@ -866,3 +866,5 @@ Nativeの293/294という従来の略記は外見スイートのチェック数�
 - UE確認（コミット94e202a時点）: `tools/build-unreal.ps1`成功（終了コード0）の後、`tools/test-unreal.ps1 -UI -Filter GirlsSpire`が460件成功/失敗0/警告0。撮影Saved/Screenshots/Presentation-Title.pngで「Spiral RPG」を目視、EliteSurvive-Day6.pngで説明文の折り返しを目視。
 - 注意: test-unreal.ps1はビルドしない。変更後にbuild-unreal.ps1を実行しないと旧DLLで試験が通る。ゲームが起動したままだとDLLを掴みリンクに失敗する（終了コード6）。
 - 未確認: 各90%の計測、配布版（Windows Shipping）への反映、物理フルスクリーンでの実機操作。
+- 各90%計測（GS-129、コミット3628cb8時点＋coverage-declarations.jsonのRunAutomation.cppハッシュ更新）: `tools/test-coverage.ps1`が終了コード0、Passed=true/Missing=[]。行5545/5574=99.48%、関数705/718=98.19%、分岐5624/6144=91.54%（直前の全体計測d221: 行99.48/関数98.26/分岐91.36%）。集計・JSON・profdata・実行物はSaved/Coverage/73c6bd12a3034fed92779b8f1e90c79dに保持。計測後に`tools/build-unreal.ps1`で通常構成へ復帰（終了コード0）。
+- 計測中の不具合: 初回はシステムのメモリ不足でプロセスが強制停止（製品/試験の失敗ではない）。2回目は、GS-125のコミットa84e3b5でRunAutomation.cppにinclude1行を足した際にtools/coverage-declarations.jsonのハッシュが未更新だったため、宣言専用ファイルの照合で失敗。ファイルがinclude/プリプロセッサ行のみであることを確認してハッシュを更新し、3回目で合格。
