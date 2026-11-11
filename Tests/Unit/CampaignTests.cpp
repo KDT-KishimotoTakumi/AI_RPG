@@ -165,5 +165,39 @@ int TestCampaign()
         check(survive[0]==survive[1]+survive[2],"生存戦はすべて勝敗が付く");
         check(stalled[difficulty]==0,"全滅戦が膠着せず有限手数で終局する");
     }
+    // 通常戦・救出戦・中ボス・最終ボスも同じAI通しで有限手数に終局するか集計する（周回の成長は反映せず初期能力のままの下限測定）。
+    // 目的達成の時間内可能性（generation-rules.md）の証跡。勝敗は問わず、未終局（膠着）0件だけを検査する。
+    {
+        struct NodeCase{NodeKind Kind;const char* Name;std::vector<int> Days;};
+        const std::vector<NodeCase> cases={{NodeKind::Battle,"battle",{1,4,8,11}},{NodeKind::Rescue,"rescue",{1,2,3,4}},{NodeKind::MidBoss,"midboss",{6}},{NodeKind::FinalBoss,"finalboss",{12}}};
+        for(const auto& nodeCase:cases)for(int difficulty=0;difficulty<3;++difficulty){
+            int tally[4]={},stuck=0;
+            for(int role=0;role<4;++role)for(std::uint64_t seed=1;seed<=SurviveSeedCount;++seed)for(int day:nodeCase.Days)try{
+                Run base(seed,static_cast<Difficulty>(difficulty),static_cast<HeroRole>(role));
+                RunSnapshot state=base.Snapshot();state.Phase=RunPhase::Event;state.Day=day;
+                const int candidate=nodeCase.Kind==NodeKind::Rescue?static_cast<int>(seed%8):-1;
+                state.Active={nodeCase.Kind,candidate};
+                state.Recruited=EliteParty[seed%EliteParty.size()];
+                state.Recruited.erase(std::remove(state.Recruited.begin(),state.Recruited.end(),candidate),state.Recruited.end());
+                auto battle=Encounter::Create(state,seed,base.ProfileState());
+                CombatControl control;control.ProfileDriven=true;control.ChoiceRandom=Random(battle.RandomState());
+                for(int id=1;id<=8;++id)control.Trust[id]=base.ProfileState().Bonds[id-1];
+                int step=0;
+                for(;battle.Snapshot().Outcome==BattleOutcome::Ongoing && step<MaxBattleSteps;++step){
+                    const auto& current=battle.Snapshot();
+                    const auto actor=std::find_if(current.Units.begin(),current.Units.end(),[&](const auto& unit){return unit.Id==current.ActiveId;});
+                    if(actor==current.Units.end())throw std::runtime_error("手番の参加者がいません");
+                    if(actor->Side==Faction::Enemy)ApplyBasicAction(battle,ChooseBasicAction(battle));
+                    else if(actor->Id==0){const auto ranked=RankIntentActions(battle,{});if(ranked.empty())throw std::runtime_error("主人公の候補がありません");ApplyBasicAction(battle,ranked.front());}
+                    else{const auto forecast=IntentForecast::Build(battle,RankIntentActions(battle,control.Orders[actor->Id]),control.Trust[actor->Id]);forecast.Execute(battle,control.ChoiceRandom);}
+                }
+                const auto outcome=battle.Snapshot().Outcome;
+                ++tally[0];if(outcome==BattleOutcome::Won)++tally[1];else if(outcome==BattleOutcome::Lost)++tally[2];else{++stuck;
+                    std::cerr<<"  未終局: node="<<nodeCase.Name<<" difficulty="<<difficulty<<" role="<<role<<" seed="<<seed<<" day="<<day<<" round="<<battle.Snapshot().Round<<'\n';}
+            }catch(const std::exception& error){check(false,error.what());}
+            std::cout<<"NodeOutcome node="<<nodeCase.Name<<" difficulty="<<difficulty<<": won="<<tally[1]<<" lost="<<tally[2]<<" stalled="<<stuck<<" of "<<tally[0]<<'\n';
+            check(stuck==0,"通常戦/救出戦/ボス戦が膠着せず有限手数で終局する");
+        }
+    }
     std::cout<<"Campaign: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }

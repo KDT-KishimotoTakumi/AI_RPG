@@ -274,3 +274,9 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - 合格していない計測4件（255efa5f…/9d1c0135…/6b601385…/d7a260c3…、gate.jsonなし）の生プロファイル13件を失敗証跡として可逆gzipへ置き換え。展開後のSHA-256が元と一致した場合のみ元を削除。論理サイズ18,973,752,387 bytesのうちgz保管後1,331,856,750 bytes、削減17,641,895,637 bytes（旧候補の削除を含む）。Savedは約33.5→16.2 GB。
 - 保護対象571ファイル（Source/Content/Tests/tools/specs/docs/.specify/Config（DefaultEngine.ini除く）/ルートの文書/最新配布候補/最新計測73c6bd12…/セーブ）のSHA-256は整理前後で差分0。DefaultEngine.iniは内容を読まず、サイズと更新日時のみが前後で一致。
 - Intermediate（約2.5 GB）は次回ビルドに必要なため保持。過去の失敗証跡は削除せずgzで保持。使う時だけ展開する。
+
+## 第5回（2026-11-12、GS-129の試験追加後）: 置き換わった旧配布候補
+
+ゲーム内容・仕様・素材は変更なし。
+- 最新43e01a90…に置き換わった旧候補95c93ac7…のProject（1,194,480,004 bytes）と、旧候補3件（95c93ac7…/b485945d…/e633ea66…）のproject-input.zip（各約54 MB、Gitのコミットから再生成可能）を削除。合計1,357,828,197 bytes。ログ・証跡・マニフェスト（input.json/result.json/package.log等）は保持。
+- 保護対象571ファイルのSHA-256は整理前後で差分0。DefaultEngine.iniは内容を読まず、サイズと更新日時が一致。最新配布候補・最新計測・セーブ・失敗証跡のgzは操作していない。
