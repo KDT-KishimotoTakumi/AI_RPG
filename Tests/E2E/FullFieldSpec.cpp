@@ -33,6 +33,16 @@ TSharedPtr<SWidget> FieldCaptionText(const TSharedRef<SWidget>& widget)
     auto* children=widget->GetChildren();for(int i=0;i<children->Num();++i)if(const auto found=FieldCaptionText(children->GetChildAt(i)))return found;
     return {};
 }
+FBox2D AbsoluteBox(const TSharedPtr<SWidget>& widget)
+{
+    const auto& geometry=widget->GetCachedGeometry();const auto at=geometry.GetAbsolutePosition();
+    return FBox2D(at,at+geometry.GetAbsoluteSize());
+}
+// 触れるだけは重なりとみなさない。
+bool BoxesOverlap(const FBox2D& a,const FBox2D& b)
+{
+    return FMath::Min(a.Max.X,b.Max.X)-FMath::Max(a.Min.X,b.Min.X)>1.f && FMath::Min(a.Max.Y,b.Max.Y)-FMath::Max(a.Min.Y,b.Min.Y)>1.f;
+}
 class FieldMemory : public GirlsSpire::SlotFiles,public GirlsSpire::JournalFiles {
 public:
     std::array<std::array<std::optional<std::string>,2>,2> Slots{};std::optional<std::string> Journal;
@@ -187,6 +197,7 @@ void FGirlsSpireFullFieldSpec::Define()
         if(!Click("battle.field.attack"))return;
         const auto button=Driver->FindElement(By::Id("battle.target.100"));
         if(!button->IsVisible())Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("battle.target.100"));DrainSlateLayout();
+        TestFalse(TEXT("対象がいれば理由の一行を出さない"),Driver->FindElement(By::Id("battle.field.notarget"))->Exists());
         TestTrue(TEXT("対象名/HP/操作文言を保持"),button->GetText().ToString()==TEXT("弓兵亡者・敵100を狙う（HP100）"));
         Async(EAsyncExecution::TaskGraphMainThread,[this]{
             const auto button=FieldCaptionTarget(Window.ToSharedRef(),"battle.target.100");if(!TestTrue(TEXT("実ボタンを取得"),button.IsValid()))return;
@@ -196,6 +207,62 @@ void FGirlsSpireFullFieldSpec::Define()
             TestTrue(TEXT("全文が切れず文字の配置領域に収まる"),desired.X>0 && desired.Y>0 && desired.X<=allocated.X+1 && desired.Y<=allocated.Y+1);
         }).Wait();
         TestTrue(TEXT("全文確認で戦闘/RNGを変更しない"),combat->Checkpoint()==before);
+    });
+    // 浮かぶ一覧は隣の敵駒を覆わず、最大文字でも盤面領域の内側に収まる。右へ置ける駒と、右端寄りで左へ置く駒の両方を見る。
+    for(int size:{8,12})for(const bool rightEdge:{false,true})It(*FString::Printf(TEXT("浮かぶ一覧は隣の敵駒を覆わない（%dマス・%s）"),size,rightEdge?TEXT("右端寄り"):TEXT("左寄り")),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this,size,rightEdge]{
+        using namespace GirlsSpire;Preferences prefs;prefs.ReducedEffects=true;prefs.Text=TextSize::Largest;
+        const int heroX=rightEdge?size-2:1;
+        BattleUnit hero;hero.At={heroX,1};hero.Speed=30;auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={heroX+1,1};enemy.Speed=10;
+        auto combat=MakeShared<Battle>(size,size,std::vector<Tile>(size*size),std::vector<BattleUnit>{hero,enemy},42);const auto before=combat->Checkpoint();
+        Async(EAsyncExecution::TaskGraphMainThread,[this,combat,prefs]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true).DisplayPreferences(prefs));}).Wait();DrainSlateLayout();
+        Async(EAsyncExecution::TaskGraphMainThread,[this,size,heroX]{
+            const auto menu=FieldCaptionTarget(Window.ToSharedRef(),"battle.field.menu"),root=FieldCaptionTarget(Window.ToSharedRef(),"battle.field.root");
+            const auto enemyCell=FieldCaptionTarget(Window.ToSharedRef(),*FString::Printf(TEXT("battle.cell.%d.1"),heroX+1)),heroCell=FieldCaptionTarget(Window.ToSharedRef(),*FString::Printf(TEXT("battle.cell.%d.1"),heroX));
+            if(!TestTrue(TEXT("一覧・盤面・マスを取得"),menu.IsValid() && root.IsValid() && enemyCell.IsValid() && heroCell.IsValid()))return;
+            const auto menuBox=AbsoluteBox(menu),rootBox=AbsoluteBox(root);
+            TestFalse(TEXT("隣の敵駒のマスを覆わない"),BoxesOverlap(menuBox,AbsoluteBox(enemyCell)));
+            TestFalse(TEXT("手番の主人公のマスも覆わない"),BoxesOverlap(menuBox,AbsoluteBox(heroCell)));
+            TestTrue(TEXT("一覧が画面から見切れない"),menuBox.Min.X>=rootBox.Min.X-.5f && menuBox.Min.Y>=rootBox.Min.Y-.5f && menuBox.Max.X<=rootBox.Max.X+.5f && menuBox.Max.Y<=rootBox.Max.Y+.5f);
+            AddInfo(FString::Printf(TEXT("%dマス 主人公x=%d 一覧 x=%.0f..%.0f y=%.0f..%.0f / 敵マス x=%.0f..%.0f"),size,heroX,menuBox.Min.X,menuBox.Max.X,menuBox.Min.Y,menuBox.Max.Y,AbsoluteBox(enemyCell).Min.X,AbsoluteBox(enemyCell).Max.X));
+            if(size!=8 && size!=12)return;
+            TArray<FColor> pixels;FIntVector extent;if(!TestTrue(TEXT("撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,extent)))return;
+            TArray64<uint8> png;FImageUtils::PNGCompressImageArray(extent.X,extent.Y,pixels,png);const auto directory=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*directory,true);
+            const auto path=directory/FString::Printf(TEXT("FullField-float-%d-%d-%s.png"),size,heroX,*FGuid::NewGuid().ToString(EGuidFormats::Digits));TestTrue(TEXT("検証画像を保持"),FFileHelper::SaveArrayToFile(png,*path));AddInfo(path);
+        }).Wait();
+        TestTrue(TEXT("配置の確認で戦闘状態を変更しない"),combat->Checkpoint()==before);
+    });
+    It(TEXT("保存して中断するは行動一覧の外にあり、待機の4方向は一覧と同じ幅"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+        using namespace GirlsSpire;BattleUnit hero;hero.At={1,1};hero.Speed=30;auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={6,6};enemy.Speed=10;
+        auto combat=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);
+        Async(EAsyncExecution::TaskGraphMainThread,[this,combat]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true).OnSuspend([](const SavedCombat&){return true;}));}).Wait();DrainSlateLayout();
+        const auto shot=[this](const TCHAR* tag){Async(EAsyncExecution::TaskGraphMainThread,[this,tag]{TArray<FColor> pixels;FIntVector extent;if(!TestTrue(TEXT("撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,extent)))return;TArray64<uint8> png;FImageUtils::PNGCompressImageArray(extent.X,extent.Y,pixels,png);const auto directory=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*directory,true);const auto path=directory/FString::Printf(TEXT("FullField-%s-%s.png"),tag,*FGuid::NewGuid().ToString(EGuidFormats::Digits));TestTrue(TEXT("検証画像を保持"),FFileHelper::SaveArrayToFile(png,*path));AddInfo(path);}).Wait();};
+        shot(TEXT("mainlist-save"));
+        Async(EAsyncExecution::TaskGraphMainThread,[this]{
+            const auto menu=FieldCaptionTarget(Window.ToSharedRef(),"battle.field.menu"),save=FieldCaptionTarget(Window.ToSharedRef(),"save.suspend");
+            if(!TestTrue(TEXT("一覧と保存ボタンを取得"),menu.IsValid() && save.IsValid()))return;
+            TestTrue(TEXT("保存ボタンを表示"),save->GetVisibility().IsVisible());
+            TestFalse(TEXT("保存ボタンは一覧と重ならない"),BoxesOverlap(AbsoluteBox(menu),AbsoluteBox(save)));
+        }).Wait();
+        if(!Click("battle.field.wait"))return;
+        Async(EAsyncExecution::TaskGraphMainThread,[this]{
+            const auto back=FieldCaptionTarget(Window.ToSharedRef(),"battle.field.back");const auto north=FieldCaptionTarget(Window.ToSharedRef(),"battle.wait.north");const auto west=FieldCaptionTarget(Window.ToSharedRef(),"battle.wait.west");
+            if(!TestTrue(TEXT("待機の方向ボタンを取得"),back.IsValid() && north.IsValid() && west.IsValid()))return;
+            const float list=AbsoluteBox(back).GetSize().X,northWidth=AbsoluteBox(north).GetSize().X;
+            AddInfo(FString::Printf(TEXT("一覧の幅%.1f / 北%.1f / 西%.1f"),list,northWidth,AbsoluteBox(west).GetSize().X));
+            TestTrue(TEXT("待機の4方向は一覧と同じ幅"),FMath::IsNearlyEqual(list,northWidth,1.f) && FMath::IsNearlyEqual(list,AbsoluteBox(west).GetSize().X,1.f));
+        }).Wait();
+        shot(TEXT("waitwidth"));
+    });
+    It(TEXT("攻撃の射程内に対象がいないと理由を出す"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+        using namespace GirlsSpire;BattleUnit hero;hero.At={1,1};hero.Speed=30;auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={6,6};enemy.Speed=10;
+        auto combat=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);const auto before=combat->Checkpoint();
+        Async(EAsyncExecution::TaskGraphMainThread,[this,combat]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true));}).Wait();DrainSlateLayout();
+        TestFalse(TEXT("攻撃を押す前は理由を出さない"),Driver->FindElement(By::Id("battle.field.notarget"))->Exists());
+        if(!Click("battle.field.attack"))return;
+        TestTrue(TEXT("対象がいなければ理由を表示"),Driver->FindElement(By::Id("battle.field.notarget"))->IsVisible() && Driver->FindElement(By::Id("battle.field.notarget"))->GetText().ToString()==TEXT("射程内に攻撃できる相手がいません"));
+        TestTrue(TEXT("戻るは残る"),Driver->FindElement(By::Id("battle.field.back"))->IsVisible());
+        Async(EAsyncExecution::TaskGraphMainThread,[this]{TArray<FColor> pixels;FIntVector extent;if(!TestTrue(TEXT("撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,extent)))return;TArray64<uint8> png;FImageUtils::PNGCompressImageArray(extent.X,extent.Y,pixels,png);const auto directory=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*directory,true);const auto path=directory/FString::Printf(TEXT("FullField-notarget-%s.png"),*FGuid::NewGuid().ToString(EGuidFormats::Digits));TestTrue(TEXT("検証画像を保持"),FFileHelper::SaveArrayToFile(png,*path));AddInfo(path);}).Wait();
+        TestTrue(TEXT("案内の表示で戦闘/RNGを変更しない"),combat->Checkpoint()==before);
     });
     AfterEach([this]{Driver.Reset();if(Window.IsValid()){Window->SetContent(SNullWidget::NullWidget);FSlateApplication::Get().RequestDestroyWindow(Window.ToSharedRef());Window.Reset();}IAutomationDriverModule::Get().Disable();});
 }

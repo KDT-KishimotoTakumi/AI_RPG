@@ -22,6 +22,8 @@ constexpr float FieldMenuWidth=346.f,FieldMenuEdge=12.f,FieldMenuGap=8.f;
 constexpr float FieldMenuFloatWidth=260.f;
 // 右上の「行動」ボタンの下端。メニューがこのボタンへ重ならない最上端。
 constexpr float FieldMenuTop=62.f;
+// 浮かぶ一覧で覆わないようにする敵駒の範囲は、主人公の射程にこの値を足したマス距離まで。
+constexpr int FieldMenuGuardMargin=1;
 // 短いコマンド一覧の文字サイズと、ボタン内の余白。縦を詰めて盤面を覆いにくくする。
 constexpr int FieldCommandFont=14;
 constexpr float FieldCommandPadX=8.f,FieldCommandPadY=2.f;
@@ -50,8 +52,15 @@ void SCombatScreen::BuildField()
                         +SOverlay::Slot()[SAssignNew(BoardObjects,SCanvas).Visibility(EVisibility::SelfHitTestInvisible)]
                         +SOverlay::Slot()[SAssignNew(MovingUnits,SCanvas).Visibility(EVisibility::HitTestInvisible)]]]]
             +SOverlay::Slot().HAlign(HAlign_Right).VAlign(VAlign_Top).Padding(16)
-            [SNew(SButton).ButtonStyle(&FSpireStyle::Command()).AddMetaData(FDriverMetaData::Id("battle.field.open"))
-                .OnClicked_Lambda([this]{FieldFocus=Combat->Snapshot().ActiveId;FieldAim=EFieldAction::None;FieldSub=EFieldSub::None;FieldMenuOpen=true;return FReply::Handled();})[label(TEXT("行動"))]]
+            [SNew(SHorizontalBox)
+                // 保存して中断する。行動一覧とは別に、「行動」ボタンの左へ置く。
+                +SHorizontalBox::Slot().AutoWidth().Padding(0,0,FieldMenuGap,0)
+                [SNew(SButton).ButtonStyle(&FSpireStyle::Command()).AddMetaData(FDriverMetaData::Id("save.suspend"))
+                    .Visibility_Lambda([this]{return OnSuspend && !FieldListHidden()?EVisibility::Visible:EVisibility::Collapsed;})
+                    .OnClicked_Lambda([this]{if(Audio)Audio->Cue(EGameCue::Confirm);const auto keepAlive=SharedThis(this);SuspensionPending=true;if(!PersistCheckpoint())Refresh();return FReply::Handled();})[label(TEXT("保存して中断する"))]]
+                +SHorizontalBox::Slot().AutoWidth()
+                [SNew(SButton).ButtonStyle(&FSpireStyle::Command()).AddMetaData(FDriverMetaData::Id("battle.field.open"))
+                    .OnClicked_Lambda([this]{FieldFocus=Combat->Snapshot().ActiveId;FieldAim=EFieldAction::None;FieldSub=EFieldSub::None;FieldMenuOpen=true;return FReply::Handled();})[label(TEXT("行動"))]]]
             +SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Top).Padding(TAttribute<FMargin>::CreateLambda([this]{return FieldMenuPadding();}))
             [SAssignNew(FieldMenu,SBox).WidthOverride_Lambda([this]{return FOptionalSize(FieldMenuFloating()?FieldMenuFloatWidth:FieldMenuWidth);}).AddMetaData(FDriverMetaData::Id("battle.field.menu"))
                 .Visibility_Lambda([this]{return FieldMenuOpen || SavingBlocked || Combat->Snapshot().Outcome!=GirlsSpire::BattleOutcome::Ongoing?EVisibility::Visible:EVisibility::Collapsed;})
@@ -173,12 +182,33 @@ FMargin SCombatScreen::FieldMenuPadding() const
     const auto toRoot=[&](const FVector2D& local){return root.AbsoluteToLocal(grid.LocalToAbsolute(local));};
     const auto topLeft=toRoot(FVector2D(actor->At.X*cell.X,actor->At.Y*cell.Y));
     const auto bottomRight=toRoot(FVector2D((actor->At.X+1)*cell.X,(actor->At.Y+1)*cell.Y));
-    // 右に収まらない駒では左側へ切り替え、どちらも無理なら右端へ置く。
-    float left=bottomRight.X+FieldMenuGap;
-    if(left+FieldMenuFloatWidth+FieldMenuEdge>rootSize.X){left=topLeft.X-FieldMenuGap-FieldMenuFloatWidth;if(left<FieldMenuEdge)return dock;}
+    // 右→左の順に、近くの敵駒を覆わない位置を探す。縦はメニューの上端か下端を駒へ揃える。
+    // どこも覆うなら、覆わない従来どおりの右端へ置く。
     const float menuHeight=FieldMenu->GetDesiredSize().Y;
-    const float top=FMath::Clamp(topLeft.Y,FieldMenuTop,FMath::Max(FieldMenuTop,rootSize.Y-menuHeight-FieldMenuEdge));
-    return FMargin(left,top,0,FieldMenuEdge);
+    TArray<FBox2D,TInlineAllocator<16>> guarded;
+    for(const auto& unit:state.Units){
+        if(unit.Hp<=0 || unit.Side!=GirlsSpire::Faction::Enemy)continue;
+        if(FMath::Max(FMath::Abs(unit.At.X-actor->At.X),FMath::Abs(unit.At.Y-actor->At.Y))>FMath::Max(1,actor->Range)+FieldMenuGuardMargin)continue;
+        guarded.Add(FBox2D(toRoot(FVector2D(unit.At.X*cell.X,unit.At.Y*cell.Y)),toRoot(FVector2D((unit.At.X+1)*cell.X,(unit.At.Y+1)*cell.Y))));
+    }
+    const auto coverage=[&](float left,float top){
+        float area=0.f;
+        for(const auto& box:guarded){
+            const float w=FMath::Min(left+FieldMenuFloatWidth,box.Max.X)-FMath::Max(left,box.Min.X),h=FMath::Min(top+menuHeight,box.Max.Y)-FMath::Max(top,box.Min.Y);
+            if(w>0.f && h>0.f)area+=w*h;
+        }
+        return area;
+    };
+    const float maxTop=FMath::Max(FieldMenuTop,rootSize.Y-menuHeight-FieldMenuEdge);
+    const float tops[]={FMath::Clamp(topLeft.Y,FieldMenuTop,maxTop),FMath::Clamp(bottomRight.Y-menuHeight,FieldMenuTop,maxTop)};
+    const float lefts[]={bottomRight.X+FieldMenuGap,topLeft.X-FieldMenuGap-FieldMenuFloatWidth};
+    for(const float left:lefts){
+        if(left<FieldMenuEdge || left+FieldMenuFloatWidth+FieldMenuEdge>rootSize.X)continue;
+        for(const float top:tops)
+            if(coverage(left,top)<=0.f)return FMargin(left,top,0,FieldMenuEdge);
+    }
+    // 盤面は右端の一覧用の余白（374）を空けて描かれるため、右端は盤上の駒を覆わない。
+    return dock;
 }
 // 予想ダメージが残りHPを超えるときは、表示だけ残りHPで丸める。計算結果は変えない。
 FString SCombatScreen::PredictedDamage(int targetId,int damage) const

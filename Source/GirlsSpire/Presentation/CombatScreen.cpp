@@ -29,6 +29,8 @@ namespace {
 constexpr float HpBarHeight=5.f;
 // 全画面の盤面で、空きマスの地形ラベルを隅へ置くときの文字サイズ。
 constexpr int CornerLabelFont=7;
+// 全画面で「攻撃」を押したのに射程内へ対象がいないときの案内。
+const TCHAR* const FieldNoTargetText=TEXT("射程内に攻撃できる相手がいません");
 // 全画面の主人公の手番で、短いコマンド一覧の外へ追い出す長い本文のID接頭辞。
 bool FieldBodyText(const FName& id)
 {
@@ -232,7 +234,8 @@ void SCombatScreen::Refresh(bool persist)
     }
     for(const auto& unit:state.Units)if(unit.Hp>0 && unit.CreatesCover)
         Text(FString::Printf(TEXT("絡繰鎧（敵%d） 防御%d：偶数ラウンドの手番開始時に遮蔽1個を生成。生成後も通常行動します。"),unit.Id,unit.Defense),*FString::Printf(TEXT("battle.cover.rule.%d"),unit.Id),14);
-    if(OnSuspend && !FieldListHidden()) Action(TEXT("保存して中断する"),"save.suspend",[this] {
+    // 全画面では「保存して中断する」を盤面右上の専用ボタンへ置き、行動一覧に混ぜない。
+    if(OnSuspend && !FullField) Action(TEXT("保存して中断する"),"save.suspend",[this] {
         const auto keepAlive=SharedThis(this);
         SuspensionPending=true;if(!PersistCheckpoint()) Refresh();
     });
@@ -284,9 +287,11 @@ void SCombatScreen::Refresh(bool persist)
         Action(TEXT("攻撃を確定"),"battle.confirm",[this,revision=state.Revision] { ConfirmAttack(revision); },prediction.Legal);
     }
     // 全画面の主人公の手番では、狙う対象の一覧は「攻撃」を押した後だけ出す。
+    int targetCount=0;
     for(const auto& target:state.Units) {
         if(FieldCompactMode() && FieldAim!=EFieldAction::Attack) break;
         if(!Combat->PreviewAttack(state.ActiveId,target.At).Legal) continue;
+        ++targetCount;
         const TCHAR* kind=target.Side==Faction::Enemy && target.Id>0 && target.Id<=8?FCharacterPortraits::Name(target.Id):target.CreatesCover?TEXT("絡繰鎧・敵"):
             target.Side==Faction::Enemy && target.Role==BattleRole::CastleLord?TEXT("歴史喰らいの城主・敵"):
             target.Side==Faction::Enemy && target.Role==BattleRole::FallenPrincess?TEXT("落城姫・敵"):
@@ -302,13 +307,20 @@ void SCombatScreen::Refresh(bool persist)
             *FString::Printf(TEXT("battle.target.%d"),target.Id),
             [this,at=target.At,revision=state.Revision] { SelectCell(at,revision); });
     }
+    if(FieldCompactMode() && FieldAim==EFieldAction::Attack && targetCount==0) {
+        // 障害物も盤面から狙えるため、対象なしと言い切る前に確かめる。
+        bool obstacleInRange=false;
+        for(int y=0;y<state.Height && !obstacleInRange;++y) for(int x=0;x<state.Width && !obstacleInRange;++x)
+            obstacleInRange=state.Tiles[y*state.Width+x].ObstacleHp>0 && Combat->PreviewAttack(state.ActiveId,Position{x,y}).Legal;
+        if(!obstacleInRange)Text(FieldNoTargetText,"battle.field.notarget",14);
+    }
     const TCHAR* labels[]={TEXT("北を向いて待機"),TEXT("東を向いて待機"),TEXT("南を向いて待機"),TEXT("西を向いて待機")};
     const TCHAR* ids[]={TEXT("battle.wait.north"),TEXT("battle.wait.east"),TEXT("battle.wait.south"),TEXT("battle.wait.west")};
-    // 全画面では待機の4方向を技と同じく1つの折り返し行へ寄せ、コマンドの下位項目として並べる。
+    // 主人公の手番では待機の4方向を一覧と同じ幅の縦並びにする。それ以外の全画面だけ折り返し行へ寄せる。
     TSharedPtr<SWrapBox> waits;
     const bool compact=FieldCompactMode();
-    if(FullField && (!compact || FieldSub==EFieldSub::Wait)) {
-        if(!compact)Text(TEXT("待機（向きを選ぶ）"),"battle.wait.label",13);
+    if(FullField && !compact) {
+        Text(TEXT("待機（向きを選ぶ）"),"battle.wait.label",13);
         SAssignNew(waits,SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(6,7));
         Panel->AddSlot().AutoHeight()[waits.ToSharedRef()];
     }
