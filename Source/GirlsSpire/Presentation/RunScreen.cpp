@@ -131,7 +131,7 @@ void SRunScreen::ShowTitle()
     SocialActor=-1;SocialChoice=-1;SocialMessage.Empty();
     Body->ClearChildren();
     if(!LoadTitleState()) return;
-    AddText(TEXT("GIRLS SPIRE"), "title.heading", 64);
+    AddText(TEXT("Spiral RPG"), "title.heading", 64);
     AddText(TEXT("四人の仲間と挑む、戦国怪異RPG。"), "title.description");
     AddText(DevelopmentTools?TEXT("経路を選び、盤面で移動・攻撃して仲間を救出します。進行確認用の結果入力も利用できます。"):
         TEXT("自動保存対応・戦闘中も中断できます。"), "title.notice");

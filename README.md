@@ -1,4 +1,4 @@
-# Girls Spire
+# Girls Spire（表示タイトル: Spiral RPG）
 
 更新: 2026-11-07。Windows/UE5.7.4で開発中の戦国怪異・グリッドターン制ローグライクRPGです。ゲーム全体は未完成です。
 

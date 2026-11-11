@@ -170,7 +170,7 @@ void FGirlsSpireRunUiSpec::Define()
         IAutomationDriverModule::Get().Enable();
         IConsoleManager::Get().ProcessUserConsoleInput(TEXT("GirlsSpire.Preview"), *GLog, nullptr);
         for (const auto& Candidate : FSlateApplication::Get().GetTopLevelWindows())
-            if (Candidate->GetTitle().ToString() == TEXT("Girls Spire — 周回プレビュー")) Window = Candidate;
+            if (Candidate->GetTitle().ToString() == TEXT("Spiral RPG — 周回プレビュー")) Window = Candidate;
         Driver = IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);

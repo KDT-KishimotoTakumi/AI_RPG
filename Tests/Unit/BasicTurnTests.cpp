@@ -1,4 +1,5 @@
 #include "AI/BasicTurn.h"
+#include "AI/Intent.h"
 #include <iostream>
 
 int TestBasicTurn()
@@ -51,6 +52,19 @@ int TestBasicTurn()
         check(ChooseBasicAction(Battle(8,8,closed,{target,chaser},42)).Kind==BasicActionKind::Wait,"経路が存在しなければ待機のまま");
         const auto before=Battle(8,8,wallTiles,{target,chaser},42);const auto snapshot=before.Snapshot();
         ChooseBasicAction(before);check(before.Snapshot()==snapshot,"経路探索で状態を変更しない");
+    }
+    // 味方の自動接近も、壁の裏の局所最小で待機せず経路距離で迂回する。
+    {
+        BattleUnit ally;ally.Id=0;ally.At={3,3};ally.Movement=2;ally.Hp=ally.MaxHp=500;
+        BattleUnit foe;foe.Id=10;foe.Side=Faction::Enemy;foe.At={3,0};foe.Hp=foe.MaxHp=500;
+        auto wallTiles=std::vector<Tile>(64);for(int x=2;x<=4;++x)wallTiles[2*8+x].Wall=true;
+        const Battle blocked(8,8,wallTiles,{ally,foe},42);const auto snapshot=blocked.Snapshot();
+        const auto ranked=RankIntentActions(blocked,{});
+        check(!ranked.empty() && ranked.front().Kind==BasicActionKind::Move,"味方も壁の裏の局所最小で迂回して接近する");
+        check(blocked.Snapshot()==snapshot,"味方の迂回探索で状態を変更しない");
+        auto closed=wallTiles;for(int x=0;x<8;++x)closed[2*8+x].Wall=true;
+        const auto sealed=RankIntentActions(Battle(8,8,closed,{ally,foe},42),{});
+        check(sealed.size()==1 && sealed.front().Kind==BasicActionKind::Wait,"経路が存在しなければ待機のまま");
     }
     hero.Hp=0;
     Battle ended(8,8,std::vector<Tile>(64),{hero,enemy},42);

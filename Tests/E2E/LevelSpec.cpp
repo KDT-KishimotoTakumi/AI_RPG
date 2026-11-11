@@ -85,7 +85,7 @@ void FGirlsSpireLevelUiSpec::Define()
     BeforeEach([this] {
         FSlateApplication::Get().CloseToolTip();IAutomationDriverModule::Get().Enable();
         IConsoleManager::Get().ProcessUserConsoleInput(TEXT("GirlsSpire.Preview"),*GLog,nullptr);
-        for(const auto& w:FSlateApplication::Get().GetTopLevelWindows()) if(w->GetTitle().ToString()==TEXT("Girls Spire — 周回プレビュー")) Window=w;
+        for(const auto& w:FSlateApplication::Get().GetTopLevelWindows()) if(w->GetTitle().ToString()==TEXT("Spiral RPG — 周回プレビュー")) Window=w;
         Driver=IAutomationDriverModule::Get().CreateDriver();
     });
     LatentBeforeEach(WaitForSlateLayout);

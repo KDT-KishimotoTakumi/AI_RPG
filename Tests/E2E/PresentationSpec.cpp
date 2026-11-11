@@ -41,7 +41,7 @@ void FGirlsSpirePresentationSpec::Define()
             Window->SetContent(SNew(SRunScreen).DevelopmentTools(false));
         }).Wait();DrainSlateLayout();
         TestTrue(TEXT("背景の実表示"),Painted("title.art"));
-        TestEqual(TEXT("正式タイトルを表示"),Driver->FindElement(By::Id("title.heading"))->GetText().ToString(),FString(TEXT("GIRLS SPIRE")));
+        TestEqual(TEXT("正式タイトルを表示"),Driver->FindElement(By::Id("title.heading"))->GetText().ToString(),FString(TEXT("Spiral RPG")));
         Capture(TEXT("Presentation-Title.png"));
         TestTrue(TEXT("開始操作を維持"),ClickAndDrain(Driver->FindElement(By::Id("title.start"))));
         TestTrue(TEXT("従来の編成へ進む"),Driver->FindElement(By::Id("role.confirm"))->Exists());

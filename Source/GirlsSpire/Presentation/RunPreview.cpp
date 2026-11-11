@@ -8,7 +8,7 @@ static FAutoConsoleCommand RunPreviewCommand(
     TEXT("GirlsSpire.Preview"), TEXT("周回進行の検証用画面を開く"),
     FConsoleCommandDelegate::CreateLambda([] {
         FSlateApplication::Get().AddWindow(
-            SNew(SWindow).Title(FText::FromString(TEXT("Girls Spire — 周回プレビュー")))
+            SNew(SWindow).Title(FText::FromString(TEXT("Spiral RPG — 周回プレビュー")))
             .ClientSize(FVector2D(1100, 760)).SupportsMaximize(false)
             [ SNew(SRunScreen) ]);
     }));

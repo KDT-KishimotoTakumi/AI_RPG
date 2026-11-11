@@ -62,9 +62,22 @@ std::vector<BasicAction> RankIntentActions(const Battle& battle, const IntentOrd
         scored.push_back({score,{BasicActionKind::UseSkill,victim.At,skill}});
     }
     const auto gap=[&](Position at) { return std::max(0,distance(at,focus)-desired); };
+    bool closing=false;
     for (const auto at : battle.Reachable(actor->Id)) {
         const int improvement=gap(actor->At)-gap(at);
-        if (improvement>0) scored.push_back({improvement*100,{BasicActionKind::Move,at}});
+        if (improvement>0) { scored.push_back({improvement*100,{BasicActionKind::Move,at}}); closing=true; }
+    }
+    if (!closing) {
+        // 直線距離が縮む移動先がないときだけ、障害物の裏で止まらないよう経路距離で迂回する。
+        const auto routeGap=[&](Position at) {
+            const int steps=battle.RouteDistance(at,focus);
+            return steps<0?steps:std::max(0,steps-desired);
+        };
+        const int from=routeGap(actor->At);
+        for (const auto at : battle.Reachable(actor->Id)) {
+            const int to=routeGap(at);
+            if (from>=0 && to>=0 && to<from) scored.push_back({(from-to)*100,{BasicActionKind::Move,at}});
+        }
     }
     scored.push_back({-1,{}});
     if(state.PersonalityAI)for(auto& entry:scored)entry.first+=PersonalityBonus(battle,entry.second);
