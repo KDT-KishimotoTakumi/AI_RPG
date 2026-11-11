@@ -287,3 +287,11 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - 最新配布候補43e01a90…のProject/Intermediate（4,524,333,204 bytes、共有PCH約4 GB）を削除。配布物（Distribution/Windows）には含まれず、package-windows.ps1で再生成できる。Distribution/Windows・Project/Binaries・ログ・証跡は保持。
 - 保護対象572ファイル（Source/Content/Tests/tools/specs/docs/.specify/Config（DefaultEngine.ini除く）/ルート文書/最新配布候補の配布物/最新計測/セーブ）のSHA-256は整理前後で差分0。DefaultEngine.iniは内容を読まず、サイズと更新日時が一致。Saved合計は約15.0→10.8 GB。
 - 失敗した計測のzip（CoverageArchives、約2.9 GB）とgz化済みの生プロファイルは失敗証跡として保持。Saved/DesktopControlの専用UserDir・撮影は小容量のため保持。
+
+## 第7回（2026-11-12、VA24Dでのプレイデバッグ後）: 作業用EXEとクック中間物
+
+ゲーム内容・仕様・素材は変更なし。
+- 最新配布候補43e01a90…のProject/Binaries/Win64の作業用EXE（配布物とSHA-256が同一であることを再確認して削除）、Project/Saved（クック中間物）を削除。Distribution/Windows・pdb・ログ・証跡は保持。
+- 起動試験の撮影ShippingSmokeのtitle.bmp（各4.6 MB、同じ画像のtitle.pngあり）を可逆gzipへ置き換え。展開後のSHA-256が元と一致した場合のみ元を削除。
+- 合計830,617,351 bytes削減。Saved合計は約10.8→10.0 GB。保護対象572ファイルのSHA-256は整理前後で差分0。DefaultEngine.iniは内容を読まず、サイズと更新日時が一致。
+- 保持: 失敗した計測のzip・gz、最新の計測、Intermediate（次回ビルド用）、Saved/DesktopControl（撮影27.6 MB。プレイデバッグの証跡）。
