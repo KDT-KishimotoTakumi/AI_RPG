@@ -105,7 +105,7 @@ public static class GirlsSpireShippingDesktop {
                         var title = new StringBuilder(512);
                         GetWindowText(candidate, title, title.Capacity);
                         var name = title.ToString().Trim();
-                        if (name != "GirlsSpire" && name != "Girls Spire") return true;
+                        if (name != "GirlsSpire" && name != "Girls Spire" && name != "Spiral RPG") return true;
                         window = candidate;
                         result.Title = name;
                         return false;
