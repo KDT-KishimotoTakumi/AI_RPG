@@ -145,7 +145,18 @@ function Read-State {
     if (-not (Test-Path -LiteralPath $statePath)) { throw 'No game was launched by this tool. Run: desktop-control.ps1 launch' }
     Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
 }
-# 対象は、このツールが起動した生存中のプロセスで、実行ファイルがプロジェクト内にあるものだけ。
+# Shippingの起動用exeは、ウィンドウを持つ本体を子プロセスとして起動する。起動したプロセスとその子孫から、許可タイトルのウィンドウを探す。
+function Find-GameWindow([int]$rootPid) {
+    $ids = [System.Collections.Generic.List[int]]::new(); $ids.Add($rootPid)
+    for ($i = 0; $i -lt $ids.Count; $i++) {
+        foreach ($c in @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$($ids[$i])" -ErrorAction SilentlyContinue)) { $ids.Add([int]$c.ProcessId) }
+    }
+    foreach ($id in $ids) {
+        $w = [GsDesktop]::FindWindow([uint32]$id, $AllowedTitles)
+        if ($w -ne [IntPtr]::Zero) { return [pscustomobject]@{ Pid = $id; Window = $w } }
+    }
+    [pscustomobject]@{ Pid = $rootPid; Window = [IntPtr]::Zero }
+}# 対象は、このツールが起動した生存中のプロセスで、実行ファイルがプロジェクト内にあるものだけ。
 function Get-Target {
     $state = Read-State
     $process = Get-Process -Id $state.Pid -ErrorAction SilentlyContinue
@@ -154,8 +165,9 @@ function Get-Target {
     if (-not $process.Path -or -not $process.Path.StartsWith($root + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
         throw 'Refused: the process is not an executable inside this project.'
     }
-    $window = [GsDesktop]::FindWindow([uint32]$state.Pid, $AllowedTitles)
+    $found = Find-GameWindow $state.Pid; $window = $found.Window
     if ($window -eq [IntPtr]::Zero) { throw 'The game window was not found (title must be Spiral RPG / GirlsSpire).' }
+    if ($found.Pid -ne $process.Id) { $process = Get-Process -Id $found.Pid }
     [pscustomobject]@{ State = $state; Process = $process; Window = $window }
 }
 function Get-Client($window) {
@@ -221,7 +233,7 @@ switch ($Command) {
         do {
             Start-Sleep -Milliseconds 500
             if ($process.HasExited) { throw "The game exited during startup (exit code $($process.ExitCode))." }
-            $window = [GsDesktop]::FindWindow([uint32]$process.Id, $AllowedTitles)
+            $window = (Find-GameWindow $process.Id).Window
         } while ($window -eq [IntPtr]::Zero -and (Get-Date) -lt $deadline)
         if ($window -eq [IntPtr]::Zero) { throw "The game window did not appear within $WaitSeconds seconds (PID $($process.Id) is still running)." }
         if ($target) {
