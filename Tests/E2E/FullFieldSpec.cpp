@@ -1,5 +1,6 @@
 #include "Misc/AutomationTest.h"
 #include "SlateTestSync.h"
+#include "FieldCommandSteps.h"
 #include "AutomationDriverCommon.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/SWindow.h"
@@ -51,7 +52,7 @@ void FGirlsSpireFullFieldSpec::Define()
     LatentBeforeEach(WaitForSlateLayout);
     for(int size:{8,12})for(int text=0;text<3;++text)It(*FString::Printf(TEXT("全画面%dマス・文字%dで駒クリックから移動と攻撃"),size,text),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this,size,text]{
         using namespace GirlsSpire;Preferences prefs;prefs.ReducedEffects=true;prefs.Text=static_cast<TextSize>(text);
-        BattleUnit hero;hero.At={1,1};hero.Speed=30;auto ally=hero;ally.Id=1;ally.At={1,3};ally.Speed=20;
+        BattleUnit hero;hero.At={1,1};hero.Speed=30;hero.Skills[0]=true;auto ally=hero;ally.Id=1;ally.At={1,3};ally.Speed=20;
         auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={3,1};enemy.Speed=10;enemy.Hp=enemy.MaxHp=100;
         auto combat=MakeShared<Battle>(size,size,std::vector<Tile>(size*size),std::vector<BattleUnit>{hero,ally,enemy},42);auto expected=*combat;
         Async(EAsyncExecution::TaskGraphMainThread,[this,combat,prefs]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true).DisplayPreferences(prefs));}).Wait();DrainSlateLayout();
@@ -75,7 +76,19 @@ void FGirlsSpireFullFieldSpec::Define()
         if(!Click("battle.field.details"))return;
         TestTrue(TEXT("表示切替は戦闘状態と乱数不変"),combat->Checkpoint()==explanationState);
         Async(EAsyncExecution::TaskGraphMainThread,[this]{const auto actual=FieldExtent(Window.ToSharedRef());const auto client=Window->GetClientSizeInScreen();TestTrue(TEXT("戦場レイヤーはウィンドウ全幅・全高"),actual.X>=client.X*.97f && actual.Y>=client.Y*.97f);}).Wait();
-        if((size==8 && text==0) || (size==12 && text==2))Async(EAsyncExecution::TaskGraphMainThread,[this,size,text]{TArray<FColor> pixels;FIntVector extent;if(!TestTrue(TEXT("全画面フィールドを撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,extent)))return;TArray64<uint8> png;FImageUtils::PNGCompressImageArray(extent.X,extent.Y,pixels,png);const auto directory=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*directory,true);const auto path=directory/FString::Printf(TEXT("FullField-%d-%d-%s.png"),size,text,*FGuid::NewGuid().ToString(EGuidFormats::Digits));TestTrue(TEXT("検証画像を保持"),FFileHelper::SaveArrayToFile(png,*path));AddInfo(path);}).Wait();
+        const auto shot=[this,size,text](const TCHAR* tag){if(!((size==8 && text==0) || (size==12 && text==2)))return;Async(EAsyncExecution::TaskGraphMainThread,[this,size,text,tag]{TArray<FColor> pixels;FIntVector extent;if(!TestTrue(TEXT("全画面フィールドを撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,extent)))return;TArray64<uint8> png;FImageUtils::PNGCompressImageArray(extent.X,extent.Y,pixels,png);const auto directory=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*directory,true);const auto path=directory/FString::Printf(TEXT("FullField-%s-%d-%d-%s.png"),tag,size,text,*FGuid::NewGuid().ToString(EGuidFormats::Digits));TestTrue(TEXT("検証画像を保持"),FFileHelper::SaveArrayToFile(png,*path));AddInfo(path);}).Wait();};shot(TEXT("menu"));
+        // 主人公のコマンド一覧は短く、待機と技は下位メニューで開く。
+        TestFalse(TEXT("一覧に待機4方向を並べない"),Driver->FindElement(By::Id("battle.wait.north"))->Exists());
+        TestFalse(TEXT("一覧に戻るを出さない"),Driver->FindElement(By::Id("battle.field.back"))->IsVisible());
+        if(!Click("battle.field.wait"))return;
+        TestTrue(TEXT("待機で4方向を同じ場所に開く"),Driver->FindElement(By::Id("battle.wait.north"))->IsVisible() && Driver->FindElement(By::Id("battle.wait.west"))->IsVisible() && !Driver->FindElement(By::Id("battle.field.move"))->IsVisible());
+        shot(TEXT("wait"));
+        if(!Click("battle.field.back"))return;
+        TestFalse(TEXT("戻ると一覧へ戻る"),Driver->FindElement(By::Id("battle.wait.north"))->Exists());
+        if(!Click("battle.field.skills"))return;
+        TestTrue(TEXT("技で使える技を開く"),Driver->FindElement(By::Id("battle.skill.0"))->IsVisible());
+        shot(TEXT("skills"));
+        if(!Click("battle.field.back"))return;
         const auto before=combat->Checkpoint();
         if(!Click("battle.field.close"))return;TestFalse(TEXT("行動メニューを閉じる"),Driver->FindElement(By::Id("battle.field.menu"))->IsVisible());
         if(!Click("battle.unit.select.1"))return;
@@ -83,11 +96,18 @@ void FGirlsSpireFullFieldSpec::Define()
         TestTrue(TEXT("情報選択は状態と乱数不変"),combat->Checkpoint()==before);
         if(!Click("battle.unit.select.0"))return;
         TestTrue(TEXT("駒から行動メニューを開く"),Driver->FindElement(By::Id("battle.field.menu"))->IsVisible());
-        if(!Click("battle.field.move") || !Click("battle.cell.2.1"))return;
+        if(!Click("battle.field.move"))return;
+        TestTrue(TEXT("移動を押しても行動メニューは残る"),Driver->FindElement(By::Id("battle.field.menu"))->IsVisible() && !Driver->FindElement(By::Id("battle.field.attack"))->IsVisible());
+        shot(TEXT("dock-aim"));
+        if(!Click("battle.cell.2.1"))return;
+        TestTrue(TEXT("移動先を選ぶと予告と確定が同じメニューに残る"),Driver->FindElement(By::Id("battle.move.preview"))->IsVisible() && Driver->FindElement(By::Id("battle.move.confirm"))->IsVisible());
+        shot(TEXT("dock-preview"));
         TestTrue(TEXT("移動先選択で状態不変"),combat->Checkpoint()==before);
         if(!Click("battle.move.confirm"))return;expected.Move(expected.Snapshot().Revision,0,{2,1});
         TestTrue(TEXT("移動は既存ルールと一致"),combat->Checkpoint()==expected.Checkpoint());
-        if(!Click("battle.unit.select.0") || !Click("battle.field.attack") || !Click("battle.unit.select.100"))return;
+        if(!Click("battle.unit.select.0") || !Click("battle.field.attack"))return;
+        TestTrue(TEXT("攻撃後はメニューが右端へ寄り敵駒をクリックできる"),Driver->FindElement(By::Id("battle.unit.select.100"))->IsInteractable());
+        if(!Click("battle.unit.select.100"))return;
         TestTrue(TEXT("攻撃予告で状態不変"),combat->Checkpoint()==expected.Checkpoint());
         if(!Click("battle.confirm"))return;expected.Attack(expected.Snapshot().Revision,0,{3,1});
         TestTrue(TEXT("攻撃結果と乱数が一致"),combat->Checkpoint()==expected.Checkpoint());
@@ -109,7 +129,8 @@ void FGirlsSpireFullFieldSpec::Define()
             if(!Click("title.resume"))return;
             const auto saved=service->Load();TestTrue(TEXT("再開で戦闘状態/RNG/保存版を維持"),saved.Run && saved.Run->Combat && saved.Run->Combat->Battle==battle && !saved.Run->ResumeAvailable);
         }else{
-            if(!Click("battle.unit.select.100") || !Click("battle.confirm") || !Click("battle.return"))return;
+            // 駒の隣へ浮かぶメニューが敵駒を覆うことがあるため、先に「攻撃」を選んでメニューを右端へ寄せる。
+            if(!Click("battle.field.attack") || !Click("battle.unit.select.100") || !Click("battle.confirm") || !Click("battle.return"))return;
             TestTrue(TEXT("勝利後は周回画面へ戻る"),Driver->FindElement(By::Id("run.frame"))->IsVisible() && !Driver->FindElement(By::Id("battle.field.root"))->Exists());
         }
     });
@@ -129,7 +150,7 @@ void FGirlsSpireFullFieldSpec::Define()
         TestTrue(TEXT("移動中の敵クリックは攻撃にしない"),!Driver->FindElement(By::Id("battle.confirm"))->Exists() && combat->Checkpoint()==before);
         if(!Click("battle.field.open") || !Click("battle.field.attack") || !Click("battle.cell.2.2"))return;
         TestTrue(TEXT("攻撃中の空マスクリックは移動にしない"),!Driver->FindElement(By::Id("battle.move.confirm"))->Exists() && combat->Checkpoint()==before);
-        if(!Click("battle.field.open") || !Click("battle.skill.1") || !Click("battle.unit.select.0") || !Click("battle.skill.confirm"))return;
+        if(!Click("battle.field.open") || !ClickFieldSkill(*this,Driver,[this](const char* id){return Click(id);},"battle.skill.1") || !Click("battle.unit.select.0") || !Click("battle.skill.confirm"))return;
         expected.UseSkill(expected.Snapshot().Revision,0,Skill::FirstAid,{1,1});
         TestTrue(TEXT("自身の駒で回復対象を選び効果/CD/RNGを維持"),combat->Checkpoint()==expected.Checkpoint());
     });
@@ -162,6 +183,8 @@ void FGirlsSpireFullFieldSpec::Define()
         auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.Role=BattleRole::Archer;enemy.At={3,1};enemy.Speed=10;enemy.Hp=enemy.MaxHp=100;
         auto combat=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);const auto before=combat->Checkpoint();
         Async(EAsyncExecution::TaskGraphMainThread,[this,combat,prefs]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true).DisplayPreferences(prefs));}).Wait();DrainSlateLayout();
+        // 狙う対象の一覧は「攻撃」を押した後に出る。
+        if(!Click("battle.field.attack"))return;
         const auto button=Driver->FindElement(By::Id("battle.target.100"));
         if(!button->IsVisible())Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("battle.target.100"));DrainSlateLayout();
         TestTrue(TEXT("対象名/HP/操作文言を保持"),button->GetText().ToString()==TEXT("弓兵亡者・敵100を狙う（HP100）"));

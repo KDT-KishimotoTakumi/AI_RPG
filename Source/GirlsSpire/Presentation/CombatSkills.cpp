@@ -29,12 +29,14 @@ void SCombatScreen::RefreshSkills()
     const auto& state=Combat->Snapshot();
     const auto actor=std::find_if(state.Units.begin(),state.Units.end(),[&](const BattleUnit& unit) {return unit.Id==state.ActiveId;});
     if(std::none_of(actor->Skills.begin(),actor->Skills.end(),[](bool owned){return owned;})) return;
+    // 全画面の主人公の手番では、技を選んだ後（対象選択中）は一覧を隠して予告と確定だけを残す。
+    const bool listing=!(FieldCompactMode() && SelectedSkill);
     FString status=TEXT("技 / 再使用待ち ");
     for(int i=0;i<SkillCount;++i) if(actor->Skills[i]) status+=FString::Printf(TEXT("%s:%d "),*OwnedSkillLabel(actor->Id,static_cast<Skill>(i)),actor->Cooldowns[i]);
-    Text(status,"battle.skill.status",13);
+    if(listing)Text(status,"battle.skill.status",13);
     const auto row=SNew(SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(6,7));
-    Panel->AddSlot().AutoHeight()[row];
-    for(int index=0;index<SkillCount;++index) {
+    if(listing)Panel->AddSlot().AutoHeight()[row];
+    for(int index=0;listing && index<SkillCount;++index) {
         if(index>=2 && !actor->Skills[index]) continue;
         Action(OwnedSkillLabel(actor->Id,static_cast<Skill>(index)),*FString::Printf(TEXT("battle.skill.%d"),index),[this,index] {
             SelectedSkill=static_cast<Skill>(index); Selected.reset(); MoveTarget.reset(); Refresh();

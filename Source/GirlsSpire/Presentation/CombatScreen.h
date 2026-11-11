@@ -45,11 +45,27 @@ private:
     void BuildField();
     bool SelectFieldCell(GirlsSpire::Position cell);
     enum class EFieldAction { None, Move, Attack, Intent };
+    // 主人公の手番で「技」「待機」「必殺」を押したときに開く下位メニュー。
+    enum class EFieldSub { None, Wait, Skills, Ultimate };
     void BeginFieldAction(EFieldAction action);
     FString FieldSelectionLabel() const;
+    bool FieldMenuFloating() const;
+    bool FieldAiming() const;
+    bool FieldCompactMode() const;
+    bool FieldMainList() const;
+    bool FieldListHidden() const;
+    // 個人必殺に要るゲージ量（Domain側は即値のため、表示側で一箇所にまとめる）。
+    static constexpr int PersonalUltimateGauge=50;
+    bool FieldPortraitsVisible() const;
+    FMargin FieldMenuPadding() const;
+    FString PredictedDamage(int targetId,int damage) const;
+    TSharedPtr<SWidget> FieldRoot,FieldMenu;
     bool FullField=false,FieldMenuOpen=true,FieldDetails=false;
     int FieldFocus=-1,FieldActor=-2;
     EFieldAction FieldAim=EFieldAction::None;
+    EFieldSub FieldSub=EFieldSub::None;
+    std::uint64_t FieldSubRevision=0;
+    bool FieldBodyHidden=false;
     struct FMovementVisual {std::vector<GirlsSpire::Position> Path;double Started=0;};
     TMap<int,FMovementVisual> Movements;
     TMap<int,int> DisplayedHp;

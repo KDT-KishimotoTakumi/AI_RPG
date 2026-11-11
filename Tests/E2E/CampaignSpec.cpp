@@ -1,5 +1,6 @@
 #include "Misc/AutomationTest.h"
 #include "SlateTestSync.h"
+#include "FieldCommandSteps.h"
 #include "AutomationDriverCommon.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/SWindow.h"
@@ -175,6 +176,8 @@ void FGirlsSpireCampaignSpec::Define()
             if(saved.Run->Combat){
                 if(accessibility && saved.Run->Combat->Battle.State.Outcome==BattleOutcome::Ongoing){
                     if(!Driver->FindElement(By::Id("battle.field.menu"))->IsVisible() && !Click("battle.field.open"))return;
+                    // 主人公の手番では表示切替が「詳細」の中にあるため、先に詳細を開く。
+                    if(!Driver->FindElement(By::Id("battle.cues.monochrome"))->Exists() && !Click("battle.field.details"))return;
                     if(Driver->FindElement(By::Id("battle.cues.monochrome"))->GetText().ToString().Contains(TEXT("色付き")) && !Click("battle.cues.monochrome"))return;
                     if(Driver->FindElement(By::Id("battle.cues.threats"))->GetText().ToString().Contains(TEXT("非表示")) && !Click("battle.cues.threats"))return;
                     if(!Driver->FindElement(By::Id("battle.cues.scope"))->Exists() && !Click("battle.field.details"))return;
@@ -207,11 +210,11 @@ void FGirlsSpireCampaignSpec::Define()
                     const auto action=ranked.front();
                     const auto occupied=std::find_if(current.Units.begin(),current.Units.end(),[&](const auto& unit){return unit.Hp>0 && unit.At==action.Target;});
                     const auto cell=occupied==current.Units.end()?FString::Printf(TEXT("battle.cell.%d.%d"),action.Target.X,action.Target.Y):FString::Printf(TEXT("battle.unit.select.%d"),occupied->Id);
-                    if(action.Kind==BasicActionKind::Wait){if(!Click("battle.wait.south"))return;}
+                    if(action.Kind==BasicActionKind::Wait){if(!ClickFieldWait(*this,Driver,[this](const char* id){return Click(id);}))return;}
                     else {
                         if(action.Kind==BasicActionKind::Move){if(!Click("battle.field.move"))return;}
                         else if(action.Kind==BasicActionKind::Attack){if(!Click("battle.field.attack"))return;}
-                        else {const auto skill=FString::Printf(TEXT("battle.skill.%d"),static_cast<int>(action.Ability));if(!Click(TCHAR_TO_UTF8(*skill)))return;}
+                        else {const auto skill=FString::Printf(TEXT("battle.skill.%d"),static_cast<int>(action.Ability));if(!ClickFieldSkill(*this,Driver,[this](const char* id){return Click(id);},TCHAR_TO_UTF8(*skill)))return;}
                         if(!Click(TCHAR_TO_UTF8(*cell)))return;
                         const char* confirm=action.Kind==BasicActionKind::Move?"battle.move.confirm":action.Kind==BasicActionKind::Attack?"battle.confirm":"battle.skill.confirm";
                         if(!Click(confirm))return;

@@ -21,7 +21,7 @@ void SCombatScreen::RefreshTeamUltimate()
     FString label=TEXT("この対象には全員必殺を使用できません（生存敵・射程・射線・発動条件を確認）");
     if(preview.Legal) {
         label=TEXT("ゲージ100消費→0（連携成立分は後から加算）\n");
-        for(const auto& hit:preview.Hits) label+=FString::Printf(TEXT("敵%d / 命中%d%% / 予想%dダメージ\n"),hit.TargetId,hit.Chance,hit.Damage);
+        for(const auto& hit:preview.Hits) label+=FString::Printf(TEXT("敵%d / 命中%d%% / %s\n"),hit.TargetId,hit.Chance,*PredictedDamage(hit.TargetId,hit.Damage));
     }
     Text(label,"battle.teamultimate.preview",16);
     Action(TEXT("全員必殺を確定"),"battle.teamultimate.confirm",[this,revision=state.Revision,actor=state.ActiveId,target=*Selected] {

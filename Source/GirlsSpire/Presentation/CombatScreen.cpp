@@ -27,6 +27,16 @@
 namespace {
 // 駒のHPバーの高さ。数値でも表示するため色以外でも読める。
 constexpr float HpBarHeight=5.f;
+// 全画面の盤面で、空きマスの地形ラベルを隅へ置くときの文字サイズ。
+constexpr int CornerLabelFont=7;
+// 全画面の主人公の手番で、短いコマンド一覧の外へ追い出す長い本文のID接頭辞。
+bool FieldBodyText(const FName& id)
+{
+    const FString name=id.ToString();
+    for(const TCHAR* prefix:{TEXT("battle.round"),TEXT("battle.generation"),TEXT("battle.goal."),TEXT("battle.finalboss."),TEXT("battle.midboss."),TEXT("battle.web."),TEXT("battle.curse."),TEXT("battle.boost."),TEXT("battle.cover.rule."),TEXT("battle.help"),TEXT("battle.cues."),TEXT("battle.medicine.count")})
+        if(name.StartsWith(prefix))return true;
+    return false;
+}
 }
 
 void SCombatScreen::Construct(const FArguments& Args)
@@ -88,6 +98,7 @@ void SCombatScreen::Construct(const FArguments& Args)
 
 void SCombatScreen::Text(const FString& label,const FName& id,int size)
 {
+    if(FieldBodyHidden && FieldBodyText(id))return;
     if(FullField && !FieldDetails && (id=="battle.generation" || id=="battle.help" || id=="battle.cues.legend" || id=="battle.cues.scope" || id=="intent.help" || id=="intent.notice"))return;
     Panel->AddSlot().AutoHeight().Padding(0,0,0,10)
     [ SNew(STextBlock).Text(FText::FromString(label)).AutoWrapText(true)
@@ -111,8 +122,13 @@ void SCombatScreen::Refresh(bool persist)
     using namespace GirlsSpire;
     const auto& state=Combat->Snapshot();
     if(FullField && FieldActor!=state.ActiveId){FieldActor=state.ActiveId;FieldFocus=state.ActiveId;FieldAim=EFieldAction::None;FieldMenuOpen=true;}
+    // 行動を確定して状態が進んだら、下位メニューを閉じて一覧へ戻す。
+    if(FullField && FieldSubRevision!=state.Revision){FieldSubRevision=state.Revision;FieldSub=EFieldSub::None;}
+    FieldBodyHidden=FieldCompactMode() && !(FieldMainList() && FieldDetails);
     RefreshPortraits();
     RefreshCombos();
+    // 作り直すマスに古いツールチップが残らないよう、先に閉じる。
+    if(FullField && FSlateApplication::IsInitialized())FSlateApplication::Get().CloseToolTip();
     Grid->ClearChildren(); Panel->ClearChildren();
     const auto cues=ReadBoardCues(*Combat,ShowThreats);
     const bool large=state.Width>8 || state.Height>8;
@@ -162,6 +178,8 @@ void SCombatScreen::Refresh(bool persist)
         const float hp=unit!=state.Units.end()?static_cast<float>(unit->Hp)/FMath::Max(1,unit->MaxHp):0.f;
         const auto ground=MonochromeBoard?nullptr:Sprites->Terrain(x==state.Width/2 || y==state.Height/2?EBoardSprite::Paving:EBoardSprite::Grass);
         if(FullField && !FieldDetails && ground && unitId<0 && !tile.Wall && !tile.Trap && tile.ObstacleHp==0 && tile.Elevation==0 && tile.Cover==0)label.Empty();
+        // 全画面では地形の文字を右上の隅へ小さく置き、下側の駒・HPと重ねない。
+        const bool cornerLabel=FullField && unitId<0;
         const auto cell=BoardCellSize();
         Grid->AddSlot(x,y)
         [ SNew(SBox).WidthOverride(cell.X).HeightOverride(cell.Y)
@@ -176,10 +194,11 @@ void SCombatScreen::Refresh(bool persist)
                   [SNew(SImage).Image(ground).ColorAndOpacity(FLinearColor(.8f,.85f,.8f,.75f))
                     .Visibility(ground?EVisibility::HitTestInvisible:EVisibility::Collapsed)
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.ground.%d.%d"),x,y)))]
-                  +SOverlay::Slot().VAlign(VAlign_Bottom).Padding(1,0,1,5)
+                  +SOverlay::Slot().HAlign(cornerLabel?HAlign_Right:HAlign_Fill).VAlign(cornerLabel?VAlign_Top:VAlign_Bottom)
+                    .Padding(cornerLabel?FMargin(0,2,2,0):FMargin(1,0,1,FullField && unitId>=0?HpBarHeight+4.f:5.f))
                   [ SNew(STextBlock).Text(FText::FromString(label)).Justification(ETextJustify::Center)
                     .AddMetaData(FDriverMetaData::Id(*FString::Printf(TEXT("battle.celllabel.%d.%d"),x,y)))
-                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(unitId>=0?10:8))).ColorAndOpacity(FLinearColor::White)
+                    .Font(FCoreStyle::GetDefaultFontStyle("Regular",FontSize(unitId>=0?10:cornerLabel?CornerLabelFont:8))).ColorAndOpacity(FLinearColor::White)
                     .ShadowOffset(FVector2D(1,1)).ShadowColorAndOpacity(FLinearColor::Black) ]
                   +SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Top).Padding(2)
                   [ SNew(STextBlock).Text(FText::FromString(UTF8_TO_TCHAR(cue.Symbols().c_str()))).Justification(ETextJustify::Center)
@@ -213,7 +232,7 @@ void SCombatScreen::Refresh(bool persist)
     }
     for(const auto& unit:state.Units)if(unit.Hp>0 && unit.CreatesCover)
         Text(FString::Printf(TEXT("絡繰鎧（敵%d） 防御%d：偶数ラウンドの手番開始時に遮蔽1個を生成。生成後も通常行動します。"),unit.Id,unit.Defense),*FString::Printf(TEXT("battle.cover.rule.%d"),unit.Id),14);
-    if(OnSuspend) Action(TEXT("保存して中断する"),"save.suspend",[this] {
+    if(OnSuspend && !FieldListHidden()) Action(TEXT("保存して中断する"),"save.suspend",[this] {
         const auto keepAlive=SharedThis(this);
         SuspensionPending=true;if(!PersistCheckpoint()) Refresh();
     });
@@ -233,10 +252,10 @@ void SCombatScreen::Refresh(bool persist)
         }
         return;
     }
-    Text(FullField?FString::Printf(TEXT("移動%s・行動%s"),state.Moved?TEXT("済"):TEXT("未"),state.Acted?TEXT("済"):TEXT("未")):
+    if(!FieldListHidden())Text(FullField?FString::Printf(TEXT("移動%s・行動%s"),state.Moved?TEXT("済"):TEXT("未"),state.Acted?TEXT("済"):TEXT("未")):
         FString::Printf(TEXT("味方%dの手番　移動:%s / 行動:%s"),state.ActiveId,state.Moved?TEXT("済"):TEXT("未"),state.Acted?TEXT("済"):TEXT("未")),"battle.turn",FullField?14:18);
     if(SelectingUltimate) { RefreshUltimate(); Text(Message,"battle.log",14); return; }
-    RefreshMedicine();
+    if(!FieldListHidden() || SelectingMedicine)RefreshMedicine();
     if(SelectingMedicine) {Text(Message,"battle.log",14);return;}
     if(state.ActiveId>0 && state.ActiveId<9) { RefreshIntent(); RefreshBoardCues(); return; }
     Text(TEXT("人物マスの数値はHP。移動先・攻撃対象をクリックし、予告を確認して確定します。"),"battle.help",15);
@@ -258,13 +277,15 @@ void SCombatScreen::Refresh(bool persist)
             if(prediction.Hits.empty()) {
                 const auto hp=state.Tiles[Selected->Y*state.Width+Selected->X].ObstacleHp;
                 preview=FString::Printf(TEXT("障害物　確定命中 / 耐久 %d → %d"),hp,hp-prediction.TerrainDamage);
-            } else preview=FString::Printf(TEXT("敵%d　命中%d%% / 予想%dダメージ"),
-                prediction.Hits[0].TargetId,prediction.Hits[0].Chance,prediction.Hits[0].Damage);
+            } else preview=FString::Printf(TEXT("敵%d　命中%d%% / %s"),
+                prediction.Hits[0].TargetId,prediction.Hits[0].Chance,*PredictedDamage(prediction.Hits[0].TargetId,prediction.Hits[0].Damage));
         }
         Text(preview,"battle.preview");
         Action(TEXT("攻撃を確定"),"battle.confirm",[this,revision=state.Revision] { ConfirmAttack(revision); },prediction.Legal);
     }
+    // 全画面の主人公の手番では、狙う対象の一覧は「攻撃」を押した後だけ出す。
     for(const auto& target:state.Units) {
+        if(FieldCompactMode() && FieldAim!=EFieldAction::Attack) break;
         if(!Combat->PreviewAttack(state.ActiveId,target.At).Legal) continue;
         const TCHAR* kind=target.Side==Faction::Enemy && target.Id>0 && target.Id<=8?FCharacterPortraits::Name(target.Id):target.CreatesCover?TEXT("絡繰鎧・敵"):
             target.Side==Faction::Enemy && target.Role==BattleRole::CastleLord?TEXT("歴史喰らいの城主・敵"):
@@ -283,12 +304,20 @@ void SCombatScreen::Refresh(bool persist)
     }
     const TCHAR* labels[]={TEXT("北を向いて待機"),TEXT("東を向いて待機"),TEXT("南を向いて待機"),TEXT("西を向いて待機")};
     const TCHAR* ids[]={TEXT("battle.wait.north"),TEXT("battle.wait.east"),TEXT("battle.wait.south"),TEXT("battle.wait.west")};
-    for(int facing=0;facing<4;++facing)
-        Action(labels[facing],ids[facing],[this,facing,revision=state.Revision] { Wait(static_cast<Facing>(facing),revision); });
-    RefreshSkills();
-    RefreshUltimate();
-    Text(Message,"battle.log",14);
-    RefreshBoardCues();
+    // 全画面では待機の4方向を技と同じく1つの折り返し行へ寄せ、コマンドの下位項目として並べる。
+    TSharedPtr<SWrapBox> waits;
+    const bool compact=FieldCompactMode();
+    if(FullField && (!compact || FieldSub==EFieldSub::Wait)) {
+        if(!compact)Text(TEXT("待機（向きを選ぶ）"),"battle.wait.label",13);
+        SAssignNew(waits,SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(6,7));
+        Panel->AddSlot().AutoHeight()[waits.ToSharedRef()];
+    }
+    for(int facing=0;facing<4 && (!compact || FieldSub==EFieldSub::Wait);++facing)
+        Action(labels[facing],ids[facing],[this,facing,revision=state.Revision] { Wait(static_cast<Facing>(facing),revision); },true,nullptr,waits);
+    if(!compact || FieldSub==EFieldSub::Skills || SelectedSkill)RefreshSkills();
+    if(!compact || FieldSub==EFieldSub::Ultimate)RefreshUltimate();
+    if(!compact || !Message.IsEmpty())Text(Message,"battle.log",14);
+    if(!compact || (FieldMainList() && FieldDetails))RefreshBoardCues();
 }
 
 void SCombatScreen::RefreshBoardCues()

@@ -1,6 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "Presentation/RunScreen.h"
 #include "SlateTestSync.h"
+#include "FieldCommandSteps.h"
 #include "AutomationDriverCommon.h"
 #include "Framework/Application/SlateApplication.h"
 #include "HAL/IConsoleManager.h"
@@ -106,11 +107,11 @@ void FGirlsSpireRunSpec::Define()
                     const auto action=ranked.front();
                     const auto occupied=std::find_if(current.Units.begin(),current.Units.end(),[&](const auto& unit){return unit.Hp>0 && unit.At==action.Target;});
                     const auto cell=occupied==current.Units.end()?FString::Printf(TEXT("battle.cell.%d.%d"),action.Target.X,action.Target.Y):FString::Printf(TEXT("battle.unit.select.%d"),occupied->Id);
-                    if(action.Kind==BasicActionKind::Wait){if(!Click("battle.wait.south"))return;}
+                    if(action.Kind==BasicActionKind::Wait){if(!ClickFieldWait(*this,Driver,[this](const char* id){return Click(id);}))return;}
                     else{
                         if(action.Kind==BasicActionKind::Move){if(!Click("battle.field.move"))return;}
                         else if(action.Kind==BasicActionKind::Attack){if(!Click("battle.field.attack"))return;}
-                        else{const auto skill=FString::Printf(TEXT("battle.skill.%d"),static_cast<int>(action.Ability));if(!Click(TCHAR_TO_UTF8(*skill)))return;}
+                        else{const auto skill=FString::Printf(TEXT("battle.skill.%d"),static_cast<int>(action.Ability));if(!ClickFieldSkill(*this,Driver,[this](const char* id){return Click(id);},TCHAR_TO_UTF8(*skill)))return;}
                         if(!Click(TCHAR_TO_UTF8(*cell)))return;
                         const char* confirm=action.Kind==BasicActionKind::Move?"battle.move.confirm":action.Kind==BasicActionKind::Attack?"battle.confirm":"battle.skill.confirm";
                         if(!Click(confirm))return;

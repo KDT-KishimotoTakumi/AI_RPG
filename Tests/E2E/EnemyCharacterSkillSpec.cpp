@@ -1,5 +1,6 @@
 #include "Misc/AutomationTest.h"
 #include "SlateTestSync.h"
+#include "FieldCommandSteps.h"
 #include "AutomationDriverCommon.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/SWindow.h"
@@ -29,6 +30,7 @@ void FGirlsSpireEnemyCharacterSkillSpec::Define()
         auto combat=MakeShared<Battle>(*restored);auto expected=*combat;CombatControlCheckpoint control;control.ProfileDriven=true;control.ChoiceRandomState=42;
         auto saved=std::make_shared<std::vector<SavedCombat>>();Preferences prefs;prefs.ReducedEffects=true;
         Async(EAsyncExecution::TaskGraphMainThread,[this,combat,control,saved,prefs]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true).SavedControl(control).DisplayPreferences(prefs).OnCheckpoint([saved](const SavedCombat& value){saved->push_back(value);return true;}));}).Wait();DrainSlateLayout();
+        if(!TestTrue(TEXT("待機の下位メニューを開く"),ClickAndDrain(Driver->FindElement(By::Id("battle.field.wait")))))return;
         const auto wait=Driver->FindElement(By::Id("battle.wait.north"));if(!wait->IsVisible()){Driver->FindElement(By::Id("battle.scroll"))->ScrollToEndUntil(By::Id("battle.wait.north"));DrainSlateLayout();}
         if(!TestTrue(TEXT("マウスで主人公の手番を終える"),ClickAndDrain(wait)))return;
         expected.EndTurn(expected.Snapshot().Revision,0,Facing::North);

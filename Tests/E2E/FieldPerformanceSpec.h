@@ -1,5 +1,6 @@
 #pragma once
 #include "Rendering/SlateRenderer.h"
+#include "FieldCommandSteps.h"
 #include "HAL/CriticalSection.h"
 #include "HAL/PlatformProcess.h"
 #include "HAL/PlatformTime.h"
@@ -111,7 +112,7 @@ void FGirlsSpireFieldPerformanceSpec::Define()
                             if(FPlatformTime::Seconds()<=collector->End)++attacks;
                         }
                         const auto beforeWait=battle->Snapshot().Revision;
-                        if(!click("battle.wait.south"))return;
+                        if(!ClickFieldWait(*this,Driver,click))return;
                         if(!TestTrue(TEXT("敵一巡の更新を確認"),battle->Snapshot().Revision-beforeWait>=static_cast<std::uint64_t>(enemies+1)))return;
                         if(FPlatformTime::Seconds()<=collector->End)enemyRevisions+=battle->Snapshot().Revision-beforeWait-1;
                     }else{
@@ -136,7 +137,7 @@ void FGirlsSpireFieldPerformanceSpec::Define()
                 const auto afterAttack=round->Snapshot().Revision;
                 if(!TestTrue(TEXT("測定中に主人公の攻撃を確定"),round->Snapshot().Acted && afterAttack>original.State.Revision))return;
                 const double enemyStart=FPlatformTime::Seconds();
-                if(!click("battle.wait.south"))return;
+                if(!ClickFieldWait(*this,Driver,click))return;
                 const double cycleEnd=FPlatformTime::Seconds();
                 const auto delta=round->Snapshot().Revision-afterAttack;
                 if(!TestTrue(TEXT("待機後に敵AIの一巡を実行"),delta>=static_cast<std::uint64_t>(enemies+1) && round->Snapshot().ActiveId==1))return;
