@@ -280,3 +280,10 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 ゲーム内容・仕様・素材は変更なし。
 - 最新43e01a90…に置き換わった旧候補95c93ac7…のProject（1,194,480,004 bytes）と、旧候補3件（95c93ac7…/b485945d…/e633ea66…）のproject-input.zip（各約54 MB、Gitのコミットから再生成可能）を削除。合計1,357,828,197 bytes。ログ・証跡・マニフェスト（input.json/result.json/package.log等）は保持。
 - 保護対象571ファイルのSHA-256は整理前後で差分0。DefaultEngine.iniは内容を読まず、サイズと更新日時が一致。最新配布候補・最新計測・セーブ・失敗証跡のgzは操作していない。
+
+## 第6回（2026-11-12、デスクトップ操作ツール追加後）: 最新配布候補のビルド中間物
+
+ゲーム内容・仕様・素材は変更なし。
+- 最新配布候補43e01a90…のProject/Intermediate（4,524,333,204 bytes、共有PCH約4 GB）を削除。配布物（Distribution/Windows）には含まれず、package-windows.ps1で再生成できる。Distribution/Windows・Project/Binaries・ログ・証跡は保持。
+- 保護対象572ファイル（Source/Content/Tests/tools/specs/docs/.specify/Config（DefaultEngine.ini除く）/ルート文書/最新配布候補の配布物/最新計測/セーブ）のSHA-256は整理前後で差分0。DefaultEngine.iniは内容を読まず、サイズと更新日時が一致。Saved合計は約15.0→10.8 GB。
+- 失敗した計測のzip（CoverageArchives、約2.9 GB）とgz化済みの生プロファイルは失敗証跡として保持。Saved/DesktopControlの専用UserDir・撮影は小容量のため保持。
