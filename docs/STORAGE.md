@@ -266,3 +266,11 @@ GS-081: 制作用Python/PillowはSaved/Tools/AppearancePythonへ隔離し次工�
 - 失敗した計測2件（81f78864…/31b9658e…）の生プロファイル8件を可逆圧縮（.gz）。7,151,160,784→967,569,298 bytes。元サイズ/SHA-256はSaved/gs121-cleanup-manifest.tsv。展開後SHAの一致を確認して元を削除。
 - 旧配布候補7件のProjectを削除（再生成可能）。ログ/証跡/マニフェストと最新候補95c93ac7708b4aacb489cfa8d1346bdeは保持。空き容量は約12.8GB増加。
 - セーブ・固定原本・素材・最新の集計・Config/DefaultEngine.iniは操作していない。
+
+## 第4回（2026-11-12、GS-129後）: 重複した配布候補と失敗計測の生データ
+
+ゲーム内容・仕様・素材は変更なし。
+- 同日に作り直した旧配布候補347a6f48a4324e6a87f8d9e021b93261（約5.9 GB）を削除。最新43e01a90708a471cbd53eb18a51d5c39に置き換わった重複で、package-windows.ps1で再生成できる。
+- 合格していない計測4件（255efa5f…/9d1c0135…/6b601385…/d7a260c3…、gate.jsonなし）の生プロファイル13件を失敗証跡として可逆gzipへ置き換え。展開後のSHA-256が元と一致した場合のみ元を削除。論理サイズ18,973,752,387 bytesのうちgz保管後1,331,856,750 bytes、削減17,641,895,637 bytes（旧候補の削除を含む）。Savedは約33.5→16.2 GB。
+- 保護対象571ファイル（Source/Content/Tests/tools/specs/docs/.specify/Config（DefaultEngine.ini除く）/ルートの文書/最新配布候補/最新計測73c6bd12…/セーブ）のSHA-256は整理前後で差分0。DefaultEngine.iniは内容を読まず、サイズと更新日時のみが前後で一致。
+- Intermediate（約2.5 GB）は次回ビルドに必要なため保持。過去の失敗証跡は削除せずgzで保持。使う時だけ展開する。

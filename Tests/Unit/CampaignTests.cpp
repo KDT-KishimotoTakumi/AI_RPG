@@ -149,7 +149,7 @@ int TestCampaign()
                 else{const auto forecast=IntentForecast::Build(battle,RankIntentActions(battle,control.Orders[actor->Id]),control.Trust[actor->Id]);forecast.Execute(battle,control.ChoiceRandom);}
             }
             const auto outcome=battle.Snapshot().Outcome;
-            // 生存戦は必ず終局する。全滅戦の膠着（敵1体が残り500手超）は既存の挙動で原因未特定のため、失敗にせず件数と条件を出力する。
+            // 生存戦は必ず終局する。全滅戦の膠着（敵1体が残り500手超）はGS-128/129の経路迂回で解消済みのため、後段で0件を検査する。未終局の条件は診断のため出力する。
             if(isSurvive)check(outcome!=BattleOutcome::Ongoing,"生存戦が有限手数で終局する");
             if(outcome==BattleOutcome::Ongoing){
                 if(!isSurvive)++stalled[difficulty];
@@ -163,6 +163,7 @@ int TestCampaign()
         std::cout<<"EliteOutcome difficulty="<<difficulty<<" survive: won="<<survive[1]<<" lost="<<survive[2]<<" of "<<survive[0]
             <<" / eliminate: won="<<eliminate[1]<<" lost="<<eliminate[2]<<" stalled="<<stalled[difficulty]<<" of "<<eliminate[0]<<'\n';
         check(survive[0]==survive[1]+survive[2],"生存戦はすべて勝敗が付く");
+        check(stalled[difficulty]==0,"全滅戦が膠着せず有限手数で終局する");
     }
     std::cout<<"Campaign: "<<checks<<" checks, "<<failed<<" failed\n";return failed;
 }
