@@ -134,7 +134,8 @@ Anthropic公式サンプルも、既存の文書/スキル作成等と重複す�
 2026-11-12、利用者依頼で追加。Claude Codeにデスクトップ操作ツールが組み込まれていない環境で、配布版のゲームを実画面で見て遊ぶための、このプロジェクト専用のスクリプト（PowerShell 7、Win32のSendInput/画面撮影）。ゲーム内容・仕様は変更しない。
 
 ```powershell
-./tools/desktop-control.ps1 launch                 # 最新のShipping配布候補を窓モード1280x900で起動
+./tools/desktop-control.ps1 monitors                # 接続中のモニター名・位置・解像度（例: VG258 / VA24D）
+./tools/desktop-control.ps1 launch [-Monitor VA24D]  # 最新のShipping配布候補を窓モード1280x900で起動。-Monitorで表示先を指定
 ./tools/desktop-control.ps1 status
 ./tools/desktop-control.ps1 shot -Out Saved/DesktopControl/shots/a.png
 ./tools/desktop-control.ps1 click -X 288 -Y 302 [-Right] [-Double]   # クライアント領域の座標

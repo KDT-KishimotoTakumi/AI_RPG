@@ -2,7 +2,8 @@
 # このプロジェクトのゲームウィンドウ専用の操作ツール（撮影・クリック・キー・スクロール）。
 # 対象は launch で起動したゲームのプロセスだけ。他のアプリには撮影も入力もしない。
 # 出力は文字化けを避けるため英語。使い方は docs/DEV_SKILLS.md を参照。
-#   launch [-Exe <path>]   専用の保存先でゲームを窓モードで起動する（利用者の本物のセーブには触れない）
+#   monitors                接続中のモニターの名前・位置・解像度を一覧する
+#   launch [-Exe <path>] [-Monitor <名前の一部|DISPLAYn>]   専用の保存先でゲームを窓モードで起動する（利用者の本物のセーブには触れない）。-Monitorで表示先を指定
 #   status                  対象ウィンドウの有無・位置・大きさ
 #   shot -Out <png>         対象ウィンドウの画面を保存する
 #   click -X <n> -Y <n> [-Right] [-Double]   ウィンドウ内（クライアント領域）の座標をクリック
@@ -11,8 +12,8 @@
 #   quit                    通常の終了要求だけを送る（強制終了しない）
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory, Position = 0)][ValidateSet('launch', 'status', 'shot', 'click', 'key', 'scroll', 'quit')][string]$Command,
-    [string]$Exe, [string]$Out, [int]$X, [int]$Y, [int]$Delta, [string[]]$Keys,
+    [Parameter(Mandatory, Position = 0)][ValidateSet('monitors', 'launch', 'status', 'shot', 'click', 'key', 'scroll', 'quit')][string]$Command,
+    [string]$Exe, [string]$Monitor, [string]$Out, [int]$X, [int]$Y, [int]$Delta, [string[]]$Keys,
     [switch]$Right, [switch]$Double,
     [int]$WaitSeconds = 60
 )
@@ -29,6 +30,49 @@ $stateDir = Join-Path $projectRoot 'Saved/DesktopControl'
 $statePath = Join-Path $stateDir 'state.json'
 
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
+if (-not ('GsDisplay' -as [type])) {
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class GsDisplay {
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct DisplayDevice {
+        public int cb;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string DeviceName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceString;
+        public int StateFlags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceID;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceKey;
+    }
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern bool EnumDisplayDevices(string device, uint index, ref DisplayDevice d, uint flags);
+    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr w, IntPtr after, int x, int y, int cx, int cy, uint flags);
+}
+'@
+}
+# 接続中のモニター（名前はWMIのUserFriendlyName、位置は仮想デスクトップ座標）を返す。
+function Get-Monitors {
+    $names = @{}
+    Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorID -ErrorAction SilentlyContinue | ForEach-Object {
+        $friendly = -join ($_.UserFriendlyName | Where-Object { $_ -ne 0 } | ForEach-Object { [char]$_ })
+        $names[$_.InstanceName.ToUpperInvariant()] = $friendly
+    }
+    foreach ($screen in [System.Windows.Forms.Screen]::AllScreens) {
+        $device = [GsDisplay+DisplayDevice]::new(); $device.cb = [Runtime.InteropServices.Marshal]::SizeOf($device)
+        $code = ''
+        if ([GsDisplay]::EnumDisplayDevices($screen.DeviceName, 0, [ref]$device, 0) -and $device.DeviceID -match 'MONITOR\\([A-Z0-9]+)\\') { $code = $Matches[1] }
+        $friendly = ($names.GetEnumerator() | Where-Object { $_.Key -like "DISPLAY\$code\*" } | Select-Object -First 1).Value
+        [pscustomobject]@{ Device = $screen.DeviceName; Name = $friendly; Primary = $screen.Primary
+            X = $screen.Bounds.X; Y = $screen.Bounds.Y; Width = $screen.Bounds.Width; Height = $screen.Bounds.Height }
+    }
+}
+function Select-Monitor([string]$wanted) {
+    $all = @(Get-Monitors)
+    $hit = @($all | Where-Object { $_.Device -ieq $wanted -or ($_.Name -and $_.Name -like "*$wanted*") })
+    if ($hit.Count -ne 1) { throw "Monitor '$wanted' matched $($hit.Count) of: $(($all | ForEach-Object { "$($_.Name)($($_.Device))" }) -join ', ')" }
+    $hit[0]
+}
+function Find-MonitorOf($x, $y) { Get-Monitors | Where-Object { $x -ge $_.X -and $x -lt $_.X + $_.Width -and $y -ge $_.Y -and $y -lt $_.Y + $_.Height } | Select-Object -First 1 }
 if (-not ('GsDesktop' -as [type])) {
     Add-Type -TypeDefinition @'
 using System;
@@ -146,6 +190,9 @@ function Resolve-Vk([string]$name) {
 }
 
 switch ($Command) {
+    'monitors' {
+        Get-Monitors | ForEach-Object { "{0} name={1} primary={2} at ({3},{4}) {5}x{6}" -f $_.Device, $_.Name, $_.Primary, $_.X, $_.Y, $_.Width, $_.Height }
+    }
     'launch' {
         if (Test-Path -LiteralPath $statePath) {
             $old = Read-State
@@ -165,6 +212,8 @@ switch ($Command) {
         $userDir = Join-Path $projectRoot "Saved/DesktopControl/UserDir-$id"
         New-Item -ItemType Directory -Force -Path $userDir | Out-Null
         $arguments = @('-windowed', "-ResX=$ResX", "-ResY=$ResY", '-NoSplash', "-UserDir=`"$userDir/`"")
+        $target = if ($Monitor) { Select-Monitor $Monitor }
+        if ($target) { $arguments += @("-WinX=$($target.X + [math]::Max(0, [int](($target.Width - $ResX) / 2)))", "-WinY=$($target.Y + 20)") }
         $process = Start-Process -FilePath $exeFull -ArgumentList $arguments -WorkingDirectory (Split-Path -Parent $exeFull) -PassThru
         New-Item -ItemType Directory -Force -Path $stateDir | Out-Null
         [pscustomobject]@{ Pid = $process.Id; Exe = $exeFull; UserDir = $userDir; Started = (Get-Date).ToString('o') } | ConvertTo-Json | Set-Content -LiteralPath $statePath
@@ -175,11 +224,20 @@ switch ($Command) {
             $window = [GsDesktop]::FindWindow([uint32]$process.Id, $AllowedTitles)
         } while ($window -eq [IntPtr]::Zero -and (Get-Date) -lt $deadline)
         if ($window -eq [IntPtr]::Zero) { throw "The game window did not appear within $WaitSeconds seconds (PID $($process.Id) is still running)." }
+        if ($target) {
+            # 引数で置けなかった場合に備え、クライアント領域が指定モニター内に入るよう移動して確かめる。
+            $c = Get-Client $window; $at = Find-MonitorOf ($c.Left + 10) ($c.Top + 10)
+            if (-not $at -or $at.Device -ne $target.Device) {
+                [void][GsDisplay]::SetWindowPos($window, [IntPtr]::Zero, $target.X + 20, $target.Y + 20, 0, 0, 0x0001 -bor 0x0004)
+                Start-Sleep -Milliseconds 500; $c = Get-Client $window; $at = Find-MonitorOf ($c.Left + 10) ($c.Top + 10)
+            }
+            if (-not $at -or $at.Device -ne $target.Device) { throw "The game window is not on monitor $($target.Name) ($($target.Device))." }
+        }
         "launched pid=$($process.Id) title='$([GsDesktop]::Title($window))' userdir=$userDir"
     }
     'status' {
         $t = Get-Target; $c = Get-Client $t.Window
-        "running pid=$($t.State.Pid) title='$([GsDesktop]::Title($t.Window))' client=$($c.Width)x$($c.Height) at ($($c.Left),$($c.Top)) foreground=$([GsDesktop]::GetForegroundWindow() -eq $t.Window)"
+        "running pid=$($t.State.Pid) title='$([GsDesktop]::Title($t.Window))' client=$($c.Width)x$($c.Height) at ($($c.Left),$($c.Top)) monitor=$((Find-MonitorOf ($c.Left + 10) ($c.Top + 10)).Name) foreground=$([GsDesktop]::GetForegroundWindow() -eq $t.Window)"
     }
     'shot' {
         if (-not $Out) { throw 'shot requires -Out <png>.' }
