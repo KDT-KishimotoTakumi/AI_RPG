@@ -128,3 +128,20 @@ Anthropic公式サンプルも、既存の文書/スキル作成等と重複す�
 ## Codex共通領域への導入
 
 2026-11-01、利用者依頼で上記非公開リポジトリのmain=d1c5fe4ff2f466340edc916181bf3a610f2a429eから8スキルを共通領域へ導入。配置は環境変数CODEX_HOME配下のskills（未設定ならホームの.codex/skills）。公式skill-installerのGit方式を使用し、Gitの改行変換だけを原文へ戻した。補助資料はCODEX_HOME/references、ライセンス/出典はCODEX_HOME/skill-bundles/AI-Development-Skills。全18配布ファイルのSHA-256と8件のメタデータを確認。プロジェクト側のスキルは保持。次のターンから共通領域のスキルを利用できる。Context Modeの実行環境とMCP接続は既存のプロジェクト限定構成を維持し、別プロジェクトで使う場合は同じセットアップ手順が必要。
+
+## デスクトップ操作ツール（tools/desktop-control.ps1）
+
+2026-11-12、利用者依頼で追加。Claude Codeにデスクトップ操作ツールが組み込まれていない環境で、配布版のゲームを実画面で見て遊ぶための、このプロジェクト専用のスクリプト（PowerShell 7、Win32のSendInput/画面撮影）。ゲーム内容・仕様は変更しない。
+
+```powershell
+./tools/desktop-control.ps1 launch                 # 最新のShipping配布候補を窓モード1280x900で起動
+./tools/desktop-control.ps1 status
+./tools/desktop-control.ps1 shot -Out Saved/DesktopControl/shots/a.png
+./tools/desktop-control.ps1 click -X 288 -Y 302 [-Right] [-Double]   # クライアント領域の座標
+./tools/desktop-control.ps1 key -Keys ENTER,ESC,F1
+./tools/desktop-control.ps1 scroll -X 1120 -Y 500 -Delta -3
+./tools/desktop-control.ps1 quit                   # 通常の終了要求のみ。強制終了しない
+```
+
+安全策: 対象はlaunchしたゲームのプロセスだけ（PID照合・実行ファイルがプロジェクト内・ウィンドウ名がSpiral RPG/GirlsSpire）。入力前に対象を最前面にし、前面にできなければ何も送らず中止する。座標はクライアント領域内に限り、範囲外/未対応キー/過大なスクロールは拒否する。ゲームは専用のSaved/DesktopControl/UserDir-*を保存先にし、本物のセーブには触れない。状態はSaved/DesktopControl/state.json。
+注意: 他の全画面ゲーム等が最前面だとWindowsが前面化を許可せず、中止する（今回はStarRailが最前面で発生。止めると成功）。操作中は利用者のマウスとキーボードを使う。出力は文字化け回避のため英語。
