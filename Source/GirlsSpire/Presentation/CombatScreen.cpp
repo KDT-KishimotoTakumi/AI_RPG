@@ -31,6 +31,8 @@ constexpr float HpBarHeight=5.f;
 constexpr int CornerLabelFont=7;
 // 全画面で「攻撃」を押したのに射程内へ対象がいないときの案内。
 const TCHAR* const FieldNoTargetText=TEXT("射程内に攻撃できる相手がいません");
+// 傷薬・回復技など味方へ使うものの対象がいないときの案内。
+const TCHAR* const FieldNoAllyText=TEXT("射程内に使える相手がいません");
 // 全画面の主人公の手番で、短いコマンド一覧の外へ追い出す長い本文のID接頭辞。
 bool FieldBodyText(const FName& id)
 {
@@ -116,6 +118,15 @@ void SCombatScreen::Action(const FString& label,const FName& id,TFunction<void()
     if(wrap)wrap->AddSlot()[button];
     else if(row) row->AddSlot().AutoWidth().Padding(0,0,6,0) [button];
     else Panel->AddSlot().AutoHeight().Padding(0,0,0,7) [button];
+}
+
+void SCombatScreen::NoTargetNotice(const TFunction<bool(GirlsSpire::Position)>& legal,bool ally)
+{
+    if(!FieldCompactMode())return;
+    const auto& state=Combat->Snapshot();
+    // 障害物も盤面から狙えるため、全マスを確かめてから対象なしと言い切る。
+    for(int y=0;y<state.Height;++y) for(int x=0;x<state.Width;++x) if(legal(GirlsSpire::Position{x,y}))return;
+    Text(ally?FieldNoAllyText:FieldNoTargetText,"battle.field.notarget",14);
 }
 
 void SCombatScreen::Refresh(bool persist)
@@ -307,13 +318,7 @@ void SCombatScreen::Refresh(bool persist)
             *FString::Printf(TEXT("battle.target.%d"),target.Id),
             [this,at=target.At,revision=state.Revision] { SelectCell(at,revision); });
     }
-    if(FieldCompactMode() && FieldAim==EFieldAction::Attack && targetCount==0) {
-        // 障害物も盤面から狙えるため、対象なしと言い切る前に確かめる。
-        bool obstacleInRange=false;
-        for(int y=0;y<state.Height && !obstacleInRange;++y) for(int x=0;x<state.Width && !obstacleInRange;++x)
-            obstacleInRange=state.Tiles[y*state.Width+x].ObstacleHp>0 && Combat->PreviewAttack(state.ActiveId,Position{x,y}).Legal;
-        if(!obstacleInRange)Text(FieldNoTargetText,"battle.field.notarget",14);
-    }
+    if(FieldAim==EFieldAction::Attack && targetCount==0)NoTargetNotice([this,&state](Position at){return Combat->PreviewAttack(state.ActiveId,at).Legal;});
     const TCHAR* labels[]={TEXT("北を向いて待機"),TEXT("東を向いて待機"),TEXT("南を向いて待機"),TEXT("西を向いて待機")};
     const TCHAR* ids[]={TEXT("battle.wait.north"),TEXT("battle.wait.east"),TEXT("battle.wait.south"),TEXT("battle.wait.west")};
     // 主人公の手番では待機の4方向を一覧と同じ幅の縦並びにする。それ以外の全画面だけ折り返し行へ寄せる。

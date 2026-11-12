@@ -23,6 +23,7 @@ void SCombatScreen::RefreshUltimate()
         const TCHAR* selection=ability.Area==GirlsSpire::AbilityArea::SelfRadius || ability.Area==GirlsSpire::AbilityArea::AdjacentFour?TEXT("自身のマスをクリック"):ability.Area==GirlsSpire::AbilityArea::CardinalLine?TEXT("上下左右のマスで方向を指定"):TEXT("対象の敵をクリック");
         Text(FString::Printf(TEXT("%s：%s / 攻撃+%d・回復%d・防御無視%d / 命中時 攻撃−%d・移動−%d / 攻撃強化%d・自身防御強化%d%s / 結・行動1回とゲージ50消費。同種強化は最大値を維持し期限更新。"),UTF8_TO_TCHAR(ability.Name.data()),selection,ability.Effects.AttackBonus,ability.Effects.Healing,ability.Effects.IgnoreDefense,ability.Effects.AttackPenalty,ability.Effects.MovementPenalty,ability.Effects.AttackBuff,ability.Effects.SelfDefenseBuff,ability.Effects.Cleanse?TEXT("・攻撃/移動低下解除"):TEXT("")),"battle.ultimate.help",16);
     }else Text(TEXT("敵1体をクリックしてください。攻撃力＋20 / 結 / 行動1回とゲージ50消費。外れても消費します。"),"battle.ultimate.help",16);
+    NoTargetNotice([this,&state](GirlsSpire::Position at){return Combat->PreviewUltimate(state.ActiveId,at).Legal;});
     Action(TEXT("必殺を取り消す"),"battle.ultimate.cancel",[this] {
         SelectingUltimate=false;Selected.reset();Refresh();
     });

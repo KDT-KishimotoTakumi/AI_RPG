@@ -34,8 +34,12 @@ void SCombatScreen::RefreshSkills()
     FString status=TEXT("技 / 再使用待ち ");
     for(int i=0;i<SkillCount;++i) if(actor->Skills[i]) status+=FString::Printf(TEXT("%s:%d "),*OwnedSkillLabel(actor->Id,static_cast<Skill>(i)),actor->Cooldowns[i]);
     if(listing)Text(status,"battle.skill.status",13);
-    const auto row=SNew(SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(6,7));
-    if(listing)Panel->AddSlot().AutoHeight()[row];
+    // 主人公の手番では技ボタンを一覧と同じ幅の縦並びにする。それ以外の全画面だけ折り返し行へ寄せる。
+    TSharedPtr<SWrapBox> row;
+    if(listing && !FieldCompactMode()) {
+        SAssignNew(row,SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(6,7));
+        Panel->AddSlot().AutoHeight()[row.ToSharedRef()];
+    }
     for(int index=0;listing && index<SkillCount;++index) {
         if(index>=2 && !actor->Skills[index]) continue;
         Action(OwnedSkillLabel(actor->Id,static_cast<Skill>(index)),*FString::Printf(TEXT("battle.skill.%d"),index),[this,index] {
@@ -43,6 +47,8 @@ void SCombatScreen::RefreshSkills()
         },actor->Skills[index] && actor->Cooldowns[index]==0 && !state.Acted,nullptr,row);
     }
     if(!SelectedSkill) return;
+    const auto skill=*SelectedSkill;
+    NoTargetNotice([this,&state,skill](Position at){return Combat->PreviewSkill(state.ActiveId,skill,at).Legal;},skill==Skill::FirstAid || skill==Skill::Heal);
     Action(TEXT("通常操作へ戻る"),"battle.skill.cancel",[this] {SelectedSkill.reset();Selected.reset();Refresh();});
     if(!Selected) return;
     const auto preview=Combat->PreviewSkill(state.ActiveId,*SelectedSkill,*Selected);

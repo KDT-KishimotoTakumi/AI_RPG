@@ -92,6 +92,8 @@ private:
     void RefreshPortraits();
     void RefreshSkills();
     void RefreshMedicine();
+    // 全画面の主人公の手番で、対象選択中に合法な対象がマスに一つもないとき、短い理由を出す。
+    void NoTargetNotice(const TFunction<bool(GirlsSpire::Position)>& legal,bool ally=false);
     static const TCHAR* SkillLabel(GirlsSpire::Skill skill);
     FString OwnedSkillLabel(int actorId,GirlsSpire::Skill skill) const;
     void RefreshCombos();

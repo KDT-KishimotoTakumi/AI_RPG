@@ -13,6 +13,7 @@ void SCombatScreen::RefreshTeamUltimate()
         return;
     }
     Text(TEXT("敵を中心に上下左右1マスへ攻撃力＋40。味方・地形は対象外。発動者の行動1回とゲージ100を消費し、外れても消費します。"),"battle.teamultimate.help",16);
+    NoTargetNotice([this,&state](GirlsSpire::Position at){return Combat->PreviewTeamUltimate(state.ActiveId,at).Legal;});
     Action(TEXT("全員必殺を取り消す"),"battle.teamultimate.cancel",[this] {
         SelectingUltimate=false;SelectingTeamUltimate=false;Selected.reset();Refresh();
     });

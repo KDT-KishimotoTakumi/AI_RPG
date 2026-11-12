@@ -253,6 +253,34 @@ void FGirlsSpireFullFieldSpec::Define()
         }).Wait();
         shot(TEXT("waitwidth"));
     });
+    It(TEXT("技・必殺の下位メニューは一覧と同じ幅で、対象がいないと技・必殺・傷薬でも理由を出す"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
+        using namespace GirlsSpire;BattleUnit hero;hero.At={1,1};hero.Speed=30;hero.Skills={true,true};auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={6,6};enemy.Speed=10;enemy.Skills={};
+        auto base=Battle(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42,BattleGoal::Eliminate,3,1);auto checkpoint=base.Checkpoint();checkpoint.State.Combos.Gauge=50;
+        const auto restored=Battle::Restore(checkpoint);if(!TestTrue(TEXT("有効な盤面"),restored.has_value()))return;
+        auto combat=MakeShared<Battle>(*restored);const auto before=combat->Checkpoint();
+        Async(EAsyncExecution::TaskGraphMainThread,[this,combat]{Window->SetContent(SNew(SCombatScreen).Combat(combat).FullField(true));}).Wait();DrainSlateLayout();
+        const auto shot=[this](const TCHAR* tag){Async(EAsyncExecution::TaskGraphMainThread,[this,tag]{TArray<FColor> pixels;FIntVector extent;if(!TestTrue(TEXT("撮影"),FSlateApplication::Get().TakeScreenshot(Window.ToSharedRef(),pixels,extent)))return;TArray64<uint8> png;FImageUtils::PNGCompressImageArray(extent.X,extent.Y,pixels,png);const auto directory=FPaths::ProjectSavedDir()/TEXT("Screenshots");IFileManager::Get().MakeDirectory(*directory,true);const auto path=directory/FString::Printf(TEXT("FullField-%s-%s.png"),tag,*FGuid::NewGuid().ToString(EGuidFormats::Digits));TestTrue(TEXT("検証画像を保持"),FFileHelper::SaveArrayToFile(png,*path));AddInfo(path);}).Wait();};
+        const auto sameWidth=[this](const TCHAR* what,std::initializer_list<const char*> ids){
+            Async(EAsyncExecution::TaskGraphMainThread,[this,what,ids]{
+                const auto back=FieldCaptionTarget(Window.ToSharedRef(),"battle.field.back");if(!TestTrue(TEXT("戻るを取得"),back.IsValid()))return;
+                const float list=AbsoluteBox(back).GetSize().X;
+                for(const char* id:ids){const auto button=FieldCaptionTarget(Window.ToSharedRef(),id);if(!TestTrue(FString::Printf(TEXT("%sのボタンを取得"),what),button.IsValid()))continue;
+                    AddInfo(FString::Printf(TEXT("%s 一覧の幅%.1f / %s %.1f"),what,list,UTF8_TO_TCHAR(id),AbsoluteBox(button).GetSize().X));
+                    TestTrue(FString::Printf(TEXT("%sは一覧と同じ幅"),UTF8_TO_TCHAR(id)),FMath::IsNearlyEqual(list,AbsoluteBox(button).GetSize().X,1.f));}
+            }).Wait();};
+        const auto notice=[this](const TCHAR* what,const TCHAR* text){const auto element=Driver->FindElement(By::Id("battle.field.notarget"));TestTrue(FString::Printf(TEXT("%sで対象がいなければ理由を表示"),what),element->IsVisible() && element->GetText().ToString()==text);TestTrue(TEXT("戻るは残る"),Driver->FindElement(By::Id("battle.field.back"))->IsVisible());};
+        if(!Click("battle.field.skills"))return;
+        sameWidth(TEXT("技"),{"battle.skill.0","battle.skill.1"});shot(TEXT("skillwidth"));
+        TestFalse(TEXT("対象選択の前は理由を出さない"),Driver->FindElement(By::Id("battle.field.notarget"))->Exists());
+        if(!Click("battle.skill.0"))return;notice(TEXT("攻撃技"),TEXT("射程内に攻撃できる相手がいません"));shot(TEXT("skill-notarget"));
+        if(!Click("battle.field.back"))return;if(!Click("battle.field.skills"))return;if(!Click("battle.skill.1"))return;notice(TEXT("回復技"),TEXT("射程内に使える相手がいません"));
+        if(!Click("battle.field.back"))return;if(!Click("battle.field.ultimate"))return;
+        sameWidth(TEXT("必殺"),{"battle.ultimate.select","battle.teamultimate.select"});shot(TEXT("ultimatewidth"));
+        if(!Click("battle.ultimate.select"))return;notice(TEXT("必殺"),TEXT("射程内に攻撃できる相手がいません"));shot(TEXT("ultimate-notarget"));
+        if(!Click("battle.field.back"))return;
+        if(!Click("battle.medicine"))return;notice(TEXT("傷薬"),TEXT("射程内に使える相手がいません"));shot(TEXT("medicine-notarget"));
+        TestTrue(TEXT("案内の表示で戦闘/RNGを変更しない"),combat->Checkpoint()==before);
+    });
     It(TEXT("攻撃の射程内に対象がいないと理由を出す"),EAsyncExecution::ThreadPool,FTimespan::FromSeconds(120),[this]{
         using namespace GirlsSpire;BattleUnit hero;hero.At={1,1};hero.Speed=30;auto enemy=hero;enemy.Id=100;enemy.Side=Faction::Enemy;enemy.At={6,6};enemy.Speed=10;
         auto combat=MakeShared<Battle>(8,8,std::vector<Tile>(64),std::vector<BattleUnit>{hero,enemy},42);const auto before=combat->Checkpoint();

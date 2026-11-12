@@ -9,6 +9,7 @@ void SCombatScreen::RefreshMedicine()
         SelectingMedicine=true;Selected.reset();SelectedSkill.reset();MoveTarget.reset();Refresh();
     },state.Medicines>0 && !state.Acted);
     if(!SelectingMedicine) return;
+    NoTargetNotice([this,&state](GirlsSpire::Position at){return Combat->PreviewMedicine(state.ActiveId,at).Legal;},true);
     Action(TEXT("傷薬を取り消す"),"battle.medicine.cancel",[this]{SelectingMedicine=false;Selected.reset();Refresh();});
     if(!Selected) {Text(TEXT("自身か隣接する味方のマスを選んでください。"),"battle.medicine.help",15);return;}
     const auto preview=Combat->PreviewMedicine(state.ActiveId,*Selected);
